@@ -3,7 +3,7 @@ utils:
   echo:
     enabled: true
     ingress: 
-      enabled: true
+      enabled: false
       tls:
         # []
         - hosts: [fiwaredsc-consumer.local]
@@ -16,7 +16,7 @@ utils:
 
 
 apisix:
-  enabled: false
+  enabled: true
   # image:
   #   registry: docker.io
   #   repository: bitnami/apisix

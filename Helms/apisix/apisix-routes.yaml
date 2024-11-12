@@ -1,0 +1,14 @@
+routes:
+  - 
+    uri: /
+    host: fiwaredsc-consumer.local
+    methods: 
+      - GET
+    upstream:
+      type: roundrobin
+      nodes:
+        echo-svc.apisix.svc.cluster.local:8080: 1
+    plugins:
+      proxy-rewrite:
+        uri: /
+#END

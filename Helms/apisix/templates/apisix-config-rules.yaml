@@ -1,0 +1,14 @@
+{{ if ((.Values.apisix).enabled) }}
+{{ if eq (((((.Values.apisix).dataPlane).extraConfig).deployment).role_data_plane).config_provider "yaml" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apisix-routes
+  namespace: {{ $.Release.Namespace | quote }}
+  labels:
+    {{ include "dsc.labels" . | nindent 4 }}
+data:
+  apisix.yaml: |
+{{ .Files.Get "apisix-routes.yaml" | indent 4 -}}
+{{- end }}
+{{- end }}

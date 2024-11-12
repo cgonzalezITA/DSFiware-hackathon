@@ -1,6 +1,7 @@
 # Apisix
 - [Apisix](#apisix)
   - [Step01: _Deploy a basic version of a helloWorld chart_](#step01-deploy-a-basic-version-of-a-helloworld-chart)
+  - [Step02: Deploy a functional version of apisix](#step02-deploy-a-functional-version-of-apisix)
 
 [Apache APISIX](https://apisix.apache.org/) provides rich traffic management features like extension via plugins, Load Balancing, Dynamic Upstream, Canary Release, Circuit Breaking, Authentication, Observability, etc.
 
@@ -47,5 +48,38 @@ For example, you can start enabling just the utils components activating the ena
 2. Test it. Does it work?
     ```
     curl https://fiwaredsc-consumer.local
+    curl -k https://fiwaredsc-consumer.local
+    ```
+
+## Step02: Deploy a functional version of apisix  
+NOTE to avoid refering to the namespace apisix at each command, the ENV VAR DEF_KTOOLS_NAMESPACE=apisix is set:
+```
+export DEF_KTOOLS_NAMESPACE=apisix
+```
+
+1. Modify the values to enable apisix and disable the util's ingress.
+2. Deploy the changes
+    ```
+    hFileCommand apisix restart
+    # Running CMD=[helm -n apisix install -f "./Helms/apisix/values.yaml" apisix "./Helms/apisix/"  --create-namespace]
+
+    ```
+3. After some seconds the deployments should be running
+    ```
+    $ kGet 
+    ...
+    #   Running command [kubectl get pod  -n apisix  ]
+    ---
+    NAME                                         READY   STATUS    RESTARTS   AGE
+    apisix-control-plane-7ffd9fdc4c-2jpw5        1/1     Running   0          5h23m
+    apisix-dashboard-78d68bf7c5-cmb28            1/1     Running   0          5h23m
+    apisix-data-plane-8488664577-4t7lg           1/1     Running   0          5h23m
+    apisix-etcd-0                                1/1     Running   0          5h23m
+    apisix-ingress-controller-5b8f85878d-vpggm   1/1     Running   0          5h23m
+    echo-588c888c78-r2d7d                        1/1     Running   0          5h23m
+    netutils-65cd7b88b8-fwn5h                    1/1     Running   0          5h23m
+    ```
+4. Test it. Does it work?
+    ```
     curl -k https://fiwaredsc-consumer.local
     ```
