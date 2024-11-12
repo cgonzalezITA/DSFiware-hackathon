@@ -2,6 +2,7 @@
 - [Apisix](#apisix)
   - [Step01: _Deploy a basic version of a helloWorld chart_](#step01-deploy-a-basic-version-of-a-helloworld-chart)
   - [Step02: Deploy a functional version of apisix](#step02-deploy-a-functional-version-of-apisix)
+  - [Step3: Deploy a new route via the apisix.yaml file](#step3-deploy-a-new-route-via-the-apisixyaml-file)
 
 [Apache APISIX](https://apisix.apache.org/) provides rich traffic management features like extension via plugins, Load Balancing, Dynamic Upstream, Canary Release, Circuit Breaking, Authentication, Observability, etc.
 
@@ -83,3 +84,77 @@ export DEF_KTOOLS_NAMESPACE=apisix
     ```
     curl -k https://fiwaredsc-consumer.local
     ```
+## Step3: Deploy a new route via the apisix.yaml file
+As you have seen, there is a dashboard component deployed, but just one dns managed by the apisix ingress. This step will modify the apisix.yaml file to include a new route to expose the dashboard to be consumed via browser.
+1. Decide the DNS to expose the apisix dashboard (Local or global DNS)
+eg. fiwaredsc-api6dashboard.local ...
+2. For Local DNS register at the /etc/hosts (ubuntu) and/or C:\Windows\System32\drivers\etc\hosts (windows)
+3. Modify the values file to use the new dns and the wildcard tls certificate
+    ```
+    apisix:
+      ...
+      ingress:
+        enabled: true
+        hostname: fiwaredsc-consumer.local
+        tls: true
+        extraHosts:
+          - name: fiwaredsc-api6dashboard.local
+            path: /
+        extraTls:
+          - hosts: [fiwaredsc-consumer.local, fiwaredsc-api6dashboard.local]
+            secretName: wildcard_local-tls
+      ...
+    ```
+4. Modify the ./Helms/apisix.apisix-routes.yaml to add the route for the apisix dashboard:
+      ```
+      routes:
+      - 
+        uri: /*
+        host: fiwaredsc-api6dashboard.local
+        methods: 
+          - GET    
+          - POST
+          - PUT
+          - HEAD
+          - CONNECT
+          - OPTIONS
+          - PATCH
+          - DELETE
+        upstream:
+          type: roundrobin
+          nodes:
+            apisix-dashboard:80: 1
+      #END
+      ```
+7. Redeploy the helm chart:
+    ```
+    $ hFileCommand api upgrade
+    # Running CMD=[helm -n apisix upgrade -f "./Helms/apisix/./values.yaml" apisix "./Helms/apisix/./"  --create-namespace]
+    Release "apisix" has been upgraded. Happy Helming!
+    ```
+8. Test it. Does it work?
+    ```
+    curl -k https://fiwaredsc-api6dashboard.local
+    ```
+    <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/apisix-dashboard.PNG"><br/>
+    APISIX Dashboard</p>
+9. Retrieve the password to login at a browser.  
+If you visit the values file, the secret and the key used to store the dashboard user's password are defined:
+    ```
+    apisix:
+      dashboard:
+        ...
+        existingSecret: apisix-dashboard-secrets
+        existingSecretPasswordKey: apisix-dashboard-secret
+        ...
+    ```
+    So, use kubectl command to retrieve the password:  
+    ```
+    $ kSecret-show dashboard-secrets -f apisix-dashboard-secret -v
+    ...
+    Running CMD=[kubectl get -n apisix secrets apisix-dashboard-secrets -o jsonpath='{.data.apisix-dashboard-secret}' | base64 -d]
+    ```
+    <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/apisix-dashboard-routes.png"><br/>
+    APISIX Routes</p>
+
+    You may notice that none of the routes defined at the apisix.yaml file appear here. This is because the dashboard usually displays routes that were created via the Admin API because it directly interacts with APISIX's etcd storage. When you load configuration from a YAML file, APISIX typically treats it as static configuration, so it doesn’t get recorded in etcd in a way that the dashboard can view.  
