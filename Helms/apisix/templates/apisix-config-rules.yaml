@@ -1,5 +1,4 @@
 {{ if ((.Values.apisix).enabled) }}
-{{ if eq (((((.Values.apisix).dataPlane).extraConfig).deployment).role_data_plane).config_provider "yaml" }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,5 +9,4 @@ metadata:
 data:
   apisix.yaml: |
 {{ .Files.Get "apisix-routes.yaml" | indent 4 -}}
-{{- end }}
 {{- end }}

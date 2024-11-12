@@ -3,6 +3,8 @@
   - [Step01: _Deploy a basic version of a helloWorld chart_](#step01-deploy-a-basic-version-of-a-helloworld-chart)
   - [Step02: Deploy a functional version of apisix](#step02-deploy-a-functional-version-of-apisix)
   - [Step3: Deploy a new route via the apisix.yaml file](#step3-deploy-a-new-route-via-the-apisixyaml-file)
+  - [Step4: Use Admin API to manage routes](#step4-use-admin-api-to-manage-routes)
+  - [Bottom line](#bottom-line)
 
 [Apache APISIX](https://apisix.apache.org/) provides rich traffic management features like extension via plugins, Load Balancing, Dynamic Upstream, Canary Release, Circuit Breaking, Authentication, Observability, etc.
 
@@ -84,6 +86,7 @@ export DEF_KTOOLS_NAMESPACE=apisix
     ```
     curl -k https://fiwaredsc-consumer.local
     ```
+
 ## Step3: Deploy a new route via the apisix.yaml file
 As you have seen, there is a dashboard component deployed, but just one dns managed by the apisix ingress. This step will modify the apisix.yaml file to include a new route to expose the dashboard to be consumed via browser.
 1. Decide the DNS to expose the apisix dashboard (Local or global DNS)
@@ -158,3 +161,52 @@ If you visit the values file, the secret and the key used to store the dashboard
     APISIX Routes</p>
 
     You may notice that none of the routes defined at the apisix.yaml file appear here. This is because the dashboard usually displays routes that were created via the Admin API because it directly interacts with APISIX's etcd storage. When you load configuration from a YAML file, APISIX typically treats it as static configuration, so it doesn’t get recorded in etcd in a way that the dashboard can view.  
+
+## Step4: Use Admin API to manage routes
+Instead of modifying the apisix.yaml file, routes can be managed via Admin API (the deployment **apisix-control-plane** exposes the endpoints to manage them) or via the dashboard set up at the previous Step.
+In this exercise, using the provided _manageAPI6Routes.ypynb_ or _manageAPI6Routes.sh_ recreate the route /hello using the Admin API:
+1. If it still exists, delete the /hello route from the apisix.yaml file and redeploy the helm chart
+2. Test the /hello route. Does it work? It should not.
+    ```
+    $ curl -k https://fiwaredsc-consumer.local
+    {"error_msg":"404 Route Not Found"}
+    ```
+3. Analyze and execute the _manageAPI6Routes.ypynb_ or _manageAPI6Routes.sh_ files to recreate the route /hello using the Admin API
+4. Visit the https://fiwaredsc-api6dashboard.local at the browser to view the /hello route.
+   <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/apisix-dashboard-routes.png"><br/>
+    APISIX Routes</p>
+5. Test the /hello route. Does it work? Now, it should.
+    ```
+    $ curl -k https://fiwaredsc-consumer.local/hello
+    ```
+    But... it does not. This is because the routes managed by the Admin API (The control-plane component) are used when the data-plane's role is set to use the config_provider: etcd.  
+6. Modify the data-plane deployment's configuration to change the config_provider:
+```
+dataPlane:
+   ingress:
+    ...
+    extraConfig:
+      # https://apisix.apache.org/docs/apisix/deployment-modes/
+      deployment:
+        role_data_plane:
+        #   # Decoupled
+        #   # In the decoupled deployment mode the data_plane and control_plane instances of APISIX are deployed 
+        #   # separately, i.e., one instance of APISIX is configured to be a data plane and the other to be a control plane.
+          config_provider: etcd
+```
+
+7. Test the /hello route. Does it work? Now, it should.
+    ```
+    $ curl -k https://fiwaredsc-consumer.local/hello
+    ```
+    Nevertheless, as the routes are now managed by the etcd component, the dashboard is not working. Try    
+    ```
+    curl -k https://fiwaredsc-api6dashboard.local
+    {"error_msg":"404 Route Not Found"}
+    ```
+8. To reenable it, add the route via Admin PAPI modifying the manageAPI6Routes.sh or .ipynb files to POST it.
+
+## Bottom line
+Once the apisix helm chart is fully deployed, the Fiware Data Space future architecture deployed looks like:
+   <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/Fiware-DataSpaceGlobalArch-phase01.png"><br/>
+    Deployed architecture after phase 1 completed</p>
