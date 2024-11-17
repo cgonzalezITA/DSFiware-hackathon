@@ -18,6 +18,7 @@
     - [Users Registered](#users-registered)
   - [Step3.5-Issuance of VCs](#step35-issuance-of-vcs)
     - [Issue VCs through a M2M flow](#issue-vcs-through-a-m2m-flow)
+    - [Issue VCs through a H2M flow](#issue-vcs-through-a-h2m-flow)
 
 Any participant willing to consume services provided by the data space will require a minimum infrastructure that will enable the management of Verifiable Credentials besides a Decentralized Identifier that will constitue the signing mechanism to authenticate any message, any request made by the consumer.   
 This section describes the steps and the components to be deployed.  
@@ -308,7 +309,7 @@ Once the infrastructure has been validated, Keycloak can be used as a VCIssuer.
 ### Issue VCs through a M2M flow
 This step is the first step of the _Life of a Verifiable Credential_ described at the [www.w3.org vc-data-model](https://www.w3.org/TR/vc-data-model/#lifecycle-details) and as the w3 specification does not describe how a VC has to be issued, the flow here used is based on the [OpenID for Verifiable Credentials Issuance specification](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html). 
 
-<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/VCIssuance-VC.png"><br/>
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/VCIssuance-VC-flowDiagram.png"><br/>
     VCIssuance sequence diagram</p>
 
 ---
@@ -323,6 +324,8 @@ Alternatively, to use the script version ([`hackathon-retrieveConsumerVC.sh`](..
 ./scripts/hackathon-retrieveConsumerVC.sh -h # To obtain info about the params
 ./scripts/hackathon-retrieveConsumerVC.sh -s # To run it stopping after each step
 ```
+
+In this flow, we will generate a `user-credential` VC, but the same flow can be used to issue `operator-credential` and `verifiable-credential`.
 
 0. Before the Jupyter Notebook can be run, a [conda working environment](https://edcarp.github.io/introduction-to-conda-for-data-scientists/02-working-with-environments/index.html) is required. A brief guideline can be found at [Install and setup an environment using Conda](https://github.com/cgonzalezITA/devopsTools/blob/master/pTools/README.md#install-and-setup-an-environment-using-conda).  
 
@@ -420,5 +423,24 @@ VERIFIABLE_CREDENTIAL=jsonResponse["credential"]
 # Verifiable Credential user-credential For user oc-user
 # VERIFIABLE_CREDENTIAL=eyJhbGciOiJFUzI1NiIsInR5c...
 ```
+This `VERIFIABLE_CREDENTIAL` is a JSON Web Token (JWT) that can be analyzed to get its content. Using the debugger provider by [jwt.io](https://jwt.io/#debugger-io) we see:
+
 
 This VC will be later used to access the Data Space.
+
+### Issue VCs through a H2M flow
+The objective of this flow is to interactivery issue an `operator-credential` and store the VC in a VCWallet. In this guideline, we are going to use the online [wallet setup for the Dome Marketplace](https://wallet.dome-marketplace-prd.org/tabs/home).
+
+1. Access the [wallet setup for the Dome Marketplace](https://wallet.dome-marketplace-prd.org/tabs/home), create an account and log in.
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/vc-wallet.png"><br/>
+    Dome Marketplace wallet</p>
+      When the QR code representing the VC is shown in next steps, quickly, scan it with the device's camera as the lifespan of the QR code is very short (30 seconds).  
+
+2. Access the Keycloak user's account page and select one VC to be generated
+    ```shell
+    https://fiwaredsc-consumer.ita.es/realms/consumerRealm/account/oid4vci
+    ```
+    <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/VCIssuance-VCFromUI.png"><br/>
+    Selection of the VC to issue</p>
+3. Issue the VC and capture it:
+   

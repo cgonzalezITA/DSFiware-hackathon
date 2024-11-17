@@ -66,12 +66,14 @@ apisix:
           path: /
         - name: fiwaredsc-consumer.ita.es
           path: /
+        - name: fiwaredsc-wallet.ita.es
+          path: /
       extraTls:
         - hosts: [fiwaredsc-consumer.local, 
                   fiwaredsc-api6dashboard.local,
                   fiwaredsc-trustanchor.local]
           secretName: wildcardlocal-tls
-        - hosts: [fiwaredsc-consumer.ita.es]
+        - hosts: [fiwaredsc-consumer.ita.es, fiwaredsc-wallet.ita.es]
           secretName: ita.es-tls
     extraConfig:
       deployment:
