@@ -135,7 +135,7 @@ keycloak:
           name: did-secret    # did.pfx.secretName
           key: store-pass     # did.pfx.secretKeyField
     - name: PFXFILE           # /did-material/{did.pfx.fileName}
-      value: /did-material/cert.pfx     
+      value: /did-material/cert.pfx
     - name: KEY_ALIAS         # did.pfx.alias
       value: ita.es 
   extraVolumeMounts:

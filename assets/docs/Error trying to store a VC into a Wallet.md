@@ -1,0 +1,379 @@
+# Error trying to store a VC into a Wallet
+- [Error trying to store a VC into a Wallet](#error-trying-to-store-a-vc-into-a-wallet)
+	- [Description](#description)
+	- [Logs](#logs)
+	- [Configuration](#configuration)
+		- [**Chart.yaml**](#chartyaml)
+		- [**values.yaml** || values-june.yaml](#valuesyaml--values-juneyaml)
+
+## Description
+
+This is the log captured when trying to store a VC in a wallet ([wallet setup for the Dome Marketplace](https://wallet.dome-marketplace-prd.org/tabs/home).)
+
+## Logs
+
+```text
+---
+INFO: Showing logs of [pod] [consumer-keycloak-0] (and all its initContainers) in namespace [consumer]
+NAMESPACE=[cons] -> [consumer]. Taken from  DEF_KTOOLS_NAMESPACE=[cons]
+K8SARTIFACT=[pod]
+K8S_COMPONENTNAME=[key] -> [consumer-keycloak-0]
+SINCE=[--since 1s]
+STRING2EXCLUDE=
+  CONTAINERS IN [pod] [consumer-keycloak-0]:     keycloak
+  INITCONTAINERS IN [pod] [consumer-keycloak-0]: read-only-workaround get-did
+---
+# Running command [kubectl logs -n consumer --since 1s -f pod/consumer-keycloak-0 -c read-only-workaround]
+---
+# Running command [kubectl logs -n consumer --since 1s -f pod/consumer-keycloak-0 -c get-did]
+---
+# Running command [kubectl logs -n consumer --since 1s -f pod/consumer-keycloak-0 -c keycloak]
+2024-11-17 23:59:07,464 ERROR [org.keycloak.headers.DefaultSecurityHeadersProvider] (executor-thread-5) MediaType not set on path /realms/test-realm/protocol/oid4vc/credential-offer/w4LOHAIhIZWF4kiKtj9juDTDx9IU0UQx, with response status 400
+2024-11-17 23:59:07,475 ERROR [io.quarkus.vertx.http.runtime.QuarkusErrorHandler] (executor-thread-5) HTTP Request to /realms/test-realm/protocol/oid4vc/credential-offer/w4LOHAIhIZWF4kiKtj9juDTDx9IU0UQx failed, error id: e5c9c089-55f6-44f8-87a9-101919dca9d0-1: jakarta.ws.rs.InternalServerErrorException: HTTP 500 Internal Server Error
+	at org.keycloak.headers.DefaultSecurityHeadersProvider.addHeaders(DefaultSecurityHeadersProvider.java:75)
+	at org.keycloak.services.filters.KeycloakSecurityHeadersFilter.filter(KeycloakSecurityHeadersFilter.java:45)
+	at org.jboss.resteasy.reactive.server.handlers.ResourceResponseFilterHandler.handle(ResourceResponseFilterHandler.java:25)
+	at io.quarkus.resteasy.reactive.server.runtime.QuarkusResteasyReactiveRequestContext.invokeHandler(QuarkusResteasyReactiveRequestContext.java:150)
+	at org.jboss.resteasy.reactive.common.core.AbstractResteasyReactiveContext.run(AbstractResteasyReactiveContext.java:147)
+	at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:582)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)
+	at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)
+	at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+```
+
+## Configuration
+This keycloak is deployed with the following helm files:
+### **Chart.yaml**
+```yaml
+apiVersion: v2
+name: consumer
+description: A Helm chart for Kubernetes to deploy Keycloak
+type: application
+version: 1.0.0
+appVersion: "17.0.1"
+dependencies:
+  - name: keycloak
+    condition: keycloak.enabled
+    version:  21.1.1
+    repository: https://charts.bitnami.com/bitnami
+```
+### **values.yaml** || values-june.yaml
+```yaml
+vcwallet:
+  enabled: true
+
+utils:
+  enabled: true
+  echo:
+    enabled: false
+
+# -- configuration for the did-helper, should only be used for demonstrational deployments, 
+# see https://hub.docker.com/repository/docker/itainnovaprojects/ita-didweb-generator/general
+did:
+  enabled: true
+  type: web
+  port: 3000
+  pfx:
+    fileName: cert.pfx
+    alias: ita.es
+    secretName: did-secret
+    secretKeyField: store-pass
+  serviceType: ClusterIP
+  baseURL: https://fiwaredsc-consumer.ita.es
+  outputFolder: /cert
+  cert:
+    country: es
+    state: ES-AR
+    locality: Zaragoza
+    organization: ITA
+    commonName: www.ita.es
+    organizationunit: it
+  ingress:
+    enabled: false
+    host: fiwaredsc-consumer.ita.es
+
+keycloak:
+  # -- should it be enabled? set to false if one outside the chart is used.
+  enabled: true
+  # -- disable the security context, required by the current quarkus container, will be solved in the future chart versions of keycloak
+  containerSecurityContext:
+    enabled: false
+  # -- keycloak image to be used - set to preview version of 25.0.0, since no other is available yet
+  image:
+    registry: quay.io
+    # until 25 is released, we have to use a snapshot version
+    repository: wi_stefan/keycloak
+    tag: 25.0.0-PRE
+    pullPolicy: Always
+  command:
+    - /bin/bash
+  # -- we need the did of the participant here. when its generated with the did-helper, we have to get it first and replace inside the realm.json through env-vars
+  args:
+    - -ec
+    - |
+      #!/bin/sh
+      export $(cat /did-material/did.env)
+      /opt/keycloak/bin/kc.sh start --features oid4vc-vci --import-realm --hostname-strict false --verbose 
+  service:
+    ports:
+      http: 8080
+  # -- authentication config for keycloak
+  auth:
+    existingSecret: consumer-keycloak
+    passwordSecretKey: admin-password
+    adminUser: admin
+  postgresql:
+      enabled: true
+      auth:
+        existingSecret: consumer-postgresql
+  externalDatabase:
+    host: postgresql
+
+  # -- the default init container is deactivated, since it conflicts with the non-bitnami image
+  enableDefaultInitContainers: false
+
+  # -- extra volumes to be mounted
+  extraVolumeMounts:
+    - name: empty-dir
+      mountPath: /opt/keycloak/lib/quarkus
+      subPath: app-quarkus-dir
+    - name: qtm-temp
+      mountPath: /qtm-tmp
+    - name: did-material
+      mountPath: /did-material
+    - name: did-material
+      mountPath: "/etc/env"
+      readOnly: true
+    - name: realms
+      mountPath: /opt/keycloak/data/import
+
+  extraVolumes:
+    - name: did-material
+      emptyDir: {}
+    - name: qtm-temp
+      emptyDir: {}
+    - name: realms
+      configMap:
+        name: realm2import
+
+  # -- extra env vars to be set. we require them at the moment, since some of the chart config mechanisms only work with the bitnami-image
+  extraEnvVars:
+    # indicates ssl is terminated at the edge
+    - name: KC_PROXY
+      value: "edge"
+    # point the transaction store to the (writeable!) empty volume
+    - name: QUARKUS_TRANSACTION_MANAGER_OBJECT_STORE_DIRECTORY
+      value: /qtm-tmp
+    # config for the db connection
+    - name: KC_DB_URL_HOST
+      value: consumer-postgresql
+    - name: KC_DB_URL_DATABASE
+      value: bitnami_keycloak
+    - name: KC_DB_USERNAME
+      value: bn_keycloak
+    - name: KC_DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: consumer-postgresql
+          key: password
+    # password for reading the key store connected to the did
+    - name: STORE_PASS
+      valueFrom:
+        secretKeyRef:
+          key: store-pass
+          name: did-secret
+    - name: PFXFILE           # /did-material/{did.pfx.fileName}
+      value: /did-material/cert.pfx
+    - name: KEY_ALIAS
+      value: ita.es
+    # keycloak admin password
+    - name: KC_ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: consumer-keycloak
+          key: admin-password
+
+  # -- init containers to be run with keycloak
+  initContainers:
+    # workaround required by the current quarkus distribution, to make keycloak working
+    - name: read-only-workaround
+      image: quay.io/wi_stefan/keycloak:25.0.0-PRE
+      command:
+        - /bin/bash
+      args:
+        - -ec
+        - |
+          #!/bin/bash
+          echo "Content of /quarkus folder pre:"
+          ls /quarkus
+          cp -r /opt/keycloak/lib/quarkus/* /quarkus
+          echo "Content of /quarkus folder post:"
+          ls /quarkus
+      volumeMounts:
+        - name: empty-dir
+          mountPath: /quarkus
+          subPath: app-quarkus-dir
+
+    # retrieve all did material required for the realm and store it to a shared folder
+    - name: get-did
+      image: ubuntu
+      command:
+        - /bin/bash
+      args:
+        - -ec
+        - |
+          #!/bin/bash
+          apt-get -y update; apt-get -y install wget
+          cd /did-material
+          wget http://did:3000/did-material/cert.pfx
+          wget http://did:3000/did-material/did.env
+      volumeMounts:
+        - name: did-material
+          mountPath: /did-material
+
+    # # register the issuer at the trusted issuers registry - will only work if that one is publicly accessible
+    # - name: register-at-tir
+    #   image: ubuntu
+    #   command:
+    #     - /bin/bash
+    #   args:
+    #     - -ec
+    #     - |
+    #       #!/bin/bash
+    #       echo Content of did-material folder:
+    #       ls -lat /did-material
+    #       echo Content of did.env:
+    #       cat /did-material/did.env
+    #       source /did-material/did.env
+    #       apt-get -y update; apt-get -y install curl
+    #       curl -X 'POST' 'http://tir.trust-anchor.svc.cluster.local:8080/issuer' -H 'Content-Type: application/json' -d "{\"did\": \"${DID}\", \"credentials\": []}"
+    #   volumeMounts:
+    #     - name: did-material
+    #       mountPath: /did-material
+
+  ingress:
+    enabled: false
+    # hostname: fdsc-consumer-keycloak.ita.es
+  # -- configuration of the realm to be imported
+  realm:
+    # -- should the realm be imported
+    import: true
+    # -- name of the realm
+    name: test-realm
+    # -- frontend url to be used for the realm
+    frontendURL: https://fiwaredsc-consumer.ita.es
+    # -- client roles to be imported - be aware the env vars can be used and will be replaced
+    clientRoles: |
+      "${DID}": [
+        {
+          "name": "ORDER_CONSUMER",
+          "description": "Is allowed to do everything",
+          "clientRole": true
+        }
+      ]
+    # -- users to be imported - be aware the env vars can be used and will be replaced
+    users: |
+      {
+        "username": "oc-user",
+        "enabled": true,
+        "email": "oc-user@provider.org",
+        "firstName": "oc-user",
+        "lastName": "oc-user",
+        "credentials": [
+          {
+            "type": "password",
+            "value": "test"
+          }
+        ],
+        "clientRoles": {
+          "${DID}": [
+            "ORDER_CONSUMER"
+          ],
+          "account": [
+            "view-profile",
+            "manage-account"
+          ]
+        },
+        "groups": [
+        ]
+      }
+    # -- clients to be imported - be aware the env vars can be used and will be replaced
+    clients: |
+      {
+        "clientId": "${DID}",
+        "enabled": true,
+        "description": "Client to manage itself",
+        "surrogateAuthRequired": false,
+        "alwaysDisplayInConsole": false,
+        "clientAuthenticatorType": "client-secret",
+        "defaultRoles": [],
+        "redirectUris": [],
+        "webOrigins": [],
+        "notBefore": 0,
+        "bearerOnly": false,
+        "consentRequired": false,
+        "standardFlowEnabled": true,
+        "implicitFlowEnabled": false,
+        "directAccessGrantsEnabled": false,
+        "serviceAccountsEnabled": false,
+        "publicClient": false,
+        "frontchannelLogout": false,
+        "protocol": "oid4vc",
+        "attributes": {
+          "client.secret.creation.time": "1675260539",
+          "vc.natural-person.format": "jwt_vc",
+          "vc.natural-person.scope": "NaturalPersonCredential",
+          "vc.verifiable-credential.format": "jwt_vc",
+          "vc.verifiable-credential.scope": "VerifiableCredential"
+        },
+        "protocolMappers": [
+          {
+            "name": "target-role-mapper",
+            "protocol": "oid4vc",
+            "protocolMapper": "oid4vc-target-role-mapper",
+            "config": {
+              "subjectProperty": "roles",
+              "clientId": "${DID}",
+              "supportedCredentialTypes": "NaturalPersonCredential"
+            }
+          },
+          {
+            "name": "target-vc-role-mapper",
+            "protocol": "oid4vc",
+            "protocolMapper": "oid4vc-target-role-mapper",
+            "config": {
+              "subjectProperty": "roles",
+              "clientId": "${DID}",
+              "supportedCredentialTypes": "VerifiableCredential"
+            }
+          },
+          {
+            "name": "context-mapper",
+            "protocol": "oid4vc",
+            "protocolMapper": "oid4vc-context-mapper",
+            "config": {
+              "context": "https://www.w3.org/2018/credentials/v1",
+              "supportedCredentialTypes": "VerifiableCredential,NaturalPersonCredential"
+            }
+          },
+          {
+            "name": "email-mapper",
+            "protocol": "oid4vc",
+            "protocolMapper": "oid4vc-user-attribute-mapper",
+            "config": {
+              "subjectProperty": "email",
+              "userAttribute": "email",
+              "supportedCredentialTypes": "NaturalPersonCredential"
+            }
+          }
+        ],
+        "authenticationFlowBindingOverrides": {},
+        "fullScopeAllowed": true,
+        "nodeReRegistrationTimeout": -1,
+        "defaultClientScopes": [],
+        "optionalClientScopes": []
+      }
+```
