@@ -1,5 +1,14 @@
 #!/bin/bash
+#********************************************************************************
+# fiwaredsc.ita.es
+# Version: 1.0.0 
+# Copyright (c) 2024 Instituto Tecnologico de Aragon (www.ita.es)
+# Date: October 2024
+# Authors: 
+#          Carlos Gonzalez Muñoz                    cgonzalez@ita.es
 # Script based on steps described on https://github.com/FIWARE/data-space-connector/blob/main/doc/deployment-integration/local-deployment/LOCAL.MD
+# All rights reserved 
+#********************************************************************************
 ############################
 ## Variable Initialization #
 ############################
@@ -223,4 +232,4 @@ CMD="curl -s -X POST $OIDC_ACCESSTOKEN_URL \
       --data scope=$SCOPE | jq '.access_token' -r";
 # echo "Running command [$CMD]"
 DATA_SERVICE_ACCESS_TOKEN=$(runCommand "$CMD" "$MSG")
-[ "$VERBOSE" = true ] && echo -e "export DATA_SERVICE_ACCESS_TOKEN=${DATA_SERVICE_ACCESS_TOKEN}" || echo $DATA_SERVICE_ACCESS_TOKEN;
+[ "$VERBOSE" = true ] && echo -e "export ACCESS_TOKEN=${DATA_SERVICE_ACCESS_TOKEN}" || echo $DATA_SERVICE_ACCESS_TOKEN;

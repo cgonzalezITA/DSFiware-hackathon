@@ -199,7 +199,7 @@ kGet -n service
    We are going to redirect the requests to https://fiwaredsc-consumer.ita.es/ngsi-ld/* to the scorpio context broker
     ```json
     # https://fiwaredsc-provider.ita.es/ngsi-ld/...
-    ROUTE_fiwaredsc_provider_hackathon_serviceWithoutAutho_ita_es='{
+    ROUTE_fiwaredsc_provider_hackathon_service-0auth='{
       "uri": "/services/hackathon-service/ngsi-ld/*",
       "name": "hackathon_service",
       "host": "fiwaredsc-provider.ita.es",

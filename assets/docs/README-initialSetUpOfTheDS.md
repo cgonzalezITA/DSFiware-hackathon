@@ -6,6 +6,8 @@
     - [Apisix routes](#apisix-routes)
     - [Retrieval of an Access Token from the VCVerifier](#retrieval-of-an-access-token-from-the-vcverifier)
     - [Access the service with the VCVerifier Access Token](#access-the-service-with-the-vcverifier-access-token)
+  - [Step 6.4-Addittion of the authorization checking to the service route](#step-64-addittion-of-the-authorization-checking-to-the-service-route)
+    - [Writing ODRL policies](#writing-odrl-policies)
   - [Bottom line](#bottom-line)
 
     
@@ -46,6 +48,7 @@ registration:
 The yaml describes that the DID of the consumer will be registered at:
 - The Trusted Issuer Registry of the Data Space (_tir at the trust-anchor namespace_) stating only that the given DID belongs to the data space.
 - The Trusted Issuer List of the Provider (_til at the provider namespace_) stating that the consumer can present OperatorCredentials to access the provider's infrastructure. This verification is made at the authentication phase of the OIDC protocol and any request from this consumer will be rejected if any other credential is presented.
+
 ## Step 6.2-Registering the Service into the provider Credential Config Service
 This setup will specify which Trust Issuer Registries and which Trust Issuer List must be visited by the VCVerifier to authenticate any request.  
 The Fiware architecture enables several Trusted participants to be used and different ones depending on the service to be accessed.  
@@ -76,14 +79,13 @@ dataPlaneRegistration:
           - http://til.provider.svc.cluster.local:8080
 ```
 
-
 ## Step 6.3-Addition of the service route to the Apisix with VC Authentication    
 ### Apisix routes
 This step is adding a bundle of new routes to the apisix to enable the routes to the service.
-1. As the `/services/hackathon-service/ngsi-ld` route already exists, it can be deleted using the [apisix dashboard page](https://fiwaredsc-api6dashboard.local/routes/list?page=1&pageSize=50) and redeployed using the ENV VAR `ROUTE_fiwaredsc_provider_hackathon_service` defined at the [managementAPI6Routes script file](../../scripts/manageAPI6Routes.sh):
+1. As the `/services/hackathon-service/ngsi-ld` route already exists, it can be deleted using the [apisix dashboard page](https://fiwaredsc-api6dashboard.local/routes/list?page=1&pageSize=50) and redeployed using the ENV VAR `ROUTE_fiwaredsc_provider_hackathon_service_authentication` defined at the [managementAPI6Routes script file](../../scripts/manageAPI6Routes.sh):
 This new route, contains a new Apisix plugin `openid-connect`, an authentication protocol based on the OAuth 2.0 that redirects NGSI-LD requests to the VCVerifier. 
     ```json
-    ROUTE_fiwaredsc_provider_hackathon_service='{
+    ROUTE_fiwaredsc_provider_hackathon_service_authentication='{
       "uri": "/services/hackathon-service/ngsi-ld/*",
       ...
       "plugins": {
@@ -238,6 +240,39 @@ With the retrieved access token, the previous request could be launched again (_
               "type" : "DateTime",
         ...
 ```
+
+## Step 6.4-Addittion of the authorization checking to the service route
+At this step, new plugin (`opa`) will be added to the service route to perform authorization tasks. The plugin will forward any request already authenticated to the `Open Policy Agent (OPA)` to verify that the request complies with the ODRL policies defined.  
+Again, as the `/services/hackathon-service/ngsi-ld` route already exists, it can be deleted using the [apisix dashboard page](https://fiwaredsc-api6dashboard.local/routes/list?page=1&pageSize=50) and redeployed using the ENV VAR `ROUTE_fiwaredsc_provider_hackathon_service_2auth` defined at the [managementAPI6Routes script file](../../scripts/manageAPI6Routes.sh):
+
+```json
+    ROUTE_fiwaredsc_provider_hackathon_service_2auth='{
+      "uri": "/services/hackathon-service/ngsi-ld/*",
+      ...
+      "plugins": {
+        "proxy-rewrite": {
+            "regex_uri": ["^/ngsi-ld/(.*)", "/ngsi-ld/$1"]
+        },
+        "openid-connect": {
+          "bearer_only": true,
+          ...
+        },
+        "opa": {
+          "host": "http://opa.provider.svc.cluster.local:8181",
+          "policy": "policy/main",
+          "with_route": true,
+          "with_service": true,
+          "with_consumer": true,
+          "with_body": true
+        }
+      }
+    }'
+```
+As you can see, the plugin redirects requests made to the ´/services/hackathon-service/ngsi-ld/*´ endpoint to the `OPA` service to verify its credentials.
+
+To gain access to the resource, a set of ODRL policies will be addedd in the next step.
+
+### Writing ODRL policies
 
 
 ## Bottom line

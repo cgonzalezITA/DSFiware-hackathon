@@ -1,3 +1,14 @@
+#/bin/bash
+#********************************************************************************
+# fiwaredsc.ita.es
+# Version: 1.0.0 
+# Copyright (c) 2024 Instituto Tecnologico de Aragon (www.ita.es)
+# Date: October 2024
+# Authors: 
+#          Carlos Gonzalez Muñoz                    cgonzalez@ita.es
+# All rights reserved 
+#********************************************************************************
+
 ADMINTOKEN=$(kSecret-show -f admin-token -n apisix plane-api -v)
 IP_APISIXCONTROL=$(kGet -a svc control- -o yaml -v -n apisix | yq eval '.spec.clusterIP' -)
 
@@ -123,10 +134,10 @@ ROUTE_WALLET_fiwaredsc_wallet_ita_es='{
 }' 
 
 
-# https://fiwaredsc-provider.ita.es/ngsi-ld/
-ROUTE_fiwaredsc_provider_hackathon_serviceWithoutAutho_ita_es='{
+# https://fiwaredsc-provider.ita.es/hackathon-service/ngsi-ld/v1/entities?type=Order
+ROUTE_fiwaredsc_provider_hackathon_service-0auth='{
   "uri": "/services/hackathon-service/ngsi-ld/*",
-  "name": "hackathon_service",
+  "name": "hack-svc-0auth",
   "host": "fiwaredsc-provider.ita.es",
   "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
   "upstream": {
@@ -145,11 +156,10 @@ ROUTE_fiwaredsc_provider_hackathon_serviceWithoutAutho_ita_es='{
 
 
 # https://fiwaredsc-provider.ita.es/services/hackathon-service/.well-known/openid-configuration
-# https://fiwaredsc-provider.ita.es/services/hackathon-service/.well-known/jwks
 # https://fiwaredsc-provider.ita.es/services/hackathon-service/token
 ROUTE_fiwaredsc_provider_hackathon_service_OIDC='{
   "uri": "/services/hackathon-service/*",
-  "name": "Hackathon_service",
+  "name": "hack-svc-OIDC",
   "host": "fiwaredsc-provider.ita.es",
   "methods": ["GET", "POST"],
   "upstream": {
@@ -164,9 +174,12 @@ ROUTE_fiwaredsc_provider_hackathon_service_OIDC='{
       }
   }
 }'
+
+
+# https://fiwaredsc-provider.ita.es/.well-known/jwks
 ROUTE_fiwaredsc_provider_wellKnownJWKS='{
   "uri": "/.well-known/jwks*",
-  "name": "Hackathon_service",
+  "name": "hack-svc-JWKS",
   "host": "fiwaredsc-provider.ita.es",
   "methods": ["GET", "POST"],
   "upstream": {
@@ -180,9 +193,9 @@ ROUTE_fiwaredsc_provider_wellKnownJWKS='{
 
 # https://fiwaredsc-provider.ita.es/services/hackathon-service/ngsi-ld/v1/entities?type=Order
 # https://apisix.apache.org/docs/apisix/plugins/openid-connect/
-ROUTE_fiwaredsc_provider_hackathon_service='{
+ROUTE_fiwaredsc_provider_hackathon_service_authentication='{
   "uri": "/services/hackathon-service/ngsi-ld/*",
-  "name": "hackathon_service",
+  "name": "hack-svc-authentication",
   "host": "fiwaredsc-provider.ita.es",
   "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
   "upstream": {
@@ -206,7 +219,30 @@ ROUTE_fiwaredsc_provider_hackathon_service='{
       }
   }
 }'
-X=',
+ROUTE_fiwaredsc_provider_hackathon_service_2auth='{
+  "uri": "/services/hackathon-service/ngsi-ld/*",
+  "name": "hack-svc-2auth",
+  "host": "fiwaredsc-provider.ita.es",
+  "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
+  "upstream": {
+    "type": "roundrobin",
+    "scheme": "http",
+    "nodes": {
+      "ds-scorpio.service.svc.cluster.local:9090": 1
+    }
+  },
+  "plugins": {
+    "proxy-rewrite": {
+        "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/$1"]
+    },
+    "openid-connect": {
+        "bearer_only": true,
+        "use_jwks": "true",
+        "client_id": "hackathon-service",
+        "client_secret": "unused",
+        "ssl_verify": false,
+        "discovery": "http://verifier.provider.svc.cluster.local:3000/services/hackathon-service/.well-known/openid-configuration"    
+      },
       "opa": {
         "host": "http://opa.provider.svc.cluster.local:8181",
         "policy": "policy/main",
@@ -214,13 +250,15 @@ X=',
         "with_service": true,
         "with_consumer": true,
         "with_body": true
-      }'
+      }
+  }
+}'
 
 
 
 ## management area
-# curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
-# -d "$ROUTE_fiwaredsc_provider_wellKnownJWKS"
+curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
+-d "$ROUTE_fiwaredsc_provider_hackathon_service_2auth"
 # Output similar to: {"key":"/apisix/routes/00000000000000000077","value":{"create_time":1731400093,
 #                     "upstream":{"nodes":{"echo-svc:8080":1},"pass_host":"pass","type":"roundrobin",
 #                     "hash_on":"vars","scheme":"http"},"status":1,"methods":["GET"],
@@ -232,10 +270,10 @@ X=',
 # curl -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN"
 
 # Fix the route
-ROUTE_ID=00000000000000000307
-curl -i -X PUT -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes/$ROUTE_ID \
-    -H "X-API-KEY:$ADMINTOKEN" \
-    -d "$ROUTE_fiwaredsc_provider_hackathon_service"
+# ROUTE_ID=00000000000000000307
+# curl -i -X PUT -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes/$ROUTE_ID \
+#     -H "X-API-KEY:$ADMINTOKEN" \
+#     -d "$ROUTE_fiwaredsc_provider_hackathon_service_authentication"
 
 # Detele a route
 # curl -i -X DELETE -k -H "X-API-KEY:$ADMINTOKEN" https://$IP_APISIXCONTROL:9180/apisix/admin/routes/00000000000000000244
