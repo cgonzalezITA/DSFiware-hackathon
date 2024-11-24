@@ -20,4 +20,4 @@ USER_01=oc-user
 USER_01_PASSWORD=test
 CREDENTIAL_TYPE=operator-credential
 
-eval $BASEDIR/_retrieveVC.sh --vcIssuer $URL_VCISSUER --user $USER_01 --password $USER_01_PASSWORD --credentialType $CREDENTIAL_TYPE $@
+$BASEDIR/_retrieveVC.sh --vcIssuer $URL_VCISSUER --user $USER_01 --password $USER_01_PASSWORD --credentialType $CREDENTIAL_TYPE $@

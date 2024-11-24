@@ -171,6 +171,7 @@ This Helm chart will deploy the following components:
 - **Target Service**: This walkthrough will deploy a [Context Data broker Scorpio](https://scorpio.readthedocs.io/en/latest/) to provide NGSI-LD data access. The DNS `fiwaredsc-provider.ita.es` will route requests to this service.  
 - A **Postgis DB server** to support the storage of the NGSI-LD records. Postgis is used by the Scorpio Context Broker as it can manage spatial data.
 - A **Job to initialize data**: In this scenario, it just inserts some data into de Scorpio CB
+- A **Job to register the service** into the credential config service. This job will be explained in next phase ([Initial setup of th Data space](README-initialSetUpOfTheDS.md))
   
 ```shell
 hFileCommand provider/service
@@ -187,6 +188,9 @@ kGet -n service
 ## Step 4.5-Addition of the service route to the Apisix without security
 1. Initially, we are going to modify the apisix values file to enable its management of the new route `fiwaredsc-provider.ita.es` and _upgrade_ the apisix helm chart to just renew the involved components (_apisix-control-plane_)
     ```shell
+    # After the new route is described at the manageAPI6Routes it is run (jupyther version could also be used)
+    ./scripts/manageAPI6Routes.sh
+
     hFileCommand api upgrade
       # Running CMD=[helm -n apisix upgrade -f "./Helms/apisix/values.yaml" apisix "./Helms/apisix/"  --create-namespace]
     ```
@@ -195,9 +199,9 @@ kGet -n service
    We are going to redirect the requests to https://fiwaredsc-consumer.ita.es/ngsi-ld/* to the scorpio context broker
     ```json
     # https://fiwaredsc-provider.ita.es/ngsi-ld/...
-    ROUTE_PROVIDER_SERVICE_fiwaredsc_providerWithoutAutho_ita_es='{
-      "uri": "/ngsi-ld/*",
-      "name": "service",
+    ROUTE_fiwaredsc_provider_hackathon_serviceWithoutAutho_ita_es='{
+      "uri": "/services/hackathon-service/ngsi-ld/*",
+      "name": "hackathon_service",
       "host": "fiwaredsc-provider.ita.es",
       "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
       "upstream": {
@@ -209,7 +213,7 @@ kGet -n service
       },
       "plugins": {
         "proxy-rewrite": {
-            "regex_uri": ["^/ngsi-ld/(.*)", "/ngsi-ld/$1"]
+            "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/$1"]
         }
       }
     }'
@@ -217,7 +221,7 @@ kGet -n service
 
     ```shell
     # Test the service
-    curl https://fiwaredsc-provider.ita.es/ngsi-ld/v1/entities?type=Order
+    curl https://fiwaredsc-provider.ita.es/services/hackathon-service/ngsi-ld/v1/entities?type=Order
         [ {
           "id" : "urn:ngsi-ld:Order:SDBrokerId-Spain.2411331.000003",
           "type" : "Order",
@@ -226,6 +230,8 @@ kGet -n service
         ...
     ```
     **NOTE**: The order shown has been inserted by the job created to initialize the data at the [Step 4.4- _Deployment of the service components_](#step-44--deployment-of-the-service-components).
+
+   **NOTE (again)**: This configuration exposes the service without any authentication nor authorization process. It is just created just for testing and should be replaced as soon as possible by the route managed by the Data Space Connector.  
 
 ## Bottom line
 The deployment of the provider components leaves the data space ready to be setup and used. The next phase [Initial setup of the Dataspace](README-initialSetUpOfTheDS.md) will show the actions to register the participants in the dataspace and will continue the configuration to provide authentication and authorization mechanisms to the dataspace to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf):

@@ -122,29 +122,34 @@ ROUTE_WALLET_fiwaredsc_wallet_ita_es='{
   "status": 1
 }' 
 
-# https://fiwaredsc-provider.ita.es/.well-known/openid-configuration
-# https://fiwaredsc-provider.ita.es/.well-known/jwks
-ROUTE_OIDC_fiwaredsc_vcverifier_ita_es='{
-  "uri": "/.well-known/*",
-  "name": "OIDC",
+
+# https://fiwaredsc-provider.ita.es/ngsi-ld/
+ROUTE_fiwaredsc_provider_hackathon_serviceWithoutAutho_ita_es='{
+  "uri": "/services/hackathon-service/ngsi-ld/*",
+  "name": "hackathon_service",
   "host": "fiwaredsc-provider.ita.es",
-  "methods": ["GET"],
+  "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
   "upstream": {
     "type": "roundrobin",
+    "scheme": "http",
     "nodes": {
-      "verifier.provider.svc.cluster.local:3000": 1
+      "ds-scorpio.service.svc.cluster.local:9090": 1
     }
   },
   "plugins": {
-      "proxy-rewrite": {
-          "regex_uri": ["^/.well-known/(.*)", "/services/hackathon-service/.well-known/$1"]
-      }
+    "proxy-rewrite": {
+        "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/$1"]
+    }
   }
 }'
+
+
+# https://fiwaredsc-provider.ita.es/services/hackathon-service/.well-known/openid-configuration
+# https://fiwaredsc-provider.ita.es/services/hackathon-service/.well-known/jwks
 # https://fiwaredsc-provider.ita.es/services/hackathon-service/token
-ROUTE_OIDC_TOKEN_fiwaredsc_vcverifier_ita_es='{
-  "uri": "/services/hackathon-service/token",
-  "name": "OIDC-Token",
+ROUTE_fiwaredsc_provider_hackathon_service_OIDC='{
+  "uri": "/services/hackathon-service/*",
+  "name": "Hackathon_service",
   "host": "fiwaredsc-provider.ita.es",
   "methods": ["GET", "POST"],
   "upstream": {
@@ -155,15 +160,17 @@ ROUTE_OIDC_TOKEN_fiwaredsc_vcverifier_ita_es='{
   },
   "plugins": {
       "proxy-rewrite": {
-          "uri": "/services/hackathon-service/token"
+          "regex_uri": ["^/services/hackathon-service/(.*)", "/services/hackathon-service/$1"]
       }
   }
 }'
 
-# https://fiwaredsc-provider.ita.es/ngsi-ld/
-ROUTE_PROVIDER_SERVICE_fiwaredsc_providerWithoutAutho_ita_es='{
-  "uri": "/ngsi-ld/*",
-  "name": "service",
+
+# https://fiwaredsc-provider.ita.es/services/hackathon-service/ngsi-ld/v1/entities?type=Order
+# https://apisix.apache.org/docs/apisix/plugins/openid-connect/
+ROUTE_fiwaredsc_provider_hackathon_service='{
+  "uri": "/services/hackathon-service/ngsi-ld/*",
+  "name": "hackathon_service",
   "host": "fiwaredsc-provider.ita.es",
   "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
   "upstream": {
@@ -175,56 +182,33 @@ ROUTE_PROVIDER_SERVICE_fiwaredsc_providerWithoutAutho_ita_es='{
   },
   "plugins": {
     "proxy-rewrite": {
-        "regex_uri": ["^/ngsi-ld/(.*)", "/ngsi-ld/$1"]
+        "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/$1"]
     }
   }
 }'
-# https://fiwaredsc-provider.ita.es/ngsi-ld/
-ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_ita_es='{
-  "uri": "/ngsi-ld/*",
-  "name": "service",
-  "host": "fiwaredsc-provider.ita.es",
-  "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
-  "upstream": {
-    "type": "roundrobin",
-    "scheme": "http",
-    "nodes": {
-      "ds-scorpio.service.svc.cluster.local:9090": 1
-    }
-  },
-  "plugins": {
-    "proxy-rewrite": {
-        "regex_uri": ["^/ngsi-ld/(.*)", "/ngsi-ld/$1"]
-    },
+X=',
     "openid-connect": {
-        # https://apisix.apache.org/docs/apisix/plugins/openid-connect/
-        "bearer_only": "true",
+        "bearer_only": true,
         "use_jwks": "true",
         "client_id": "hackathon-service",
         "client_secret": "unused",
-        "ssl_verify": "false",
+        "ssl_verify": false,
         "discovery": "http://verifier.provider.svc.cluster.local:3000/services/hackathon-service/.well-known/openid-configuration"    
-      }
-  }
-}'
+      },
+      "opa": {
+        "host": "http://opa.provider.svc.cluster.local:8181",
+        "policy": "policy/main",
+        "with_route": true,
+        "with_service": true,
+        "with_consumer": true,
+        "with_body": true
+      }'
+
+
+
 ## management area
 # curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
-# -d "$ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_ita_es"
-curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
--d "$ROUTE_OIDC_TOKEN_fiwaredsc_vcverifier_ita_es"
-# curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
-# -d "$ROUTE_OIDC_fiwaredsc_vcverifier_ita_es"
-# curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
-# -d "$ROUTE_PROVIDER_SERVICE_fiwaredsc_providerWithoutAutho_ita_es"
-# curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
-# -d "$ROUTE_WALLET_fiwaredsc_wallet_ita_es"# curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
-# -d "$ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_ita_es"
-# curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
-# -d "$ROUTE_DID_WEB_fiwaredsc_consumer_ita_es"
-# curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
-# -d "$ROUTE_TIR_JSON"
-# curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
-# -d "$ROUTE_API6DASHBOARD_JSON"
+# -d "$ROUTE_fiwaredsc_provider_hackathon_service_OIDC"
 # Output similar to: {"key":"/apisix/routes/00000000000000000077","value":{"create_time":1731400093,
 #                     "upstream":{"nodes":{"echo-svc:8080":1},"pass_host":"pass","type":"roundrobin",
 #                     "hash_on":"vars","scheme":"http"},"status":1,"methods":["GET"],
@@ -232,14 +216,14 @@ curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-
 #                     "plugins":{"proxy-rewrite":{"uri":"/","use_real_request_uri_unsafe":false}},
 #                     "update_time":1731400093,"id":"00000000000000000077","priority":0}}
 
-# # Get routes
+# Get routes
 # curl -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN"
 
 # Fix the route
-# ROUTE_ID=00000000000000000281
-# curl -i -X PUT -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes/$ROUTE_ID \
-#     -H "X-API-KEY:$ADMINTOKEN" \
-#     -d "$ROUTE_OIDC_fiwaredsc_vcverifier_ita_es"
+ROUTE_ID=00000000000000000307
+curl -i -X PUT -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes/$ROUTE_ID \
+    -H "X-API-KEY:$ADMINTOKEN" \
+    -d "$ROUTE_fiwaredsc_provider_hackathon_service"
 
 # Detele a route
 # curl -i -X DELETE -k -H "X-API-KEY:$ADMINTOKEN" https://$IP_APISIXCONTROL:9180/apisix/admin/routes/00000000000000000244

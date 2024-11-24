@@ -133,7 +133,7 @@ opa:
           polling:
             min_delay_seconds: 100
             max_delay_seconds: 220
-    # default_decision: /policy/main/allow
+    default_decision: /policy/main/allow
     decision_logs: 
       console: true 
     status: 

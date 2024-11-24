@@ -310,7 +310,7 @@ For example this image show the roles defined for the `did:web:fiwaredsc-consume
     consumerRealm roles for its `did:web:fiwaredsc-consumer.ita.es` client</p>
 
 ### Users Registered
-The Keycloak UI allows the management of users for this Realm, but this deployment has created a couple of them just for testing. `oc-user` and `op-user` with their password present at the value file used.
+The Keycloak UI allows the management of users for this Realm, but this deployment has created some of them just for testing. `oc-user`, `op-user` and `dev-user` with their password present at the values file used.
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-consumerRealm-oc-user-roles.png"><br/>
     oc-user roles</p>
 

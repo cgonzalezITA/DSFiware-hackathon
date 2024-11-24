@@ -245,33 +245,66 @@ keycloak:
           "name": "ORDER_CONSUMER",
           "description": "Holder consult shipping orders registered by their organization (a manager for example)",
           "clientRole": true
+        },
+        {
+          "name": "SW_DEVELOPER",
+          "description": "Holder is a software developer in the organization",
+          "clientRole": true
+        },
+        {
+          "name": "SW_ARCHITECT",
+          "description": "Holder is a software architect in the organization",
+          "clientRole": true
         }
       ]
     # -- users to be imported - be aware the env vars can be used and will be replaced
     users: |
       {
+        "username": "swarch-user",
+        "enabled": true,
+        "email": "swArchUser@consumer.org",
+        "firstName": "SwArchitect",
+        "lastName": "User",
+        "credentials": [
+          { "type": "password", "value": "test" }
+        ],
+        "clientRoles": {
+          "${DID}": [ "SW_DEVELOPER", "SW_ARCHITECT" ],
+          "account": [ "view-profile", "manage-account" ]
+        },
+        "groups": []
+      },
+      {
+        "username": "swdev-user",
+        "enabled": true,
+        "email": "swDevUser@consumer.org",
+        "firstName": "swDev",
+        "lastName": "User",
+        "credentials": [
+          { "type": "password", "value": "test" }
+        ],
+        "clientRoles": {
+          "${DID}": [ "SW_DEVELOPER" ],
+          "account": [
+            "view-profile",
+            "manage-account"
+          ]
+        },
+        "groups": [ ]
+      },{
         "username": "op-user",
         "enabled": true,
         "email": "orderProducerUser@consumer.org",
         "firstName": "OrderProducer",
         "lastName": "User",
         "credentials": [
-          {
-            "type": "password",
-            "value": "test"
-          }
+          { "type": "password", "value": "test" }
         ],
         "clientRoles": {
-          "${DID}": [
-            "ORDER_PRODUCER"
-          ],
-          "account": [
-            "view-profile",
-            "manage-account"
-          ]
+          "${DID}": [ "ORDER_PRODUCER" ],
+          "account": [ "view-profile", "manage-account" ]
         },
-        "groups": [
-        ]
+        "groups": [ ]
       },
       {
         "username": "oc-user",
@@ -280,22 +313,13 @@ keycloak:
         "firstName": "OrderConsumer",
         "lastName": "User",
         "credentials": [
-          {
-            "type": "password",
-            "value": "test"
-          }
+          { "type": "password", "value": "test" }
         ],
         "clientRoles": {
-          "${DID}": [
-            "ORDER_CONSUMER"
-          ],
-          "account": [
-            "view-profile",
-            "manage-account"
-          ]
+          "${DID}": [ "ORDER_CONSUMER" ],
+          "account": [ "view-profile", "manage-account" ]
         },
-        "groups": [
-        ]
+        "groups": [ ]
       }
       
     # -- clients to be imported - be aware the env vars can be used and will be replaced
@@ -411,12 +435,13 @@ registration:
         did: $DID 
         credentials: 
           - credentialsType: OperatorCredential
-# validFor:
-#   from: "2024-07-21T17:32:28Z"
-#   to: "2040-07-21T17:32:28Z"
-# claims:
-#   - name: roles
-#     allowedValues: 
-#       - ORDER_PRODUCER
-#       - ORDER_CONSUMER
-#     target: $DID
+        validFor:
+          from: "2024-07-21T17:32:28Z"
+          to: "2040-07-21T17:32:28Z"
+        claims:
+          - name: roles
+            allowedValues: 
+              - - names:
+                - "ORDER_PRODUCER"
+                - ORDER_CONSUMER
+            # target: $DID
