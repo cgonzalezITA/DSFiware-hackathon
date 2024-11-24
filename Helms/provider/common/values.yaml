@@ -31,7 +31,6 @@ did:
 registration:
   # Used to register the DID to the different TrustedIssuers 
   enabled: true
-  name: registration-job
   job:
     hookDeletePolicy: before-hook-creation
     hook: post-install,post-upgrade

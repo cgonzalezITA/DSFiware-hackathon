@@ -85,7 +85,3 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 {{- end }}
 {{- end }}
-
-{{- define "dataplane-registration.configmap.name" -}}
-{{- default "dataplane-registration-cm" .Values.dataPlaneRegistration.configMapName | trunc 63 | trimSuffix "-" -}}
-{{- end -}}

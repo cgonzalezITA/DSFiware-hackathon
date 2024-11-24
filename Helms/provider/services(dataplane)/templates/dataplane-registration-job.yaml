@@ -1,5 +1,5 @@
 {{- if (.Values.dataPlaneRegistration).enabled }}
-{{- $jobName := printf "%s-job" (include "dataplane-registration.configmap.name" .) }}
+{{- $jobName := "dataplane-registration-job" }}
 {{- $backoffLimit := default 1 (.Values.dataPlaneRegistration.job).backoffLimit }}
 apiVersion: batch/v1
 kind: Job

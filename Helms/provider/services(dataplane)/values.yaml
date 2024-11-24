@@ -158,7 +158,6 @@ scorpio:
 
 dataPlaneRegistration:
   enabled: true
-  configMapName: data-plane-registration
   # -- service id of the hackathon-service to be used
   id: hackathon-service
   # -- endpoint of the ccs to regsiter at

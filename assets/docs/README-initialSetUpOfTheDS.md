@@ -23,7 +23,6 @@ This registration is made at the [consumer helm chart registration section](../.
 registration:
   # Used to register the DID to the different TrustedIssuers 
   enabled: true
-  name: registration-job
   job:
     hookDeletePolicy: before-hook-creation
     hook: post-install,post-upgrade
@@ -45,6 +44,13 @@ registration:
         credentials: 
           - credentialsType: OperatorCredential
 ```
+To apply it, simply enable the registration section and upgrade the consumer helm chart:
+```shell
+hFileCommand consumer u
+# Running CMD=[helm -n consumer upgrade -f "./Helms/consumer/values-did.web.yaml" consumer "./Helms/consumer/"  --create-namespace]
+...
+```
+
 The yaml describes that the DID of the consumer will be registered at:
 - The Trusted Issuer Registry of the Data Space (_tir at the trust-anchor namespace_) stating only that the given DID belongs to the data space.
 - The Trusted Issuer List of the Provider (_til at the provider namespace_) stating that the consumer can present OperatorCredentials to access the provider's infrastructure. This verification is made at the authentication phase of the OIDC protocol and any request from this consumer will be rejected if any other credential is presented.
@@ -57,7 +63,6 @@ At this scenario, only one service (_hackathon-service_), one Trusted Participan
 ```yaml
 dataPlaneRegistration:
   enabled: true
-  configMapName: data-plane-registration
   # -- service id of the hackathon-service to be used
   id: hackathon-service
   # -- endpoint of the ccs to regsiter at
@@ -77,6 +82,12 @@ dataPlaneRegistration:
           - http://tir.trust-anchor.svc.cluster.local:8080
         trustedIssuersLists:
           - http://til.provider.svc.cluster.local:8080
+```
+To apply it, simply enable the dataPlaneRegistration section and upgrade the service helm chart:
+```shell
+hFileCommand service u
+# Running CMD=[helm -n service upgrade -f "./Helms/provider/services(dataplane)/values.yaml" services "./Helms/provider/services(dataplane)/"  --create-namespace]
+...
 ```
 
 ## Step 6.3-Addition of the service route to the Apisix with VC Authentication    
@@ -273,6 +284,55 @@ As you can see, the plugin redirects requests made to the ´/services/hackathon-
 To gain access to the resource, a set of ODRL policies will be addedd in the next step.
 
 ### Writing ODRL policies
+This setup will deploy policies to authorize access to the service depending on the role that the VC provides.
+
+The authorization helm chart contains a odrlPolicyRegistration section with the policies to be deployed for this use case.
+
+```yaml
+odrlPolicyRegistration:
+  enabled: true
+  job:
+    hookDeletePolicy: before-hook-creation
+    hook: post-install,post-upgrade
+    backoffLimit: 1
+  # -- service id of the hackathon-service to be used
+  id: hackathon-service
+  # -- endpoint of the ccs to regsiter at
+  odrlPAPEndpoint: http://odrl-pap.provider.svc.cluster.local:8080/policy
+  odrlPolicies:
+    ODRL_ORDER_READER:
+      "@context":
+        dc: http://purl.org/dc/elements/1.1/
+        dct: http://purl.org/dc/terms/
+        owl: http://www.w3.org/2002/07/owl#
+        odrl: http://www.w3.org/ns/odrl/2/
+        rdfs: http://www.w3.org/2000/01/rdf-schema#
+        skos: http://www.w3.org/2004/02/skos/core#
+      "@id": https://fiwaredsc-provider.ita.es/policy/common/type-order-reader
+      "@type": odrl:Policy
+      odrl:permission:
+        odrl:assigner:
+          "@id": https://fiwaredsc-provider.ita.es
+        odrl:target:
+          "@type": odrl:AssetCollection
+          odrl:source: urn:asset
+          odrl:refinement:
+          - "@type": odrl:Constraint
+            odrl:leftOperand: ngsi-ld:entityType
+            odrl:operator:
+              "@id": odrl:eq
+            odrl:rightOperand: Order
+        odrl:assignee:
+          "@id": vc:any
+        odrl:action:
+          "@id": odrl:read
+```
+To apply the policies, simply enable the odrlPolicyRegistration section and upgrade the authorization helm chart:
+```shell
+hFileCommand authorization u
+# Running CMD=[helm -n provider upgrade -f "./Helms/provider/authorization(odrlpap+opa)/./values.yaml" provider-authorization "./Helms/provider/authorization(odrlpap+opa)/./"  --create-namespace]
+...
+```
 
 
 ## Bottom line
