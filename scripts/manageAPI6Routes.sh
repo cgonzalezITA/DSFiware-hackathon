@@ -164,6 +164,18 @@ ROUTE_fiwaredsc_provider_hackathon_service_OIDC='{
       }
   }
 }'
+ROUTE_fiwaredsc_provider_wellKnownJWKS='{
+  "uri": "/.well-known/jwks*",
+  "name": "Hackathon_service",
+  "host": "fiwaredsc-provider.ita.es",
+  "methods": ["GET", "POST"],
+  "upstream": {
+    "type": "roundrobin",
+    "nodes": {
+      "verifier.provider.svc.cluster.local:3000": 1
+    }
+  }  
+}'
 
 
 # https://fiwaredsc-provider.ita.es/services/hackathon-service/ngsi-ld/v1/entities?type=Order
@@ -183,10 +195,7 @@ ROUTE_fiwaredsc_provider_hackathon_service='{
   "plugins": {
     "proxy-rewrite": {
         "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/$1"]
-    }
-  }
-}'
-X=',
+    },
     "openid-connect": {
         "bearer_only": true,
         "use_jwks": "true",
@@ -194,7 +203,10 @@ X=',
         "client_secret": "unused",
         "ssl_verify": false,
         "discovery": "http://verifier.provider.svc.cluster.local:3000/services/hackathon-service/.well-known/openid-configuration"    
-      },
+      }
+  }
+}'
+X=',
       "opa": {
         "host": "http://opa.provider.svc.cluster.local:8181",
         "policy": "policy/main",
@@ -208,7 +220,7 @@ X=',
 
 ## management area
 # curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
-# -d "$ROUTE_fiwaredsc_provider_hackathon_service_OIDC"
+# -d "$ROUTE_fiwaredsc_provider_wellKnownJWKS"
 # Output similar to: {"key":"/apisix/routes/00000000000000000077","value":{"create_time":1731400093,
 #                     "upstream":{"nodes":{"echo-svc:8080":1},"pass_host":"pass","type":"roundrobin",
 #                     "hash_on":"vars","scheme":"http"},"status":1,"methods":["GET"],

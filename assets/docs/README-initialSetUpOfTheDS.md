@@ -4,7 +4,8 @@
   - [Step 6.2-Registering the Service into the provider Credential Config Service](#step-62-registering-the-service-into-the-provider-credential-config-service)
   - [Step 6.3-Addition of the service route to the Apisix with VC Authentication](#step-63-addition-of-the-service-route-to-the-apisix-with-vc-authentication)
     - [Apisix routes](#apisix-routes)
-    - [Access to the service](#access-to-the-service)
+    - [Retrieval of an Access Token from the VCVerifier](#retrieval-of-an-access-token-from-the-vcverifier)
+    - [Access the service with the VCVerifier Access Token](#access-the-service-with-the-vcverifier-access-token)
   - [Bottom line](#bottom-line)
 
     
@@ -78,7 +79,7 @@ dataPlaneRegistration:
 
 ## Step 6.3-Addition of the service route to the Apisix with VC Authentication    
 ### Apisix routes
-This step is adding a couple of new routes to the apisix to enable the routes to the service.
+This step is adding a bundle of new routes to the apisix to enable the routes to the service.
 1. As the `/services/hackathon-service/ngsi-ld` route already exists, it can be deleted using the [apisix dashboard page](https://fiwaredsc-api6dashboard.local/routes/list?page=1&pageSize=50) and redeployed using the ENV VAR `ROUTE_fiwaredsc_provider_hackathon_service` defined at the [managementAPI6Routes script file](../../scripts/manageAPI6Routes.sh):
 This new route, contains a new Apisix plugin `openid-connect`, an authentication protocol based on the OAuth 2.0 that redirects NGSI-LD requests to the VCVerifier. 
     ```json
@@ -130,12 +131,36 @@ This new route, contains a new Apisix plugin `openid-connect`, an authentication
           "issuer": "https://fiwaredsc-provider.ita.es",
           "authorization_endpoint": "https://fiwaredsc-provider.ita.es",
           "token_endpoint": "https://fiwaredsc-provider.ita.es/services/hackathon-service/token",
+          "jwks_uri": "https://fiwaredsc-provider.ita.es/.well-known/jwks",
+          "scopes_supported": [
+            "operator",
+            "default"
+          ],
           ...
         }
     ```
+  3. The well known openid-configuration shows a set of urls to perform some operations or to retrieve some info besides some configuration parameters:
+      - The `token_endpoint` url used to request for a new token, used at the [Retrieval of an access token step](#retrieval-of-an-access-token-from-the-vcverifier).  
+      `https://fiwaredsc-provider.ita.es/services/hackathon-service/token`: URL already served by the `ROUTE_fiwaredsc_provider_hackathon_service_OIDC` route.
+      - The `jwks_uri` url used to decypt the Access Token content provided at the [step to access the service with the VCVerifier access token](#access-the-service-with-the-vcverifier-access-token).  
+      `https://fiwaredsc-provider.ita.es/.well-known/jwks`: This route is not served by the Apisix, so a new route has to be added. Use the `ROUTE_fiwaredsc_provider_wellKnownJWKS`  
+      **What is the JWKS?** The [**JSON Web Key Set (JWKS)**](https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-sets) _is a set of keys containing the public keys used to verify any JSON Web Token (JWT) issued by the Authorization Server and signed using the RS256 signing algorithm_.
+        ```shell
+        curl https://fiwaredsc-provider.ita.es/.well-known/jwks
+            {
+              "keys": [
+                {
+                  "e": "AQAB",
+                  "kid": "sLrd88T...NUPtI",
+                  "kty": "RSA",
+                  "n": "_EiBivJbXzAx...Ui9kVUw"
+                }
+              ]
+            }
+        ```
     
-### Access to the service
-  Again, the same request made to get NGSI-LD data will shows a `401 Authorization Required` error
+### Retrieval of an Access Token from the VCVerifier
+  Before the retrieval begins, let's try the same request made to get NGSI-LD data to see that with the new route plugin (`openid-connect`), an erro `401 Authorization Required` is returned.
   ```shell
     # Test the service
     curl https://fiwaredsc-provider.ita.es/services/hackathon-service/ngsi-ld/v1/entities?type=Order
@@ -190,16 +215,28 @@ This new route, contains a new Apisix plugin `openid-connect`, an authentication
       VP_TOKEN=ZXlKaGJHY2lPaUpG...5hffIpsqqYAB8
       ---
       - Finally An access token is returned to be used to request the service (This is a JWT)
-      export DATA_SERVICE_ACCESS_TOKEN=eyJhbGciOiJS...rc-L-_w
+      export ACCESS_TOKEN=eyJhbGciOiJS...rc-L-_w
   ```
+The following image shows the info contained by the JWT ACCESS_TOKEN
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/provider-jwt_access_token.png"><br/>
+    Analysis of the VCVerifier Access Token</p>
 
-Whith the returned access token, the previous request could be launched again:
+### Access the service with the VCVerifier Access Token
+With the retrieved access token, the previous request could be launched again (_the -v parameter launches the scripts in a !verbose mode, so only the final value is returned_):
 ```shell
   export VERIFIABLE_CREDENTIAL=$(. scripts/issueVC_operator-credential-orderConsumer.sh -v)
   export ACCESS_TOKEN=$(scripts/generateAccessTokenFromVC.sh $VERIFIABLE_CREDENTIAL -v)
   curl https://fiwaredsc-provider.ita.es/services/hackathon-service/ngsi-ld/v1/entities?type=Order \
     --header "Accept: application/json" \
     --header "Authorization: Bearer ${ACCESS_TOKEN}"
+        [ {
+          "id" : "urn:ngsi-ld:Order:SDBrokerId-Spain.2411331.000003",
+          "type" : "Order",
+          "dateCreated" : {
+            "type" : "Property",
+            "value" : {
+              "type" : "DateTime",
+        ...
 ```
 
 
