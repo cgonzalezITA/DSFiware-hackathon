@@ -119,8 +119,8 @@ opa:
           service: pap_server
           resource: policies.tar.gz
           polling:
-            min_delay_seconds: 120
-            max_delay_seconds: 240
+            min_delay_seconds: 30
+            max_delay_seconds: 60
       methods:
           service: pap_server
           resource: methods.tar.gz
@@ -133,7 +133,7 @@ opa:
           polling:
             min_delay_seconds: 100
             max_delay_seconds: 220
-    default_decision: /policy/main/allow
+    default_decision: /policy/main/deny
     decision_logs: 
       console: true 
     status: 
@@ -185,6 +185,38 @@ odrlPolicyRegistration:
               "@id": odrl:eq
             odrl:rightOperand: Order
         odrl:assignee:
-          "@id": vc:any
+          # "@id": vc:any
+          # "@type": odrl:PartyCollection
+          # odrl:source: urn:user
+          # odrl:refinement:
+          #   "@type": odrl:Constraint
+          #   odrl:leftOperand:
+          #     "@id": vc:role
+          #   odrl:operator:
+          #     "@id": odrl:hasPart
+          #   odrl:rightOperand:
+          #     "@value": ORDER_CONSUMER
+          "@type": odrl:PartyCollection
+          odrl:source: urn:user
+          odrl:refinement:
+            # "@type": odrl:LogicalConstraint
+            # odrl:and:
+            # - "@type": odrl:Constraint
+            #   odrl:leftOperand:
+            #     "@id": dome-op:role
+            #   odrl:operator:
+            #     "@id": odrl:hasPart
+            #   odrl:rightOperand:
+            #     "@value": ORDER_CONSUMER
+            #     "@type": xsd:string
+            - "@type": odrl:Constraint
+              odrl:leftOperand:
+                "@id": vc:type
+              odrl:operator:
+                "@id": odrl:hasPart
+              odrl:rightOperand:
+                "@value": OperatorCredential
+                "@type": xsd:string
+
         odrl:action:
           "@id": odrl:read

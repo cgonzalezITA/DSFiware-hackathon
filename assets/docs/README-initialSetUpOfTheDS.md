@@ -6,8 +6,9 @@
     - [Apisix routes](#apisix-routes)
     - [Retrieval of an Access Token from the VCVerifier](#retrieval-of-an-access-token-from-the-vcverifier)
     - [Access the service with the VCVerifier Access Token](#access-the-service-with-the-vcverifier-access-token)
-  - [Step 6.4-Addittion of the authorization checking to the service route](#step-64-addittion-of-the-authorization-checking-to-the-service-route)
+  - [Step 6.4-Addition of the authorization checking to the service route](#step-64-addition-of-the-authorization-checking-to-the-service-route)
     - [Writing ODRL policies](#writing-odrl-policies)
+    - [Access the service with the authentication and authorization plugins enabled with the VCVerifier Access Token](#access-the-service-with-the-authentication-and-authorization-plugins-enabled-with-the-vcverifier-access-token)
   - [Bottom line](#bottom-line)
 
     
@@ -252,7 +253,7 @@ With the retrieved access token, the previous request could be launched again (_
         ...
 ```
 
-## Step 6.4-Addittion of the authorization checking to the service route
+## Step 6.4-Addition of the authorization checking to the service route
 At this step, new plugin (`opa`) will be added to the service route to perform authorization tasks. The plugin will forward any request already authenticated to the `Open Policy Agent (OPA)` to verify that the request complies with the ODRL policies defined.  
 Again, as the `/services/hackathon-service/ngsi-ld` route already exists, it can be deleted using the [apisix dashboard page](https://fiwaredsc-api6dashboard.local/routes/list?page=1&pageSize=50) and redeployed using the ENV VAR `ROUTE_fiwaredsc_provider_hackathon_service_2auth` defined at the [managementAPI6Routes script file](../../scripts/manageAPI6Routes.sh):
 
@@ -286,7 +287,7 @@ To gain access to the resource, a set of ODRL policies will be addedd in the nex
 ### Writing ODRL policies
 This setup will deploy policies to authorize access to the service depending on the role that the VC provides.
 
-The authorization helm chart contains a odrlPolicyRegistration section with the policies to be deployed for this use case.
+The authorization helm chart contains a `odrlPolicyRegistration` section with the policies to be deployed for this use case.
 
 ```yaml
 odrlPolicyRegistration:
@@ -327,13 +328,30 @@ odrlPolicyRegistration:
         odrl:action:
           "@id": odrl:read
 ```
-To apply the policies, simply enable the odrlPolicyRegistration section and upgrade the authorization helm chart:
+To apply the policies, simply enable the `odrlPolicyRegistration` section and upgrade the authorization helm chart:
 ```shell
 hFileCommand authorization u
 # Running CMD=[helm -n provider upgrade -f "./Helms/provider/authorization(odrlpap+opa)/./values.yaml" provider-authorization "./Helms/provider/authorization(odrlpap+opa)/./"  --create-namespace]
 ...
 ```
 
+### Access the service with the authentication and authorization plugins enabled with the VCVerifier Access Token
+With the retrieved access token, the previous request could be launched again (_the -v parameter launches the scripts in a !verbose mode, so only the final value is returned_):
+```shell
+  export VERIFIABLE_CREDENTIAL=$(. scripts/issueVC_operator-credential-orderConsumer.sh -v)
+  export ACCESS_TOKEN=$(scripts/generateAccessTokenFromVC.sh $VERIFIABLE_CREDENTIAL -v)
+  curl https://fiwaredsc-provider.ita.es/services/hackathon-service/ngsi-ld/v1/entities?type=Order \
+    --header "Accept: application/json" \
+    --header "Authorization: Bearer ${ACCESS_TOKEN}"
+        [ {
+          "id" : "urn:ngsi-ld:Order:SDBrokerId-Spain.2411331.000003",
+          "type" : "Order",
+          "dateCreated" : {
+            "type" : "Property",
+            "value" : {
+              "type" : "DateTime",
+        ...
+```
 
 ## Bottom line
 The setup of the data space leaves a complete scenario enabling the customization defining _business, operational and organizational agreements among participants_ via the policy definitions.

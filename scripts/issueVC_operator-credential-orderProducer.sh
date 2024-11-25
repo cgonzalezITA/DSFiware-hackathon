@@ -24,7 +24,7 @@ STOP=false
 URL_VCISSUER=https://fiwaredsc-consumer.ita.es/realms/consumerRealm
 # https://fiwaredsc-consumer.ita.es/realms/consumerRealm/account/oid4vci to retrieve the equivalent from a browser using a VCWallet
 ADMIN_CLI=admin-cli
-USER_01=oc-user
+USER_01=op-user
 USER_01_PASSWORD=test
 CREDENTIAL_TYPE=operator-credential
 

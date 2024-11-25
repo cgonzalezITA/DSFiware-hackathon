@@ -24,7 +24,7 @@ INFO=false
 ## Functions               ##
 #############################
 
-URL_VCISSUER=https://fdsc-consumer-keycloak.ita.es/realms/test-realm
+URL_VCISSUER=https://fiwaredsc-consumer.ita.es/realms/consumerRealm
 ADMIN_CLI=admin-cli
 USER_01=test-user
 USER_01_PASSWORD=test
