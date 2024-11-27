@@ -1,0 +1,6 @@
+dependencies:
+- name: apisix
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 3.5.2
+digest: sha256:56800da74d8aaa1554060fdaad67d9f28cd5ca596d9d2c12399571159719117d
+generated: "2024-12-01T12:03:42.967293572+01:00"

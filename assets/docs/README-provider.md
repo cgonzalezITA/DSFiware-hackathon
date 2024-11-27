@@ -1,9 +1,9 @@
 # Provider's infrastructure
 - [Provider's infrastructure](#providers-infrastructure)
-  - [Step4.1- _Deployment of the common components_](#step41--deployment-of-the-common-components)
-  - [Step4.2- _Deployment of the authentication components_](#step42--deployment-of-the-authentication-components)
+  - [step04.1- _Deployment of the common components_](#step041--deployment-of-the-common-components)
+  - [step04.2- _Deployment of the authentication components_](#step042--deployment-of-the-authentication-components)
     - [Verification of the deployment so far](#verification-of-the-deployment-so-far)
-  - [Step4.3- _Deployment of the authorization components_](#step43--deployment-of-the-authorization-components)
+  - [step04.3- _Deployment of the authorization components_](#step043--deployment-of-the-authorization-components)
   - [Step 4.4- _Deployment of the service components_](#step-44--deployment-of-the-service-components)
   - [Step 4.5-Addition of the service route to the Apisix without security](#step-45-addition-of-the-service-route-to-the-apisix-without-security)
   - [Bottom line](#bottom-line)
@@ -27,7 +27,7 @@ To split the deployment of the provider's components, it has been split into 4 i
 - The **_authorization helm chart_** (green components of the diagram)
 - The **_services helm chart_** (purple components of the diagram)
 - 
-## Step4.1- _Deployment of the common components_
+## step04.1- _Deployment of the common components_
 This Helm chart contains the following components:
 - A did:web `did:web:fiwaredsc-provider.ita.es` component to provide a decentralized identifier to the provider, used to sign the messages generated at the provider's side. Despite being deployed at this block (_Authentication components_), it is generic and it is going to be used across all the data provider interactions.
 - The already seen utilities pods.
@@ -42,7 +42,7 @@ kGet -w
     utils-echo-6ff8f87546-tx5gw       1/1     Running   0          25s
     utils-nettools-8554c96795-c9j96   1/1     Running   0          25s
 ```
-## Step4.2- _Deployment of the authentication components_
+## step04.2- _Deployment of the authentication components_
 This Helm chart contains the following components:
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/provider-components-authentication.png"><br/>
     Authentication components</p>
@@ -119,7 +119,7 @@ kExec net -- curl https://fiwaredsc-provider.ita.es/.well-known/openid-configura
     }
 ```
     
-## Step4.3- _Deployment of the authorization components_
+## step04.3- _Deployment of the authorization components_
 This Helm chart will deploy the following components:
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/provider-components-authorization.png"><br/>
     Authorization components</p>

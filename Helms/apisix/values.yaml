@@ -3,7 +3,7 @@ utils:
   echo:
     enabled: true
     ingress: 
-      enabled: false
+      enabled: true
       tls:
         # []
         - hosts: [fiwaredsc-consumer.local]
@@ -16,7 +16,7 @@ utils:
 
 
 apisix:
-  enabled: true
+  enabled: false
   # image:
   #   registry: docker.io
   #   repository: bitnami/apisix
@@ -74,7 +74,7 @@ apisix:
                   fiwaredsc-trustanchor.local]
           secretName: wildcardlocal-tls
         - hosts: [fiwaredsc-consumer.ita.es,
-                  fiwaredsc-consumer.ita.es]
+                  fiwaredsc-tir.ita.es]
           secretName: ita.es-tls
     extraConfig:
       deployment:

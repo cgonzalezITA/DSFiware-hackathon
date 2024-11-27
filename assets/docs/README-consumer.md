@@ -5,19 +5,19 @@
     - [Usage and actors around a VC](#usage-and-actors-around-a-vc)
     - [Benefits of Using DIDs with VCs](#benefits-of-using-dids-with-vcs)
   - [Infrastructure](#infrastructure)
-  - [Step3.1: _Deployment of the DID:key_](#step31-deployment-of-the-didkey)
+  - [step03.1: _Deployment of the DID:key_](#step031-deployment-of-the-didkey)
     - [values-did.key.yaml](#values-didkeyyaml)
     - [values-did.web.yaml](#values-didwebyaml)
     - [Verification](#verification)
       - [values.did.key.yaml](#valuesdidkeyyaml)
       - [values.did.web.yaml](#valuesdidwebyaml)
-  - [Step3.2-Publication of the did:web route](#step32-publication-of-the-didweb-route)
-  - [_Step3.3-Deployment of the VCIssuer (Keycloak)_](#step33-deployment-of-the-vcissuer-keycloak)
+  - [step03.2-Publication of the did:web route](#step032-publication-of-the-didweb-route)
+  - [_step03.3-Deployment of the VCIssuer (Keycloak)_](#step033-deployment-of-the-vcissuer-keycloak)
     - [Verification](#verification-1)
-  - [Step3.4-Publication and first access to the Keycloak route](#step34-publication-and-first-access-to-the-keycloak-route)
+  - [step03.4-Publication and first access to the Keycloak route](#step034-publication-and-first-access-to-the-keycloak-route)
     - [Roles](#roles)
     - [Users Registered](#users-registered)
-  - [Step3.5-Issuance of VCs](#step35-issuance-of-vcs)
+  - [step03.5-Issuance of VCs](#step035-issuance-of-vcs)
     - [Issue VCs through a M2M flow (Using API Rest calls)](#issue-vcs-through-a-m2m-flow-using-api-rest-calls)
     - [Issue VCs using a browser](#issue-vcs-using-a-browser)
   - [Bottom line](#bottom-line)
@@ -84,7 +84,7 @@ The following steps describe the different components to be deployed:
 - **Registration mechanism**. This component contains the steps to register a Consumer inside a data space. It does not follow the steps described at the [_Onboarding of an organization in the data space_](https://github.com/FIWARE/data-space-connector?tab=readme-ov-file#onboarding-of-an-organization-in-the-data-space) as it is tailored for demo scenarios and because the interactions with the [GaiaX Clearing Houses (GXDCH)](https://gaia-x.eu/gxdch/) have to be yet fully polished (at the moment this guideline was written).  
 Ths registration is not explained nor deployed at this phase as it requires the whole data space to be in place. It will be explained later at the [initial set up the DS infrastructure](README-initialSetUpOfTheDS.md) phase.
   
-## Step3.1: _Deployment of the DID:key_ 
+## step03.1: _Deployment of the DID:key_ 
 The consumer Helm Chart provides two value files. One to deploy the DID:key component and another to deploy the DID:web one. To deploy the DID:key run:
 At this first step, only the utils and the did are enabled to trace potential problems.
 ### values-did.key.yaml
@@ -219,7 +219,7 @@ kExec net -v -- curl http://did:3000/did-material/did.env
 ```
 This previous verification is highly sensitive, so protect this kind of actions at your production k8s cluster; eg. using _KubeArmorPolicies_.
 
-## Step3.2-Publication of the did:web route
+## step03.2-Publication of the did:web route
 As explained before, one of the requirements of the did:web DIDs is that they must be accessible from the internet at the well known endpoint `/.well-known/did.json`. To setup a new route to access this json document it is mandatory to have the control of the chosen DNS having its certificates (these certificates will have to be signed by an Certification Authority (CA)):
 1. Create a tls secret containing the certificate files.
   ```shell
@@ -233,7 +233,7 @@ To test it is working, browse this URL:
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/did-web.json.png"><br/>
     did-web.json exposed at a well known URL</p>
 
-## _Step3.3-Deployment of the VCIssuer (Keycloak)_
+## _step03.3-Deployment of the VCIssuer (Keycloak)_
 [Keycloak](https://www.keycloak.org/) is an open source identity and access management solution that on its [release v25](https://www.keycloak.org/docs/latest/release_notes/index.html#openid-for-verifiable-credential-issuance-experimental-support) supports the protocol [OpenID for Verifiable Credential Issuance (OID4VCI) OID4VC](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) to manage Verifiable Credentials, and so, it can play the role of VCIssuer in the data space architecture.  
 The values of the Keycloak are more complex than previous helms, so it is recomended to analyze them to get familiar with.  
 From now on, this guideline will focus solely in the `values-did.web.yaml`.  
@@ -279,8 +279,8 @@ curl -k https://consumer-keycloak/realms/consumerRealm/.well-known/openid-config
 
 Not to mention that this previous command is faking the Host name, but the whole values file should be tailored to match the DNS managed by your organization to be used.
 
-## Step3.4-Publication and first access to the Keycloak route
-In the [_Step3.2-Publication of the did:web route_](#step32-publication-of-the-didweb-route), the tls secret `wildcard-ita.es-tls` and the changes in the `Apisix` gateway to manage the `fiwaredsc-consumer.ita.es` were already done, so at this stage, only the publication of a new route is required to redirect requests to `https://fiwaredsc-consumer.ita.es/` to the newly created Keycloak service:
+## step03.4-Publication and first access to the Keycloak route
+In the [_step03.2-Publication of the did:web route_](#step032-publication-of-the-didweb-route), the tls secret `wildcard-ita.es-tls` and the changes in the `Apisix` gateway to manage the `fiwaredsc-consumer.ita.es` were already done, so at this stage, only the publication of a new route is required to redirect requests to `https://fiwaredsc-consumer.ita.es/` to the newly created Keycloak service:
 
 To test it is working, browse the URL [https://fiwaredsc-consumer.ita.es](https://fiwaredsc-consumer.ita.es):
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-login.png"><br/>
@@ -314,7 +314,7 @@ The Keycloak UI allows the management of users for this Realm, but this deployme
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-consumerRealm-oc-user-roles.png"><br/>
     oc-user roles</p>
 
-## Step3.5-Issuance of VCs
+## step03.5-Issuance of VCs
 Once the infrastructure has been validated, Keycloak can be used as a VCIssuer. 
 ### Issue VCs through a M2M flow (Using API Rest calls)
 This step is the first step of the _Life of a Verifiable Credential_ described at the [www.w3.org vc-data-model](https://www.w3.org/TR/vc-data-model/#lifecycle-details) and as the w3 specification does not describe how a VC has to be issued, the flow here used is based on the [OpenID for Verifiable Credentials Issuance specification](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html). 
