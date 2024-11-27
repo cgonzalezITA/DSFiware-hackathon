@@ -113,7 +113,7 @@ hFileCommand apisix r -y
 # The deployment could take around 2/3 minutes
 . Helms/apisix/manageAPI6Routes.sh
 # test within the cluster
-kExec utils -- curl http://tir:8080/v4/issuers
+kExec -n trust utils -- curl http://tir:8080/v4/issuers
 
 # Add the route of dns to your Windows host file (C:\Windows\System32\drivers\etc\hosts as admin) or linux (/etc/hosts as sudo). Your ip=$(hostname -I)
 # eg. 193.143.225.86  fiwaredsc-trustanchor.local
