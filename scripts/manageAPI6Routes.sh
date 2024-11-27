@@ -48,6 +48,19 @@ ROUTE_TIR_JSON='{
   }
 }'
 
+ROUTE_TIRITA_JSON='{
+  "name": "TIRITA",
+  "uri": "/*",
+  "host": "fiwaredsc-tir.ita.es",
+  "methods": ["GET", "POST", "PUT" ],
+  "upstream": {
+    "type": "roundrobin",
+    "nodes": {
+      "tir.trust-anchor.svc.cluster.local:8080": 1
+    }
+  }
+}'
+
 # https://fiwaredsc-consumer.ita.es/.well-known/did.json
 ROUTE_DID_WEB_fiwaredsc_consumer_ita_es='{
   "uri": "/.well-known/did.json",
@@ -211,7 +224,7 @@ ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_ita_es='{
 # curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
 # -d "$ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_ita_es"
 curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
--d "$ROUTE_OIDC_TOKEN_fiwaredsc_vcverifier_ita_es"
+-d "$ROUTE_TIRITA_JSON"
 # curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
 # -d "$ROUTE_OIDC_fiwaredsc_vcverifier_ita_es"
 # curl -i -X POST -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" \
