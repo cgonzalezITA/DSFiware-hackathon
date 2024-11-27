@@ -73,6 +73,10 @@ curl -k https://fiwaredsc-consumer.local
 
 # step02
 git checkout step02
+
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add fiware https://fiware.gitlab.io/helm-charts
+
 hFileCommand apisix r -y
 # Populating the apisix helm chart takes a while (3/4 mins on my microk8s cluster)
 kGet -w
@@ -81,7 +85,7 @@ curl -k https://fiwaredsc-consumer.local
 
 # step03
 git checkout step03
-hFileCommand apisix -r -y
+hFileCommand apisix r -y
 # Add the route of dns to your Windows host file (C:\Windows\System32\drivers\etc\hosts as admin) or linux (/etc/hosts as sudo). Your ip=$(hostname -I)
 # eg. 193.143.225.86  fiwaredsc-api6dashboard.local
 sudo vi /etc/hosts
@@ -95,7 +99,7 @@ password=$(kSecret-show dashboard-secrets -f apisix-dashboard-secret -v)
 # step04
 git checkout step04
 # I'm not sure 100% if this commande has to be run Upgrade the helm to redeploy the echo service
-hFileCommand apisix u -y
+hFileCommand apisix r -y
 
 # Deploy via API the route https://fiwaredsc-consumer.local
 . Helms/apisix/manageAPI6Routes.sh 
@@ -105,7 +109,7 @@ git checkout phase02
 # Deploy the trust-anchor
 hFileCommand trustAnchor -b
 # Upgrade the apisix to manage the fiwaredsc-trustanchor.local dns
-hFileCommand apisix u -y
+hFileCommand apisix r -y
 # The deployment could take around 2/3 minutes
 . Helms/apisix/manageAPI6Routes.sh
 # test within the cluster
