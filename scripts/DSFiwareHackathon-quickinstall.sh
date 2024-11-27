@@ -40,6 +40,10 @@ alias hFileCommand='$_TOOLSFOLDER/hTools/hFileCommand.sh'
 #install yq
 wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O ./yq && chmod +x ./yq && sudo mv ./yq /usr/bin
 
+
+# Activate the aliases
+. ~/bash_aliases
+
 ##############################3
 # Install the DSFiware-hackathon
 DSFIWAREHOL_GH_HTTPS="https://github.com/cgonzalezITA/DSFiware-hackathon.git"
@@ -51,8 +55,10 @@ code DSFiware-hackathon
 
 # step01
 # Create tls secret
+kubectl create namespace apisix
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout Helms/apisix/certs/tls-wildcard.key -out Helms/apisix/certs/tls-wildcard.crt -subj "/CN=*.local"
 kubectl create secret tls wildcardlocal-tls -n apisix --key Helms/apisix/certs/tls-wildcard.key --cert Helms/apisix/certs/tls-wildcard.crt
+
 
 # Install the apisix
 git checkout step01
@@ -60,12 +66,13 @@ export DEF_KTOOLS_NAMESPACE=apisix
 hFileCommand apisix -y -b
 # Add the route of dns . Your ip=$(hostname -I)
 # eg. 193.143.225.86  fiwaredsc-consumer.local
-vi /etc/hosts
+sudo vi /etc/hosts
 # The curl should work
 curl -k https://fiwaredsc-consumer.local
 
 
 # step02
+git checkout step02
 hFileCommand apisix r -y
 # Populating the apisix helm chart takes a while (3/4 mins on my microk8s cluster)
 kGet -w
@@ -73,6 +80,7 @@ kGet -w
 curl -k https://fiwaredsc-consumer.local
 
 # step03
+git checkout step03
 hFileCommand apisix -r -y
 # Add the route of dns to your Windows host file (C:\Windows\System32\drivers\etc\hosts as admin) or linux (/etc/hosts as sudo). Your ip=$(hostname -I)
 # eg. 193.143.225.86  fiwaredsc-api6dashboard.local
@@ -85,11 +93,12 @@ password=$(kSecret-show dashboard-secrets -f apisix-dashboard-secret -v)
 
 
 # step04
-# ? Upgrade the helm to redeploy the echo service
-? hFileCommand apisix u -y
+git checkout step04
+# I'm not sure 100% if this commande has to be run Upgrade the helm to redeploy the echo service
+hFileCommand apisix u -y
 
 # Deploy via API the route https://fiwaredsc-consumer.local
- . Helms/apisix/manageAPI6Routes.sh 
+. Helms/apisix/manageAPI6Routes.sh 
  
 # phase02
 git checkout phase02

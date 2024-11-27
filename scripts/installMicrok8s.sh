@@ -11,9 +11,14 @@ microk8s enable dashboard dns ingress
 
 microk8s kubectl get all --all-namespaces
 
+# If you previously had minikube installed
+minikube stop && minikube delete
 
 # https://discuss.kubernetes.io/t/use-kubectl-with-microk8s/5313/2
 microk8s.kubectl config view --raw > $HOME/.kube/microk8s.config
+# This command is just in case you had a previous minikube installed
+cp $HOME/.kube/config $HOME/.kube/config.backup
+microk8s.kubectl config view --raw > $HOME/.kube/config
 # Add next two lines to your ~/.bashrc
 export  KUBECONFIG=$HOME/.kube/config
 export  KUBECONFIG=$KUBECONFIG:$HOME/.kube/microk8s.config
