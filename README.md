@@ -10,7 +10,7 @@ From there, this github can be used as a playground to play with the policies OD
 
 - [DSFiware-hackathon](#dsfiware-hackathon)
   - [Step by step deployment guide](#step-by-step-deployment-guide)
-    - [_Install the devop tools to ease the life during deployment_](#install-the-devop-tools-to-ease-the-life-during-deployment)
+    - [_Installation of the devop tools to ease the life during deployment_](#installation-of-the-devop-tools-to-ease-the-life-during-deployment)
     - [Deployment of apisix as proxy](#deployment-of-apisix-as-proxy)
     - [Deployment of the Verifiable Data Registry components (Trust-Anchor)](#deployment-of-the-verifiable-data-registry-components-trust-anchor)
     - [Consumer's infrastructure](#consumers-infrastructure)
@@ -21,11 +21,15 @@ From there, this github can be used as a playground to play with the policies OD
 There are two methods to deploy the infrastructure:
 - A [step by step guide](#step-by-step-deployment-guide) explaining the concepts introduced at every step and the commands to be run.
 - A [quick deployment guide](#quick-eployment-from-scratch) with the same target, but focusing just on the commands.
+
+**NOTE**: All commands run on these guidelines are executed from the github root folder.
+
 ## Step by step deployment guide
 
-### [_Install the devop tools to ease the life during deployment_](./assets/docs/README-preparationGuide.md)
+
+### [_Installation of the devop tools to ease the life during deployment_](./assets/docs/README-preparationGuide.md)
 This section installs a set of tools used during the deployment of the components.  
-See the [Preparation Guide guide](./assets/docs/README-preparationGuide.md)
+See the [Preparation guide](./assets/docs/README-preparationGuide.md)
 
 ### [Deployment of apisix as proxy](./assets/docs/README-apisix.md)
 This section describes the steps to test the kubernetes environment while deploying the Apisix Gateway.  
