@@ -28,3 +28,52 @@ fi
 
 echo "# $DSFIWAREHOL_TAG-Deploy a new route via the Apisix.yaml file"
 NAMESPACE="apisix"
+
+# DSFIWAREHOL_FOLDER="DSFiware-hackathon1" # TODELETE
+echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
+cd $DSFIWAREHOL_FOLDER
+echo "Now at $(pwd) folder"
+
+
+PUBLIC_IP=$(hostname -I | awk '{print $1}')
+DNS_APISIX="fiwaredsc-api6dashboard.local"
+LINE="$PUBLIC_IP  $DNS_APISIX"
+echo "# Map the local DNS at your hosts file"
+MSG="# To use the DNS $DNS_APISIX at the host, it is required to add a new line \"$LINE\" to the '/etc/hosts' file.\n\
+Do you want to insert it automatically?";
+if [ $(readAnswer "$MSG (y*|n)" 'y') == 'y' ]; then
+    sudo cat <<EOF >> /etc/hosts
+$LINE
+EOF
+    if [[ "$?" -ne 0 ]]; then
+        readAnswer "An error has happened. This operation requires sudo permission. Do it manually on another terminal and press any key to continue" \
+            "" 120 false false
+    fi
+fi
+readAnswer "To access it from a windows browser, add the same line into the 'C:\Windows\System32\drivers\etc\hosts' file\n\
+    Press a key to continue" "" 20 false false
+
+echo "# Deploying the apisix helm..."
+ARTIFACT_NAME=apisix
+hFileCommand $ARTIFACT_NAME -v -y -b restart
+
+readAnswer "On the next screen wait till all the artifacts are properly deployed (1/1) for all; then press Ctrl+C and the process will continue. Even once available, the initialization of the apisix-data-plane can take several seconds, so be patient" "" 20 false
+kGet -w -v -n $NAMESPACE
+
+CMD="curl -s -o /dev/null -w \"%{http_code}\" -k https://$DNS_APISIX"
+echo "# Running CMD=$CMD"
+RC=$($CMD)
+echo "RC=$RC"
+if [[ "$RC" == "\"200\"" ]]; then
+    echo "It has worked! This is the end of $DSFIWAREHOL_TAG. Congrats!"
+    echo "Now you can try it running command \"curl -k https://$DNS_APISIX\""
+    SECRET=$(kSecret-show -n api apisix-dashboard-secrets -f apisix-dashboard-secret -v)
+    echo "Better to open it at a browser using \"user;$SECRET\"";
+else
+    echo "It seems that something has failed (RC=$RC). You can wait some minutes and test again the command \"curl -k https://$DNS_APISIX\", else review the logs for some clues"
+fi
+echo "Script $SCRIPTNAME has finished"
+cd ..
+
+
+
