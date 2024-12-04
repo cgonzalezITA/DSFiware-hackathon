@@ -23,7 +23,7 @@ Once deployed the whole infrastructure, this github can be used as a playground 
 ## Organization
 There are two methods to deploy the infrastructure:
 - A [step by step guide](#step-by-step-deployment-guide) explaining the concepts introduced at every step and the commands to be run.
-- A [quick deployment guide](#quick-eployment-from-scratch) with the same target, but focusing just on the commands.
+- A [quick deployment guide](#quick-deployment-from-scratch) with the same target, but focusing just on the commands.
 
 **NOTE**: All commands run on these guidelines are executed from the github root folder.
 
