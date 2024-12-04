@@ -14,16 +14,12 @@ Once deployed the whole infrastructure, this github can be used as a playground 
   - [Step by step deployment guide](#step-by-step-deployment-guide)
     - [_Installation of the devop tools to ease the life during deployment_](#installation-of-the-devop-tools-to-ease-the-life-during-deployment)
     - [Deployment of apisix as gateway](#deployment-of-apisix-as-gateway)
-    - [Deployment of the Verifiable Data Registry components (Trust-Anchor)](#deployment-of-the-verifiable-data-registry-components-trust-anchor)
-    - [Consumer's infrastructure](#consumers-infrastructure)
-    - [Provider's infrastructure](#providers-infrastructure)
-    - [Initial setup of the Dataspace](#initial-setup-of-the-dataspace)
   - [Quick deployment from scratch](#quick-deployment-from-scratch)
 
 ## Organization
 There are two methods to deploy the infrastructure:
 - A [step by step guide](#step-by-step-deployment-guide) explaining the concepts introduced at every step and the commands to be run.
-- A [quick deployment guide](#quick-eployment-from-scratch) with the same target, but focusing just on the commands.
+- A [quick deployment guide](#quick-deployment-from-scratch) with the same target, but focusing just on the commands.
 
 **NOTE**: All commands run on these guidelines are executed from the github root folder.
 
@@ -39,34 +35,14 @@ On the other side, the last comment of each section is the `git checkout <next p
 ## Step by step deployment guide
 ### [_Installation of the devop tools to ease the life during deployment_](./assets/docs/README-preparationGuide.md)
 This section installs a set of tools used during the deployment of the components.  
-See the [Preparation guide](./assets/docs/README-preparationGuide.md)
+See the [Preparation guide](./assets/docs/README-preparationGuide.md).
 
 ### [Deployment of apisix as gateway](./assets/docs/README-apisix.md)
 This section describes the steps to test the kubernetes environment while deploying the Apisix Gateway that is used to expose the required endpoints.
-See the [apisix deployment guide](./assets/docs/README-apisix.md)
-
-### [Deployment of the Verifiable Data Registry components (Trust-Anchor)](./assets/docs/README-trustAnchor.md)
-This section describes the setup to deploy the components of the Verifiable Data Registry.  
-See the [trust-anchor deployment guide](./assets/docs/README-trustAnchor.md)
-
-### [Consumer's infrastructure](./assets/docs/README-consumer.md)
-Any participant willing to consume services provided by the data space will require a minimum infrastructure that will enable the management of Verifiable Credentials besides a Decentralized Identifier that will constitue the signing mechanism to authenticate any message, any request made by the consumer.   
-This section describes the steps and the components to be deployed.  
-See the [consumer deployment guide](./assets/docs/README-consumer.md)
-
-### [Provider's infrastructure](./assets/docs/README-provider.md)
-Any organization willing to market their data and or services in a dataspace will require an infrastructure to manage:
-- The authentication phase: Analyze that any request made to their services are made by a known and verified participant.
-- The authorization phase: Analyze that any request made to their services are made by a participant entitled to perform the requested action.
-- The data and or services offered.  
-This section describes the steps and the components to be deployed at the provider's side
-See the [consumer deployment guide](./assets/docs/README-provider.md)
-
-### [Initial setup of the Dataspace](README-initialSetUpOfTheDS.md) 
-This phase will show the actions to register the participants in the dataspace and will continue the configuration to provide authentication and authorization mechanisms to the dataspace to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf)
+See the [apisix deployment guide](./assets/docs/README-apisix.md).
 
 ## Quick deployment from scratch
-To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions  
+To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions:  
 **NOTE**: _although these scripts have been tested in an `Ubuntu 20.04.6 LTS`, they may contain steps that require manual actions (such as editting a file with sudo permissions), so in case of failure, please review the logs and perform the steps manually (copying, pasting) for a better understanding of the whole process)_
 1. In case you do not have a kubernetes cluster on hand, the [./scripts/quickInstall/installMicrok8s.sh](./scripts/quickInstall/installMicrok8s.sh)  contains the steps to quickly deploy a microK8s cluster on one node.
     ```shell
