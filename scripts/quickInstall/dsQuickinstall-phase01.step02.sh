@@ -45,7 +45,7 @@ echo "# Running CMD=$CMD"
 RC=$($CMD)
 echo "RC=$RC"
 if [[ "$RC" == "\"200\"" ]]; then
-    echo "It has worked! This is the end of phase01.step01. Congrats!"
+    echo "It has worked! This is the end of $DSFIWAREHOL_TAG. Congrats!"
     echo "Now you can try it running command \"curl -k https://$DNS_CONSUMER\""
 else
     echo "It seems that something has failed (RC=$RC). You can wait some minutes and test again the command \"curl -k https://$DNS_CONSUMER\", else review the logs for some clues"
