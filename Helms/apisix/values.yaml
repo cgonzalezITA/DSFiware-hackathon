@@ -3,7 +3,7 @@ utils:
   echo:
     enabled: true
     ingress: 
-      enabled: true
+      enabled: false
       tls:
         # []
         - hosts: [fiwaredsc-consumer.local]
@@ -16,7 +16,7 @@ utils:
 
 
 apisix:
-  enabled: false
+  enabled: true
   # image:
   #   registry: docker.io
   #   repository: bitnami/apisix
@@ -83,13 +83,13 @@ apisix:
         #   # Decoupled
         #   # In the decoupled deployment mode the data_plane and control_plane instances of APISIX are deployed 
         #   # separately, i.e., one instance of APISIX is configured to be a data plane and the other to be a control plane.
-          config_provider: etcd
+          # config_provider: etcd
         # role_data_plane:
         #   # Standalone
         #   # The routing rules in the conf/apisix.yaml file are loaded into memory immediately after the APISIX 
         # node service starts. And every time interval (default 1 second), will try to detect whether the file content is 
         # updated, if there is an update, reload the rule.
-          # config_provider: yaml
+          config_provider: yaml
     extraVolumes:
       - name: routes
         configMap:

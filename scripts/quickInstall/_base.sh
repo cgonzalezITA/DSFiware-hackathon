@@ -46,16 +46,16 @@ function createArtifact() {
 }
 
 function readAnswer() {
-    # RESPONSE=$(readAnswer <QUESTION> <DEFANSWER="">  <TIMEOUT=100> <LOWERANSWER=true> <ISQUESTION=true)
+    # RESPONSE=$(readAnswer <QUESTION> <DEFANSWER="">  <TIMEOUT=100> <ISQUESTION=true> <LOWERANSWER=true>)
     FATAL_ERROR=false;
     [[ "$#" -gt 0 ]] && QUESTION=$1; shift || FATAL_ERROR=true;
     [[ "$#" -gt 0 ]] && DEFANSWER=$1; shift || DEFANSWER='';
     [[ "$#" -gt 0 ]] && TIMEOUT=$(($1 + 0)); shift || TIMEOUT=15;
-    [[ "$#" -gt 0 ]] && LOWERANSWER=$1; shift || LOWERANSWER=true;
     [[ "$#" -gt 0 ]] && ISQUESTION=$1; shift || ISQUESTION=true;
+    [[ "$#" -gt 0 ]] && LOWERANSWER=$1; shift || LOWERANSWER=true;
     [ "$FATAL_ERROR" == true ] && echo "Missing mandatory param at readAnswer function" exit;
     [ "$ISQUESTION" == true ] && HEADER="QUESTION: (timeout=${TIMEOUT}s. def=$DEFANSWER)-->" || HEADER="(timeout=${TIMEOUT}s)";
     echo -e "${HEADER}$QUESTION" >/dev/tty;
-    read -t $TIMEOUT -n 1 REPLY && echo "" || REPLY=$DEFANSWER;
+    read -t $TIMEOUT -n 1 REPLY || REPLY=$DEFANSWER;
     [ "$LOWERANSWER" == true ] && echo "${REPLY,,}" || echo $REPLY;
 }

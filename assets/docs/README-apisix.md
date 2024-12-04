@@ -74,8 +74,9 @@ git checkout phase01.step02
 # NOTE to avoid refering to the namespace apisix at each command, the ENV VAR DEF_KTOOLS_NAMESPACE=apisix is set:
 export DEF_KTOOLS_NAMESPACE=apisix
 ```
+At this step, we will setup the apisix to serve as the official gateway of the HOL in which the different routes that have to be exposed on the internet will be registered. At this stage statically, but later dinamically.
 
-1. Modify the values to enable apisix and disable the util's ingress.
+1. Modify the values file (Helms/apisix/values.yaml) to enable apisix and disable the util's ingress.
 2. Deploy the changes
     ```shell
     hFileCommand apisix restart
@@ -84,7 +85,7 @@ export DEF_KTOOLS_NAMESPACE=apisix
 3. After some seconds the deployments should be running
     ```shell
     kGet 
-    #   Running command [kubectl get pod  -n apisix  ]
+    #   Running command [kubectl get pod  -n apisix]
     ---
     NAME                                         READY   STATUS    RESTARTS   AGE
     apisix-control-plane-7ffd9fdc4c-2jpw5        1/1     Running   0          5h23m
@@ -95,17 +96,53 @@ export DEF_KTOOLS_NAMESPACE=apisix
     echo-588c888c78-r2d7d                        1/1     Running   0          5h23m
     netutils-65cd7b88b8-fwn5h                    1/1     Running   0          5h23m
     ```
-4. Test it. Does it work?
+4. Test it. Does it work? It should
     ```shell
     curl -k https://fiwaredsc-consumer.local
     ```
+The changes that introduce the use of the Apisix in order to define new routes are two:
+1. The ingress section of the data plane at the apisix values file contains the ingress configuration: DNSs, TlSs, ...  
+For this initial use, just one DNS and one TLS secret are required:
+    ```yaml
+    apisix:
+      ...
+      ingress:
+        enabled: true
+        hostname: fiwaredsc-consumer.local
+        tls: true
+        extraTls:
+          - hosts: [fiwaredsc-consumer.local]
+            secretName: wildcard_local-tls
+      ...
+    ```
 
+2. The route `https://fiwaredsc-consumer.local` has been defined at the [apisix-routes.yaml file](../../Helms/apisix/apisix-routes.yaml).  
+This file is used to statically specify the routes the Apisix gateway will manage.
+```shell
+cat Helms/apisix/apisix-routes.yaml
+  routes:
+  - 
+    uri: /*
+    host: fiwaredsc-consumer.local
+    methods: 
+      - GET    
+    upstream:
+      type: roundrobin
+      nodes:
+        echo-svc:8080: 1
+  ...
+```
+
+```shell
+# To show the structure of the github after the completion of the next step
+git checkout phase01.step03
+```
 ## step03: Deploy a new route via the Apisix.yaml file
 As you have seen, there is a dashboard component deployed, but just one dns managed by the Apisix ingress. This step will modify the apisix.yaml file to include a new route to expose the dashboard to be consumed via browser.
 1. Decide the DNS to expose the Apisi dashboard (Local or global DNS)
 eg. fiwaredsc-api6dashboard.local ...
-2. For Local DNS register at the /etc/hosts (ubuntu) and/or C:\Windows\System32\drivers\etc\hosts (windows)
-3. Modify the values file to use the new dns and the wildcard tls certificate
+1. For Local DNS register at the /etc/hosts (ubuntu) and/or C:\Windows\System32\drivers\etc\hosts (windows)
+2. Modify the values file to use the new dns and the wildcard tls certificate
     ```yaml
     apisix:
       ...
@@ -121,7 +158,7 @@ eg. fiwaredsc-api6dashboard.local ...
             secretName: wildcard_local-tls
       ...
     ```
-4. Modify the ./Helms/apisix.apisix-routes.yaml to add the route for the Apisi dashboard:
+3. Modify the ./Helms/apisix.apisix-routes.yaml to add the route for the Apisi dashboard:
       ```yaml
       routes:
       - 
@@ -142,19 +179,19 @@ eg. fiwaredsc-api6dashboard.local ...
             apisix-dashboard:80: 1
       #END
       ```
-7. Redeploy the helm chart:
+4. Redeploy the helm chart:
     ```shell
     hFileCommand api upgrade
     # Running CMD=[helm -n apisix upgrade -f "./Helms/apisix/./values.yaml" apisix "./Helms/apisix/./"  --create-namespace]
     Release "apisix" has been upgraded. Happy Helming!
     ```
-8. Test it. Does it work?
+5. Test it. Does it work?
     ```shell
     curl -k https://fiwaredsc-api6dashboard.local
     ```
     <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/apisix-dashboard.PNG"><br/>
     APISIX Dashboard</p>
-9. Retrieve the password to login at a browser.  
+6. Retrieve the password to login at a browser.  
 If you visit the values file, the secret and the key used to store the dashboard user's password are defined:
     ```yaml
     apisix:

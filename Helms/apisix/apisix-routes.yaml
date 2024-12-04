@@ -1,6 +1,15 @@
 routes:
 - 
   uri: /*
+  host: fiwaredsc-consumer.local
+  methods: 
+    - GET    
+  upstream:
+    type: roundrobin
+    nodes:
+      echo-svc:8080: 1
+- 
+  uri: /*
   host: fiwaredsc-api6dashboard.local
   methods: 
     - GET    
