@@ -37,7 +37,7 @@ echo "Now at $(pwd) folder"
 
 
 echo "# Deploy the did:key"
-hFileCommand consumer -f key r -v -y
+hFileCommand consumer -f key r -b -v -y
 wait4PodsDeploymentCompleted $NAMESPACE 20
 
 echo "# Verification"
