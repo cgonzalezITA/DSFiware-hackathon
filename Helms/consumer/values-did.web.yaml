@@ -1,6 +1,3 @@
-vcwallet:
-  enabled: true
-
 utils:
   enabled: true
   echo:
@@ -389,7 +386,7 @@ keycloak:
 
 registration:
   # Used to register the DID to the different TrustedIssuers 
-  enabled: true
+  enabled: false
   name: registration-job
   job:
     hookDeletePolicy: before-hook-creation
@@ -420,3 +417,6 @@ registration:
 #       - ORDER_PRODUCER
 #       - ORDER_CONSUMER
 #     target: $DID
+
+vcwallet:
+  enabled: false

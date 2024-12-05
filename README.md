@@ -39,15 +39,15 @@ On the other side, the last comment of each section is the `git checkout <next p
 ## Step by step deployment guide
 ### [_Installation of the devop tools to ease the life during deployment_](./assets/docs/README-preparationGuide.md)
 This section installs a set of tools used during the deployment of the components.  
-See the [Preparation guide](./assets/docs/README-preparationGuide.md)
+See the [Preparation guide](./assets/docs/README-preparationGuide.md).
 
 ### [Deployment of apisix as gateway](./assets/docs/README-apisix.md)
 This section describes the steps to test the kubernetes environment while deploying the Apisix Gateway that is used to expose the required endpoints.
-See the [apisix deployment guide](./assets/docs/README-apisix.md)
+See the [apisix deployment guide](./assets/docs/README-apisix.md).
 
 ### [Deployment of the Verifiable Data Registry components (Trust-Anchor)](./assets/docs/README-trustAnchor.md)
 This section describes the setup to deploy the components of the Verifiable Data Registry.  
-See the [trust-anchor deployment guide](./assets/docs/README-trustAnchor.md)
+See the [trust-anchor deployment guide](./assets/docs/README-trustAnchor.md).
 
 ### [Consumer's infrastructure](./assets/docs/README-consumer.md)
 Any participant willing to consume services provided by the data space will require a minimum infrastructure that will enable the management of Verifiable Credentials besides a Decentralized Identifier that will constitue the signing mechanism to authenticate any message, any request made by the consumer.   

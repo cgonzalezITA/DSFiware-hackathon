@@ -71,7 +71,7 @@ mkdir -p .tmp
 echo "# Deploying the apisix helm..."
 ARTIFACT_NAME=apisix
 hFileCommand $ARTIFACT_NAME -y -b restart >.tmp/quickInstall.log
-readAnswer "On the next screen wait till all the artifacts are properly deployed (1/1) for all; then press Ctrl+C and the process will continue" "" 5
+readAnswer "On the next screen wait until all the artifacts are properly deployed (1/1)  then press Ctrl+C and the process will continue" "" 5
 kGet -w -v -n $NAMESPACE
 
 CMD="curl -s -o /dev/null -w \"%{http_code}\" -k https://$DNS_CONSUMER"
@@ -86,56 +86,3 @@ else
 fi
 echo "Script $SCRIPTNAME has finished"
 cd ..
-return 0
-
-# step02
-git checkout step02
-
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo add fiware https://fiware.gitlab.io/helm-charts
-
-hFileCommand apisix r -y
-# Populating the apisix helm chart takes a while (3/4 mins on my microk8s cluster)
-kGet -w
-# The curl should work
-curl -k https://fiwaredsc-consumer.local
-
-# step03
-git checkout step03
-hFileCommand apisix r -y
-# Add the route of dns to your Windows host file (C:\Windows\System32\drivers\etc\hosts as admin) or linux (/etc/hosts as sudo). Your ip=$(hostname -I)
-# eg. 193.143.225.86  fiwaredsc-api6dashboard.local
-sudo vi /etc/hosts
-
-# Navigate to url from a browser
-https://fiwaredsc-api6dashboard.local
-#Use this password
-password=$(kSecret-show dashboard-secrets -f apisix-dashboard-secret -v)
-
-
-# step04
-git checkout step04
-# I'm not sure 100% if this commande has to be run Upgrade the helm to redeploy the echo service
-hFileCommand apisix r -y
-
-# Deploy via API the route https://fiwaredsc-consumer.local
-. Helms/apisix/manageAPI6Routes.sh 
- 
-# phase02
-git checkout phase02
-# Deploy the trust-anchor
-hFileCommand trustAnchor -b
-# Upgrade the apisix to manage the fiwaredsc-trustanchor.local dns
-hFileCommand apisix r -y
-# The deployment could take around 2/3 minutes
-. Helms/apisix/manageAPI6Routes.sh
-# test within the cluster
-kExec -n trust utils -- curl http://tir:8080/v4/issuers
-
-# Add the route of dns to your Windows host file (C:\Windows\System32\drivers\etc\hosts as admin) or linux (/etc/hosts as sudo). Your ip=$(hostname -I)
-# eg. 193.143.225.86  fiwaredsc-trustanchor.local
-sudo vi /etc/hosts
-
-# test outside the cluster
-# curl -k https://fiwaredsc-consumer.local/hello
-curl -k https://fiwaredsc-trustanchor.local/v4/issuers
