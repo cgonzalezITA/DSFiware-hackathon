@@ -63,10 +63,8 @@ readAnswer "To access it from a windows browser, add the same line into the 'C:\
 
 
 
-readAnswer "On the next screen wait till all the artifacts are properly deployed (1/1) for all; then press Ctrl+C and the process will continue. Please, be patient" "" 20 false
-kGet -w -v -n trust
-readAnswer "On the next screen wait till all the artifacts are properly deployed (1/1) for all; then press Ctrl+C and the process will continue. Even once available, the initialization of the apisix-data-plane can take several seconds, so be patient" "" 20 false
-kGet -w -v -n apisix
+wait4PodsDeploymentCompleted trust 20
+wait4PodsDeploymentCompleted trust 20 "Even once available, the initialization of the apisix-data-plane can take several seconds, so be patient"
 
 # Insert api6 route ROUTE_TIR_JSON
 . scripts/manageAPI6Routes.sh insert -r ROUTE_TIR_JSON

@@ -57,7 +57,7 @@ echo "# Deploying the apisix helm..."
 ARTIFACT_NAME=apisix
 hFileCommand $ARTIFACT_NAME -v -y -b restart
 
-readAnswer "On the next screen wait till all the artifacts are properly deployed (1/1) for all; then press Ctrl+C and the process will continue. Even once available, the initialization of the apisix-data-plane can take several seconds, so be patient" "" 20 false
+readAnswer "On the next screen wait until all the artifacts are properly deployed (1/1)  then press Ctrl+C and the process will continue. Even once available, the initialization of the apisix-data-plane can take several seconds, so be patient" "" 20 false
 kGet -w -v -n $NAMESPACE
 
 CMD="curl -s -o /dev/null -w \"%{http_code}\" -k https://$DNS_APISIX"
@@ -74,6 +74,3 @@ else
 fi
 echo "Script $SCRIPTNAME has finished"
 cd ..
-
-
-

@@ -71,7 +71,7 @@ mkdir -p .tmp
 echo "# Deploying the apisix helm..."
 ARTIFACT_NAME=apisix
 hFileCommand $ARTIFACT_NAME -y -b restart >.tmp/quickInstall.log
-readAnswer "On the next screen wait till all the artifacts are properly deployed (1/1) for all; then press Ctrl+C and the process will continue" "" 5
+readAnswer "On the next screen wait until all the artifacts are properly deployed (1/1)  then press Ctrl+C and the process will continue" "" 5
 kGet -w -v -n $NAMESPACE
 
 CMD="curl -s -o /dev/null -w \"%{http_code}\" -k https://$DNS_CONSUMER"
