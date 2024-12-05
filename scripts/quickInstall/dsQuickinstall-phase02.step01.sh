@@ -41,7 +41,7 @@ hFileCommand $ARTIFACT_NAME -v -y -b restart
 DNS_TRUSTANCHOR="fiwaredsc-trustanchor.local"
 echo "# Restarts the apisix data plane to manage the new DNS $DNS_TRUSTANCHOR"
 kRemoveRestart deploy data-plane -n apisix -y -v
-hFileCommand api upgrade -v -y
+hFileCommand apisix upgrade -v -b -y
 
 
 PUBLIC_IP=$(hostname -I | awk '{print $1}')
