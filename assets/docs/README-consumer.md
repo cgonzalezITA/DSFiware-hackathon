@@ -11,6 +11,9 @@
     - [Verification](#verification)
       - [values.did.key.yaml](#valuesdidkeyyaml)
     - [values.did.web.yaml](#valuesdidwebyaml)
+  - [step01.web: Publication of the did:web route](#step01web-publication-of-the-didweb-route)
+  - [_step02.web-Deployment of the VCIssuer (Keycloak)_](#step02web-deployment-of-the-vcissuer-keycloak)
+    - [Verification](#verification-1)
 
 Any participant willing to consume services offered at the data space is required to count on a minimum infrastructure to enable the management of its **Verifiable Credentials (VCs)** and a **Decentralized Identifier (DID)** that will be its identity used to sign any VC request issued by it.  
 This section describes the components and the steps deploy a consumer's infrastructure. The step number is duplicated given that they focus on the use of a DID web or a DID key as explained below.
@@ -201,7 +204,6 @@ keytool -list -v -keystore cert.pfx -storetype PKCS12
 ```
 This previous verification is highly sensitive, so protect this kind of actions at your production k8s cluster; eg. using _KubeArmorPolicies_.
 
-
 ### values.did.web.yaml
 If this file is used to generate the k8s artifacts, the commands are the same, although the output will differ:
 ```shell
@@ -221,3 +223,84 @@ This previous verification is highly sensitive, so protect this kind of actions 
 # To show the structure of the github after the completion of the next step
 git checkout phase03.step02-key
 ```
+
+## step01.web: Publication of the did:web route
+As explained before, one of the requirements of the did:web DIDs is that they must be accessible from the internet at the well known endpoint `/.well-known/did.json`. To setup a new route to access this json document it is mandatory to have the control of the chosen DNS having its certificates (these certificates will have to be signed by an Certification Authority (CA)):
+1. Create a tls secret containing the certificate files. Customize the following commands according to your organization methodology to manage certificates.
+      ```shell
+      # Creates the tls certificate at the apisix namespace to manage the *.ita.es tls.
+      kubectl create secret tls wildcard-ita.es-tls -n apisix --key /certificates/<organization>/privkey.pem --cert /certificates/<organization>/fullchain.pem
+      # Creates the tls certificate at the consumer namespace to manage the *.ita.es tls.
+      kubectl create secret tls wildcard-ita.es-tls -n consumer --key /certificates/<organization>/privkey.pem --cert /certificates/<organization>/fullchain.pem
+      ```
+      
+2. Modify the Apisix to manage a new DNS (`fiwaredsc-consumer.ita.es`) using the tls `wildcard-ita.es-tls` and upgrade the Apisix Helm chart and enable the keycloack component at the [values-did.web.yaml](../../Helms/consumer/values-did.web.yaml).
+      ```script
+      hFileCommand consumer -y restart -v -n consumer -f web
+      ```
+
+3. Once deployed, new routes must be registered to expose:
+- The well known did.json document at the endpoint `https://fiwaredsc-consumer.ita.es/.well-known/did.json`
+- The endpoint to access the VCIssuer. `https://fiwaredsc-consumer`,  `https://fiwaredsc-consumer/realms/consumerRealm/oid4vci`...  
+  This VCIssuer role implies that it exposes the OIDC well known endpoing. `https://fiwaredsc-consumer/realms/consumerRealm/.well-known/openid-configuration`
+
+    ```script
+    # Remove the previously used route ROUTE_DEMO_JSON
+    . scripts/manageAPI6Routes.sh delete -r ROUTE_DEMO_JSON
+
+    # Registers the Well known did.json document
+    . scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_DID_WEB_fiwaredsc_consumer_ita_es
+
+    # Register the VCIssuer endpoints
+    . scripts/manageAPI6Routes.sh insert -r ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_ita_es
+    ```
+
+To test it is working, browse this URL `https://fiwaredsc-consumer.ita.es`:
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/did-web.json.png"><br/>
+    did-web.json exposed at a well known URL</p>
+
+## _step02.web-Deployment of the VCIssuer (Keycloak)_
+[Keycloak](https://www.keycloak.org/) is an open source identity and access management solution that on its [release v25](https://www.keycloak.org/docs/latest/release_notes/index.html#openid-for-verifiable-credential-issuance-experimental-support) supports the protocol [OpenID for Verifiable Credential Issuance (OID4VCI) OID4VC](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) to manage Verifiable Credentials, and so, it can play the role of VCIssuer in the data space architecture.  
+The values of the Keycloak are more complex than previous helms, so it is recomended to analyze them to get familiar with.  
+From now on, this step focuses in the values of the `values-did.web.yaml` file.  
+As a brief summary, the values cover the following areas:
+- It setups a [postgresSql](https://www.postgresql.org/) instance.
+- No ingress is enabled as the Keycloak will be exposed via an apisix route.
+- Internally, the pods expose their endpoints via the https ports setting up a tls using the dns `fiwaredsc-consumer.ita.es`, so both inside and outside of the k8s network the URL to access the Keycloak will be `https://fiwaredsc-consumer.ita.es/`
+- A [Realm](https://mi-do.medium.com/understanding-realms-clients-and-roles-in-keycloak-c88a6e57d74f) `consumerRealm` is created at startup to manage a set of users, credentials, roles, and verifiable credentials to serve merely for this HOL.
+
+The deployment of the helm is taking in the development server around 3 minutes, so it is interesting to check to correct deployment of the chart, using the `devopTools` commands `kGet`, `kGet -w`, `kLog`, `kDescribe`, ... It is also interesting to analyze the k8s components generated using the command `hFileCommand debug`:
+```shell
+hFileCommand consumer debug > .tmp/componentsconsumer.yaml
+```
+
+**NOTE**: Most of the secrets used in this tutorial are randomly generated and although they are tried to be kept, they could be deleted. Imagine, _this helm chart is uninstalled and the secret manually deleted_. A new deployment of the chart will generate a new secret with new passwords to access the previously generated DDBB using a previously existing password (that has been destroyed forever). In these scenarios the only options are:
+- Recreate the DDBB from scratch
+- Stablish a policy to save the secrets and install manually them instead of generate new ones with random passwords.  
+
+### Verification
+Once the consumer helm has been deployed, it status should look similar to this:
+```shell
+kGet 
+#   Running command [kubectl get pod  -n consumer  ]
+NAME                              READY   STATUS    RESTARTS   AGE
+consumer-keycloak-0               1/1     Running   0          3m37s
+consumer-postgresql-0             1/1     Running   0          3m37s
+did-web-7b8f9b5d5d-lwwsf          1/1     Running   0          3m37s
+utils-nettools-8554c96795-b6ssf   1/1     Running   0          3m37s
+```
+
+By now the endpoint is not externally accessible, but this command to show the well known openid configuration should work (`HTTP/2 200` should be the returned status request.):
+```shell
+curl -k https://consumer-keycloak/realms/consumerRealm/.well-known/openid-configuration -H fIdsc-consumer-keycloak.ita.es
+  HTTP/2 200 
+  cache-control: no-cache, must-revalidate, no-transform, no-store
+  content-type: application/json;charset=UTF-8
+  referrer-policy: no-referrer
+  strict-transport-security: max-age=31536000; includeSubDomains
+  x-content-type-options: nosniff
+  x-frame-options: SAMEORIGIN
+  x-xss-protection: 1; mode=block
+```
+
+Not to mention that this previous command is faking the Host name, but the whole values file should be tailored to match the DNS managed by your organization to be used.

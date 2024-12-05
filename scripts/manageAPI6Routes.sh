@@ -34,7 +34,7 @@ function help() {
     HELP="$HELP\nHELP: USAGE: $SCRIPTNAME [optArgs] <ACTION> \n
             \t-h: Show help info \n
             \t [ -r | --route ] <ROUTE>: Mandatory for insert and update. ENVVAR NAME of the route to execute the action on. It has to be defined inside this script \n
-            \t [ -rid | --routeId ] <ROUTE_ID>: Mandatory for delete and update\n
+            \t [ -rid | --routeId ] <ROUTE_ID>: Mandatory when more than one route is registered with the same name,uri and host\n
             \t <ACTION>: One of [ info | list | insert* | delete | update ] "
     echo $HELP
 }
@@ -154,7 +154,7 @@ ROUTES=$(cat <<EOF
             }
         }
     },
-    "ROUTE_DID_WEB_fiwaredsc_consumer_ita_es": {
+    "ROUTE_WELLKNOWN_DID_WEB_fiwaredsc_consumer_ita_es": {
         "uri": "/.well-known/did.json",
         "name": "Did.web",
         "host": "fiwaredsc-consumer.ita.es",
@@ -233,7 +233,7 @@ ROUTES=$(cat <<EOF
         },
         "status": 1
     },
-    "ROUTE_OIDC_fiwaredsc_vcverifier_ita_es": {
+    "ROUTE_WELLKNOWN_OIDC_fiwaredsc_vcverifier_ita_es": {
         "uri": "/.well-known/*",
         "name": "OIDC",
         "host": "fiwaredsc-provider.ita.es",
@@ -349,7 +349,7 @@ EOF
 # Info routes
 INFO_ROUTES=$(cat <<EOF
 {
-    "ROUTE_DID_WEB_fiwaredsc_consumer_ita_es": {
+    "ROUTE_WELLKNOWN_DID_WEB_fiwaredsc_consumer_ita_es": {
         "info": "# https://fiwaredsc-consumer.ita.es/.well-known/did.json"
 	},
     "ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_ita_es": {
@@ -358,7 +358,7 @@ INFO_ROUTES=$(cat <<EOF
     "ROUTE_WALLET_fiwaredsc_wallet_ita_es": {
         "info": "# https://fiwaredsc-wallet.ita.es/"
 	},
-    "ROUTE_OIDC_fiwaredsc_vcverifier_ita_es": {
+    "ROUTE_WELLKNOWN_OIDC_fiwaredsc_vcverifier_ita_es": {
         "info": [
             "# https://fiwaredsc-provider.ita.es/.well-known/openid-configuration",
             "# https://fiwaredsc-provider.ita.es/.well-known/jwks"
@@ -393,21 +393,51 @@ EOF
 if [[ "$ACTION" =~ ^(list|info|insert|update|delete)$ ]]; then  
   ROUTE_NAMES=$(echo "$ROUTES" | jq -r 'keys[]')
   if [ ${#ROUTE} -eq 0 ]; then
-    if [[ "$ACTION" =~ ^(insert|update)$ ]]; then
+    if [[ "$ACTION" =~ ^(insert)$ ]]; then
       echo -e $(help "ERROR: Route is mandatory for action $ACTION. Must be one of [$ROUTE_NAMES]")
       [ "$CALLMODE" == "executed" ] && exit -1 || return -1; 
+    elif [[ "$ACTION" =~ ^(update|delete)$ ]] && [ ${#ROUTE_ID} -eq 0 ]; then
+      echo -e $(help "ERROR: One of ROUTE or ROUTE_ID must be provided for action $ACTION. The ROUTE must be one of [$ROUTE_NAMES]")
+      [ "$CALLMODE" == "executed" ] && exit -1 || return -1; 
     fi
-  else 
+  elif  [ ${#ROUTE_ID} -eq 0 ]; then
     ROUTE_JSON=$(echo "$ROUTES" | jq -r --arg key "$ROUTE" '.[$key]')
     if [ ${#ROUTE_JSON} -eq 0 ]; then
       echo -e $(help "ERROR: No route with name $ROUTE has been found. Must be one of [$ROUTE_NAMES]")
       [ "$CALLMODE" == "executed" ] && exit -1 || return -1; 
     fi
-  fi  
-  if [[ $ACTION =~ ^(delete|update)$ ]]; then
-    if [ ${#ROUTE_ID} -eq 0 ]; then
-      echo -e $(help "ERROR: RouteID is mandatory for action $ACTION. Must match the ID of the route (see the list to find it)")
-      [ "$CALLMODE" == "executed" ] && exit -1 || return -1; 
+    ROUTE_NAME=$(echo $ROUTE_JSON | jq -e -r '.name // ""' 2>/dev/null || echo "")
+    ROUTE_URI=$(echo $ROUTE_JSON | jq -e -r '.uri // ""' 2>/dev/null || echo "")
+    ROUTE_HOST=$(echo $ROUTE_JSON | jq -e -r '.host // ""' 2>/dev/null || echo "")
+    if [[ $ACTION =~ ^(insert|update|delete)$ ]]; then
+        # .value.name; .value.host
+        APISIXROUTES=$(curl -s -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN") 
+        # Search the ID
+        # ROUTE_ID=$(echo $APISIXROUTES | jq -r --arg NAME "$ROUTE_NAME" --arg HOST "$ROUTE_HOST" --arg URI "$ROUTE_URI" \
+        #     '.list[] | select(.name == $NAME and .host == $HOST and .uri == $URI) | .id // ""')
+        if [[ ${#ROUTE_NAME} -gt 0 ]] && [[ ${#ROUTE_URI} -gt 0 ]] && [[ ${#ROUTE_HOST} -gt 0 ]]; then
+            ROUTE_ID=$(echo $APISIXROUTES | jq -c --arg NAME "$ROUTE_NAME" --arg URI "$ROUTE_URI" --arg HOST "$ROUTE_HOST" \
+                '.list[] | select(.value.name == $NAME and .value.uri == $URI and .value.host == $HOST) | .value.id // ""')
+        elif [[ ${#ROUTE_NAME} -gt 0 ]] && ${#ROUTE_URI} -gt 0 ]]; then
+            ROUTE_ID=$(echo $APISIXROUTES | jq -c --arg NAME "$ROUTE_NAME" --arg URI "$ROUTE_URI" \
+                '.list[] | select(.value.name == $NAME and .value.uri == $URI) | .value.id // ""')
+        else
+            echo -e $(help "ERROR: Route $ROUTE must contain at least a name and a uri; optional a host")
+            [ "$CALLMODE" == "executed" ] && exit -1 || return -1; 
+        fi
+        if [ ${#ROUTE_ID} -eq 0 ]; then
+            if [[ $ACTION =~ ^(update|delete)$ ]]; then
+                echo -e $(help "ERROR: Route $ROUTE not found at the list of registered apisix routes for action $ACTION.")
+                [ "$CALLMODE" == "executed" ] && exit -1 || return -1; 
+            fi
+        else
+            [[ "$ACTION" == "insert" ]] && ACTION="update";
+            ROUTE_ID=$(echo $ROUTE_ID | sed "s|\"||g"); # Removes "
+            if [[ "$ROUTE_ID" == *" "* ]]; then
+                echo -e $(help "ERROR: More than one route has been detected. Please use -rid ROUTE_ID. The possible values are [$ROUTE_ID]")
+                [ "$CALLMODE" == "executed" ] && exit -1 || return -1; 
+            fi
+        fi
     fi
   fi
   if [[ $ACTION == "info" ]]; then
@@ -421,7 +451,7 @@ if [[ "$ACTION" =~ ^(list|info|insert|update|delete)$ ]]; then
   elif [[ "$ACTION" == "list" ]]; then
     if [ ${#ROUTE_ID} -eq 0 ]; then
       echo "# Get list of api6 routes"
-      curl -s -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN"
+      curl -s -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes -H "X-API-KEY:$ADMINTOKEN" | jq .
     else
       echo "# Get details of api6 route $ROUTE_ID"
       curl -s -k https://$IP_APISIXCONTROL:9180/apisix/admin/routes/$ROUTE_ID -H "X-API-KEY:$ADMINTOKEN"

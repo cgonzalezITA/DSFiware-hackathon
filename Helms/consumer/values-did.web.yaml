@@ -29,7 +29,7 @@ did:
     host: fiwaredsc-consumer.ita.es
 
 keycloak:
-  enabled: false
+  enabled: true
   global:
     compatibility:
       openshift:
