@@ -14,6 +14,7 @@ Once deployed the whole infrastructure, this github can be used as a playground 
   - [Step by step deployment guide](#step-by-step-deployment-guide)
     - [_Installation of the devop tools to ease the life during deployment_](#installation-of-the-devop-tools-to-ease-the-life-during-deployment)
     - [Deployment of apisix as gateway](#deployment-of-apisix-as-gateway)
+    - [Deployment of the Verifiable Data Registry components (Trust-Anchor)](#deployment-of-the-verifiable-data-registry-components-trust-anchor)
   - [Quick deployment from scratch](#quick-deployment-from-scratch)
 
 ## Organization
@@ -40,6 +41,12 @@ See the [Preparation guide](./assets/docs/README-preparationGuide.md)
 ### [Deployment of apisix as gateway](./assets/docs/README-apisix.md)
 This section describes the steps to test the kubernetes environment while deploying the Apisix Gateway that is used to expose the required endpoints.
 See the [apisix deployment guide](./assets/docs/README-apisix.md)
+
+
+### [Deployment of the Verifiable Data Registry components (Trust-Anchor)](./assets/docs/README-trustAnchor.md)
+This section describes the setup to deploy the components of the Verifiable Data Registry.  
+See the [trust-anchor deployment guide](./assets/docs/README-trustAnchor.md)
+
 
 ## Quick deployment from scratch
 To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions  
