@@ -17,7 +17,7 @@ The following steps are focused in the deployment of the Helm Chart of Apisix to
 git checkout phase01.step01
 kubectl create namespace apisix
 ```
-This step uses the components at the apisix Chart, deploys a basic version of a helloWorld chart (included inside apisix Helm Chart)
+This step uses the components at the apisix Chart; it deploys a basic version of a helloWorld chart (included inside apisix Helm Chart)
 1. Decide the DNS to expose the consumer apisix proxy (Local or global DNS)
    eg. fiwaredsc-consumer.local, fiwaredsc-consumer.ita.es, ...
 2. For Local DNS register them as root at the '/etc/hosts' file (ubuntu) and/or 'C:\Windows\System32\drivers\etc\hosts' file (windows)

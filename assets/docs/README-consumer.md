@@ -10,10 +10,13 @@
     - [values-did.web.yaml](#values-didwebyaml)
     - [Verification](#verification)
       - [values.did.key.yaml](#valuesdidkeyyaml)
-    - [values.did.web.yaml](#valuesdidwebyaml)
-  - [step01.web: Publication of the did:web route](#step01web-publication-of-the-didweb-route)
+      - [values.did.web.yaml](#valuesdidwebyaml)
+  - [step01.web: Publication of the did:web VCIssuer routes](#step01web-publication-of-the-didweb-vcissuer-routes)
+  - [step01.key: Publication of the did:key VCIssuer route](#step01key-publication-of-the-didkey-vcissuer-route)
   - [_step02.web-Deployment of the VCIssuer (Keycloak)_](#step02web-deployment-of-the-vcissuer-keycloak)
     - [Verification](#verification-1)
+  - [_step02.key-Deployment of the VCIssuer (Keycloak)_](#step02key-deployment-of-the-vcissuer-keycloak)
+    - [Verification](#verification-2)
 
 Any participant willing to consume services offered at the data space is required to count on a minimum infrastructure to enable the management of its **Verifiable Credentials (VCs)** and a **Decentralized Identifier (DID)** that will be its identity used to sign any VC request issued by it.  
 This section describes the components and the steps deploy a consumer's infrastructure. The step number is duplicated given that they focus on the use of a DID web or a DID key as explained below.
@@ -148,11 +151,13 @@ did:
 ```
 **NOTE**: Pay attention that at this moment, the dns used is not a _.local_ one, but a real DNS managed by the ITA organization as explained before.
 
-To deploy the consumer charts just run:
+To deploy the consumer charts just run for the did:key:
 ```shell
 hFileCommand consumer -f key -b
 # Running CMD=[helm -n consumer install -f "./Helms/consumer/values-did.key.yaml" consumer "./Helms/consumer/"  --create-namespace]
-# or
+```
+To deploy the consumer charts just run for the did:web:
+```shell
 hFileCommand consumer -f web
 # Running CMD=[helm -n consumer install -f "./Helms/consumer/values-did.web.yaml" consumer "./Helms/consumer/"  --create-namespace]
 ```
@@ -204,7 +209,7 @@ keytool -list -v -keystore cert.pfx -storetype PKCS12
 ```
 This previous verification is highly sensitive, so protect this kind of actions at your production k8s cluster; eg. using _KubeArmorPolicies_.
 
-### values.did.web.yaml
+#### values.did.web.yaml
 If this file is used to generate the k8s artifacts, the commands are the same, although the output will differ:
 ```shell
 # Change the default working namespace:
@@ -224,7 +229,7 @@ This previous verification is highly sensitive, so protect this kind of actions 
 git checkout phase03.step02-key
 ```
 
-## step01.web: Publication of the did:web route
+## step01.web: Publication of the did:web VCIssuer routes
 As explained before, one of the requirements of the did:web DIDs is that they must be accessible from the internet at the well known endpoint `/.well-known/did.json`. To setup a new route to access this json document it is mandatory to have the control of the chosen DNS having its certificates (these certificates will have to be signed by an Certification Authority (CA)):
 1. Create a tls secret containing the certificate files. Customize the following commands according to your organization methodology to manage certificates.
       ```shell
@@ -236,13 +241,13 @@ As explained before, one of the requirements of the did:web DIDs is that they mu
       
 2. Modify the Apisix to manage a new DNS (`fiwaredsc-consumer.ita.es`) using the tls `wildcard-ita.es-tls` and upgrade the Apisix Helm chart and enable the keycloack component at the [values-did.web.yaml](../../Helms/consumer/values-did.web.yaml).
       ```script
-      hFileCommand consumer -y restart -v -n consumer -f web
+      hFileCommand consumer -y restart -v -f web
       ```
 
 3. Once deployed, new routes must be registered to expose:
 - The well known did.json document at the endpoint `https://fiwaredsc-consumer.ita.es/.well-known/did.json`
-- The endpoint to access the VCIssuer. `https://fiwaredsc-consumer`,  `https://fiwaredsc-consumer/realms/consumerRealm/oid4vci`...  
-  This VCIssuer role implies that it exposes the OIDC well known endpoing. `https://fiwaredsc-consumer/realms/consumerRealm/.well-known/openid-configuration`
+- The endpoint to access the VCIssuer. `https://fiwaredsc-consumer.ita.es`,  `https://fiwaredsc-consumer.ita.es/realms/consumerRealm/oid4vci`...  
+  This VCIssuer role implies that it exposes the OIDC well known endpoing. `https://fiwaredsc-consumer.ita.es/realms/consumerRealm/.well-known/openid-configuration`
 
     ```script
     # Remove the previously used route ROUTE_DEMO_JSON
@@ -259,19 +264,40 @@ To test it is working, browse this URL `https://fiwaredsc-consumer.ita.es`:
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/did-web.json.png"><br/>
     did-web.json exposed at a well known URL</p>
 
+## step01.key: Publication of the did:key VCIssuer route
+Unlike the did:web deployment, this did:key does not require the exposition of any global DNS, so a local DNS will be used instead. In previous examples, the DNS was linked to a demo service, but now it will be linked to the consumer VCIssuer, the `fiwaredns-consumer.local`, so no new secret will have to be registered.
+      
+1. Modify the Apisix routes to reassign the already used DNS (`fiwaredns-consumer.local`) to expose:
+- The endpoint to access the VCIssuer. `https://fiwaredsc-consumer.local`,  `https://fiwaredsc-consumer.local/realms/consumerRealm/oid4vci`...  
+  This VCIssuer role implies that it exposes the OIDC well known endpoing. `https://fiwaredsc-consumer.local/realms/consumerRealm/.well-known/openid-configuration`
+
+    ```script
+    # Remove the previously used route ROUTE_DEMO_JSON
+    . scripts/manageAPI6Routes.sh delete -r ROUTE_DEMO_JSON
+
+    # Register the VCIssuer endpoint
+    . scripts/manageAPI6Routes.sh insert -r ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_local
+    ```
+2. As it is a locally managed DNS, remember to register it at the environments from where the local DNS will be accessed -this operation requires elevated permissions- (`/etc/hosts` for Linux and `C:\Windows\System32\drivers\etc\hosts` for Windows environment).
+
 ## _step02.web-Deployment of the VCIssuer (Keycloak)_
 [Keycloak](https://www.keycloak.org/) is an open source identity and access management solution that on its [release v25](https://www.keycloak.org/docs/latest/release_notes/index.html#openid-for-verifiable-credential-issuance-experimental-support) supports the protocol [OpenID for Verifiable Credential Issuance (OID4VCI) OID4VC](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) to manage Verifiable Credentials, and so, it can play the role of VCIssuer in the data space architecture.  
 The values of the Keycloak are more complex than previous helms, so it is recomended to analyze them to get familiar with.  
-From now on, this step focuses in the values of the `values-did.web.yaml` file.  
+This step focuses in the values of the `values-did.web.yaml` file.  
 As a brief summary, the values cover the following areas:
 - It setups a [postgresSql](https://www.postgresql.org/) instance.
 - No ingress is enabled as the Keycloak will be exposed via an apisix route.
 - Internally, the pods expose their endpoints via the https ports setting up a tls using the dns `fiwaredsc-consumer.ita.es`, so both inside and outside of the k8s network the URL to access the Keycloak will be `https://fiwaredsc-consumer.ita.es/`
 - A [Realm](https://mi-do.medium.com/understanding-realms-clients-and-roles-in-keycloak-c88a6e57d74f) `consumerRealm` is created at startup to manage a set of users, credentials, roles, and verifiable credentials to serve merely for this HOL.
 
-The deployment of the helm is taking in the development server around 3 minutes, so it is interesting to check to correct deployment of the chart, using the `devopTools` commands `kGet`, `kGet -w`, `kLog`, `kDescribe`, ... It is also interesting to analyze the k8s components generated using the command `hFileCommand debug`:
+To enable this scenario, ensure that the keycloak section of the `values-did.web.yaml` file is enabled before restarting the helm chart: 
 ```shell
-hFileCommand consumer debug > .tmp/componentsconsumer.yaml
+hFileCommand consumer -y restart -v -f web
+```
+
+The deployment of the helm is taking around 3 minutes, so it is interesting to check to correct deployment of the chart, using the `devopTools` commands `kGet`, `kGet -w`, `kLog`, `kDescribe`, ... It is also interesting to analyze the k8s components generated using the command `hFileCommand debug`:
+```shell
+hFileCommand consumer -f web -o .tmp/componentsconsumer.yaml
 ```
 
 **NOTE**: Most of the secrets used in this tutorial are randomly generated and although they are tried to be kept, they could be deleted. Imagine, _this helm chart is uninstalled and the secret manually deleted_. A new deployment of the chart will generate a new secret with new passwords to access the previously generated DDBB using a previously existing password (that has been destroyed forever). In these scenarios the only options are:
@@ -290,17 +316,42 @@ did-web-7b8f9b5d5d-lwwsf          1/1     Running   0          3m37s
 utils-nettools-8554c96795-b6ssf   1/1     Running   0          3m37s
 ```
 
-By now the endpoint is not externally accessible, but this command to show the well known openid configuration should work (`HTTP/2 200` should be the returned status request.):
+As the DNS was published at [step01.web](#step01web-publication-of-the-didweb-vcissuer-routes), the `https://fiwaredsc-consumer.ita.es` is linked to the Keycloak front end:
+   <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-1stacces.png"><br/>
+    Keycloak exposed at a global DNS</p>
+
+## _step02.key-Deployment of the VCIssuer (Keycloak)_
+[Keycloak](https://www.keycloak.org/) is an open source identity and access management solution that on its [release v25](https://www.keycloak.org/docs/latest/release_notes/index.html#openid-for-verifiable-credential-issuance-experimental-support) supports the protocol [OpenID for Verifiable Credential Issuance (OID4VCI) OID4VC](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) to manage Verifiable Credentials, and so, it can play the role of VCIssuer in the data space architecture.  
+The values of the Keycloak are more complex than previous helms, so it is recomended to analyze them to get familiar with.  
+This step focuses in the values of the `values-did.key.yaml` file.  
+As a brief summary, the values cover the following areas:
+- It setups a [postgresSql](https://www.postgresql.org/) instance.
+- No ingress is enabled as the Keycloak will be exposed via an apisix route. The DNS used to access the Keycloak will be `https://fiwaredsc-consumer.local`. Remember that up to now, this local DNS has been used for testing purposed.  
+Unlike the [step02.web deployment](#step02web-deployment-of-the-vcissuer-keycloak), this uses a local DNS to ease its deployment in environments in which the management of a global DNS is not possible.
+- A [Realm](https://mi-do.medium.com/understanding-realms-clients-and-roles-in-keycloak-c88a6e57d74f) `consumerRealm` is created at startup to manage a set of users, credentials, roles, and verifiable credentials to serve merely for this HOL.
+
+To enable this scenario, ensure that the keycloak section of the `values-did.key.yaml` file is enabled before restarting the helm chart: 
 ```shell
-curl -k https://consumer-keycloak/realms/consumerRealm/.well-known/openid-configuration -H fIdsc-consumer-keycloak.ita.es
-  HTTP/2 200 
-  cache-control: no-cache, must-revalidate, no-transform, no-store
-  content-type: application/json;charset=UTF-8
-  referrer-policy: no-referrer
-  strict-transport-security: max-age=31536000; includeSubDomains
-  x-content-type-options: nosniff
-  x-frame-options: SAMEORIGIN
-  x-xss-protection: 1; mode=block
+hFileCommand consumer -y restart -v -f key
 ```
 
-Not to mention that this previous command is faking the Host name, but the whole values file should be tailored to match the DNS managed by your organization to be used.
+The deployment of the helm is taking around 3 minutes, so it is interesting to check to correct deployment of the chart, using the `devopTools` commands `kGet`, `kGet -w`, `kLog`, `kDescribe`, ... It is also interesting to analyze the k8s components generated using the command `hFileCommand debug`:
+```shell
+hFileCommand consumer -f key -o .tmp/componentsconsumer.yaml
+```
+
+### Verification
+Once the consumer helm has been deployed, it status should look similar to this:
+```shell
+kGet 
+#   Running command [kubectl get pod  -n consumer  ]
+NAME                              READY   STATUS    RESTARTS   AGE
+consumer-keycloak-0               1/1     Running   0          3m37s
+consumer-postgresql-0             1/1     Running   0          3m37s
+did-key-7b8f9b5d5d-lwwsf          1/1     Running   0          3m37s
+utils-nettools-8554c96795-b6ssf   1/1     Running   0          3m37s
+```
+
+As the DNS was published at [step01.key](#step01key-publication-of-the-didkey-vcissuer-route), the `https://fiwaredsc-consumer.local` is linked to the Keycloak front end:
+   <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-consumer-local.png"><br/>
+    Keycloak exposed at a local DNS</p>

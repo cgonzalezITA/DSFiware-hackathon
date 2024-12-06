@@ -45,6 +45,7 @@ createArtifact $NAMESPACE $ARTIFACT $ARTIFACT_NAME \
     "kubectl create $ARTIFACT tls $ARTIFACT_NAME -n $NAMESPACE --key $CERT_KEY --cert $CERT_PUB"
     true
 
+echo "# Registers the fiwaredsc-consumer.local at the /etc/hosts file to map the DNS with the IP address"
 PUBLIC_IP=$(hostname -I | awk '{print $1}')
 DNS_CONSUMER="fiwaredsc-consumer.local"
 LINE="$PUBLIC_IP  $DNS_CONSUMER"
@@ -62,6 +63,7 @@ EOF
 fi
 readAnswer "To access it from a windows browser, add the same line into the 'C:\Windows\System32\drivers\etc\hosts' file\n\
     Press a key to continue" "" 10 false false
+
 
 echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
 cd $DSFIWAREHOL_FOLDER

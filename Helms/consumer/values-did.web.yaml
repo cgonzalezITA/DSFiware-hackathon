@@ -204,7 +204,7 @@ keycloak:
               info "** keycloak setup finished! **"
           fi
 
-          echo ""
+          echo "Running CMD=\"$@\""
           exec "$@"
   initContainers:
     - name: get-did
