@@ -35,14 +35,14 @@ echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
 cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
 
+echo "# Deployment of the VCIssuer (Keycloak)"
+hFileCommand consumer -f key r -v -y -b
+
 echo "# Remove the previously used route ROUTE_DEMO_JSON"
 . scripts/manageAPI6Routes.sh delete -r ROUTE_DEMO_JSON
 
 echo "# Register the VCIssuer endpoint"
 . scripts/manageAPI6Routes.sh insert -r ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_local
-
-echo "# Deployment of the VCIssuer (Keycloak)"
-hFileCommand consumer -f key r -v -y
 
 
 echo "# Registers the fiwaredsc-consumer.local at the /etc/hosts file to map the DNS with the IP address"
