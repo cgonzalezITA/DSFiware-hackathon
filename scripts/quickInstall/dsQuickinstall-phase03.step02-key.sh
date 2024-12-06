@@ -8,11 +8,12 @@ SUBMODULE=""
 . $BASEDIR/_base.sh
 SCRIPTNAME=$BASH_SOURCE
 
+unset DID1
 #---------------------------------------------- main program ------------------------
 echo "##############################"
 echo "# Install the DSFiware-hackathon github repository"
 DSFIWAREHOL_GH_HTTPS="https://github.com/cgonzalezITA/DSFiware-hackathon.git"
-DSFIWAREHOL_TAG="phase01.step01"
+DSFIWAREHOL_TAG="phase03.step02-key"
 DSFIWAREHOL_FOLDER="DSFiware-hackathon-$DSFIWAREHOL_TAG"
 REPLY='y'
 if [[ -d $DSFIWAREHOL_FOLDER ]]; then
@@ -26,24 +27,23 @@ if [[ $REPLY == 'y' ]]; then
     bash -c "$CMD"
 fi
 
-echo "# $DSFIWAREHOL_TAG-Deploying a basic version of a helloWorld chart"
-NAMESPACE="apisix"
-ARTIFACT=ns
-# createArtifact <namespace> <artifact> <artifactClue> <create_cmd>\
-#                   <deleteIfExists> (true)
-createArtifact $NAMESPACE $ARTIFACT $NAMESPACE "kubectl create $ARTIFACT $NAMESPACE" true
+echo "# $DSFIWAREHOL_TAG-Deployment of the VCIssuer (Keycloak)"
+NAMESPACE="consumer"
 
-echo "# Creating a tls secret"
-mkdir -p Helms/apisix/.certs 
-CERT_KEY=Helms/apisix/.certs/tls-wildcard.key
-CERT_PUB=Helms/apisix/.certs/tls-wildcard.crt
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $CERT_KEY -out $CERT_PUB -subj "/CN=*.local"
+# DSFIWAREHOL_FOLDER="DSFiware-hackathon" # TODO DELETE
+echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
+cd $DSFIWAREHOL_FOLDER
+echo "Now at $(pwd) folder"
 
-ARTIFACT=secret
-ARTIFACT_NAME=wildcardlocal-tls
-createArtifact $NAMESPACE $ARTIFACT $ARTIFACT_NAME \
-    "kubectl create $ARTIFACT tls $ARTIFACT_NAME -n $NAMESPACE --key $CERT_KEY --cert $CERT_PUB"
-    true
+echo "# Deployment of the VCIssuer (Keycloak)"
+hFileCommand consumer -f key r -v -y -b
+
+echo "# Remove the previously used route ROUTE_DEMO_JSON"
+. scripts/manageAPI6Routes.sh delete -r ROUTE_DEMO_JSON
+
+echo "# Register the VCIssuer endpoint"
+. scripts/manageAPI6Routes.sh insert -r ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_local
+
 
 echo "# Registers the fiwaredsc-consumer.local at the /etc/hosts file to map the DNS with the IP address"
 PUBLIC_IP=$(hostname -I | awk '{print $1}')
@@ -52,7 +52,7 @@ LINE="$PUBLIC_IP  $DNS_CONSUMER"
 echo "# Map the local DNS at your hosts file"
 MSG="# To use the DNS $DNS_CONSUMER at the host, it is required to add a new line \"$LINE\" to the '/etc/hosts' file.\n\
 Do you want to insert it automatically?";
-if [ $(readAnswer "$MSG (y*|n)" 'y') == 'y' ]; then
+if [ $(readAnswer "$MSG (y|n*)" 'n') == 'y' ]; then
     sudo cat <<EOF >> /etc/hosts
 $LINE
 EOF
@@ -65,26 +65,19 @@ readAnswer "To access it from a windows browser, add the same line into the 'C:\
     Press a key to continue" "" 10 false false
 
 
-echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
-cd $DSFIWAREHOL_FOLDER
-echo "Now at $(pwd) folder"
-mkdir -p .tmp 
 
-echo "# Deploying the apisix helm..."
-ARTIFACT_NAME=apisix
-hFileCommand $ARTIFACT_NAME -y -b restart >.tmp/quickInstall.log
-readAnswer "On the next screen wait until all the artifacts are properly deployed (1/1)  then press Ctrl+C and the process will continue" "" 5
-kGet -w -v -n $NAMESPACE
+# Waits for the deployment
+wait4PodsDeploymentCompleted $NAMESPACE 20 "Keycloak may take a while to be available, so please, wait a few seconds after its status is (1/1)"
 
-CMD="curl -s -o /dev/null -w \"%{http_code}\" -k https://$DNS_CONSUMER"
-echo "# Running CMD=$CMD"
+echo "# Verification"
+CMD="curl -s -o /dev/null -w \"%{http_code}\" -k https://$DNS_CONSUMER/realms/consumerRealm/account/oid4vci"
 RC=$($CMD)
-echo "RC=$RC"
+echo -e "\nRC=$RC"
 if [[ "$RC" == "\"200\"" ]]; then
-    echo "It has worked! This is the end of phase01.step01. Congrats!"
-    readAnswer "Now you can try it running command \"curl -k https://$DNS_CONSUMER\"" 5
+    readAnswer "\"https://$DNS_CONSUMER\" has worked! Congrats!. Now with the proper configuration you can browse the \"https://$DNS_CONSUMER\" URL" "" 15 false
 else
-    echo "It seems that something has failed (RC=$RC). Review the process step by step reading the documentation"
+    readAnswer "\"https://$DNS_CONSUMER\" has failed (RC=$RC). Review the logs and the value file used by helm for some clues" "" 15 false
 fi
+
 echo "Script $SCRIPTNAME has finished"
 cd ..

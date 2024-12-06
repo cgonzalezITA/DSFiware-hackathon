@@ -156,7 +156,7 @@ ROUTES=$(cat <<EOF
     },
     "ROUTE_WELLKNOWN_DID_WEB_fiwaredsc_consumer_ita_es": {
         "uri": "/.well-known/did.json",
-        "name": "Did.web",
+        "name": "vcissuer-consumer-Did.web",
         "host": "fiwaredsc-consumer.ita.es",
         "methods": [
             "GET"
@@ -175,7 +175,7 @@ ROUTES=$(cat <<EOF
     },
     "ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_ita_es": {
         "uri": "/*",
-        "name": "consumer",
+        "name": "vcissuer-consumer-ita_es",
         "host": "fiwaredsc-consumer.ita.es",
         "methods": [
             "GET",
@@ -192,6 +192,28 @@ ROUTES=$(cat <<EOF
             "scheme": "https",
             "nodes": {
                 "consumer-keycloak.consumer.svc.cluster.local:443": 1
+            }
+        }
+    },
+    "ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_local": {
+        "name": "vcissuer-consumer-local",
+        "uri": "/*",
+        "host": "fiwaredsc-consumer.local",
+        "methods": [
+            "GET",
+            "POST",
+            "PUT",
+            "HEAD",
+            "CONNECT",
+            "OPTIONS",
+            "PATCH",
+            "DELETE"
+        ],
+        "upstream": {
+            "type": "roundrobin",
+            "scheme": "http",
+            "nodes": {
+                "consumer-keycloak.consumer.svc.cluster.local:80": 1
             }
         }
     },

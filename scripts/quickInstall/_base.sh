@@ -59,3 +59,16 @@ function readAnswer() {
     read -t $TIMEOUT -n 1 REPLY || REPLY=$DEFANSWER;
     [ "$LOWERANSWER" == true ] && echo "${REPLY,,}" || echo $REPLY;
 }
+
+function wait4PodsDeploymentCompleted() {
+    # wait4PodsDeploymentCompleted <NAMESPACE> [<TIMEOUT=20>] [<CUSTOMMSG>]
+    FATAL_ERROR=false;
+    [[ "$#" -gt 0 ]] && NAMESPACE=$1; shift || FATAL_ERROR=true;
+    [[ "$#" -gt 0 ]] && TIMEOUT=$1; shift || TIMEOUT=20;
+    [[ "$#" -gt 0 ]] && CUSTOMMSG_END=$1; shift || CUSTOMMSG_END="Please, be patient";
+    [ "$FATAL_ERROR" == true ] && echo "Missing mandatory param at wait4PodsDeploymentCompleted func">&2 exit
+    CUSTOMMSG="On the next screen wait until all the artifacts are properly deployed, then press Ctrl+C and the process will continue. $CUSTOMMSG_END"
+
+    readAnswer "$CUSTOMMSG" "" $TIMEOUT false
+    kGet -w -v -n $NAMESPACE
+}
