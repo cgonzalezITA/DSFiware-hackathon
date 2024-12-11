@@ -13,11 +13,13 @@ STOP=false
 ## Functions               ##
 #############################
 
-URL_VCISSUER=https://fiwaredsc-consumer.ita.es/realms/consumerRealm
-# https://fiwaredsc-consumer.ita.es/realms/consumerRealm/account/oid4vci to retrieve the equivalent from a browser using a VCWallet
+URL_VCISSUER=https://fiwaredsc-consumer.local/realms/consumerRealm
+# https://fiwaredsc-consumer.local/realms/consumerRealm/account/oid4vci to retrieve the equivalent from a browser using a VCWallet
 ADMIN_CLI=admin-cli
 USER_01=oc-user
 USER_01_PASSWORD=test
 CREDENTIAL_TYPE=operator-credential
 
-eval $BASEDIR/_retrieveVC.sh --vcIssuer $URL_VCISSUER --user $USER_01 --password $USER_01_PASSWORD --credentialType $CREDENTIAL_TYPE $@
+VERIFIABLE_CREDENTIAL=$($BASEDIR/_issueVC.sh --vcIssuer $URL_VCISSUER --user $USER_01 --password $USER_01_PASSWORD --credentialType $CREDENTIAL_TYPE $@)
+echo VERIFIABLE_CREDENTIAL=$VERIFIABLE_CREDENTIAL > /dev/tty
+echo $VERIFIABLE_CREDENTIAL

@@ -13,7 +13,7 @@ unset DID1
 echo "##############################"
 echo "# Install the DSFiware-hackathon github repository"
 DSFIWAREHOL_GH_HTTPS="https://github.com/cgonzalezITA/DSFiware-hackathon.git"
-DSFIWAREHOL_TAG="phase03.step02-key"
+DSFIWAREHOL_TAG="phase03.step04"
 DSFIWAREHOL_FOLDER="DSFiware-hackathon-$DSFIWAREHOL_TAG"
 REPLY='y'
 if [[ -d $DSFIWAREHOL_FOLDER ]]; then
@@ -36,7 +36,7 @@ cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
 
 echo "# Removes previously existing namespace %$NAMESPACE"
-kRemoveRestart ns $NAMESPACE -y
+kRemoveRestart ns $NAMESPACE -y -v
 echo "# Deployment of the VCIssuer (Keycloak)"
 hFileCommand consumer -f key r -v -y -b
 
@@ -45,7 +45,6 @@ echo "# Remove the previously used route ROUTE_DEMO_JSON"
 
 echo "# Register the VCIssuer endpoint"
 . scripts/manageAPI6Routes.sh insert -r ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_local
-
 
 echo "# Registers the fiwaredsc-consumer.local at the /etc/hosts file to map the DNS with the IP address"
 PUBLIC_IP=$(hostname -I | awk '{print $1}')
@@ -76,10 +75,35 @@ CMD="curl -s -o /dev/null -w \"%{http_code}\" -k https://$DNS_CONSUMER/realms/co
 RC=$($CMD)
 echo -e "\nRC=$RC"
 if [[ "$RC" == "\"200\"" ]]; then
-    readAnswer "\"https://$DNS_CONSUMER\" has worked! Congrats!. Now with the proper configuration you can browse the \"https://$DNS_CONSUMER\" URL" "" 15 false
+    readAnswer "\"https://$DNS_CONSUMER\" has worked! Congrats!. Now a VC will be issued for a user with ORDERCONSUMER role" "" 5 false
+
+    echo "Script $SCRIPTNAME Continues issuing a VC"
+    VERIFIABLE_CREDENTIAL=$(scripts/issueVC_operator-credential-orderProducer.sh)
+
+    echo "# Verification. Does VERIFIABLE_CREDENTIAL exists?"
+    if [[ "${#VERIFIABLE_CREDENTIAL}" -gt  0 ]]; then
+        if echo "$VERIFIABLE_CREDENTIAL" | grep -Eq '^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$'; then
+            echo "The VERIFIABLE_CREDENTIAL contains a JWT."
+            HEADER=$(echo "$VERIFIABLE_CREDENTIAL" | cut -d '.' -f1 | base64 -d 2>/dev/null)
+            PAYLOAD=$(echo "$VERIFIABLE_CREDENTIAL" | cut -d '.' -f2 | base64 -d 2>/dev/null)
+            if echo "$HEADER" | jq . >/dev/null 2>&1 && echo "$PAYLOAD" | jq . >/dev/null 2>&1; then
+                echo "The VERIFIABLE_CREDENTIAL contains a valid JWT."
+                readAnswer "\"https://$DNS_CONSUMER\" has worked. VC VERIFIABLE_CREDENTIAL has been properly generated for the user with ORDERCONSUMER role. \
+                You can verify it is a valid JWT at https://jwt.io/
+                $VERIFIABLE_CREDENTIAL\nCongrats!" "" 5 false
+            else
+                echo "The variable contains an invalid JWT."
+            fi
+        else
+            echo "The VERIFIABLE_CREDENTIAL does not contain a valid JWT format."
+        fi
+    else
+        readAnswer "\"https://$DNS_CONSUMER\" has been unable to issue a VC VERIFIABLE_CREDENTIAL. Review the logs and the value file used by helm for some clues" "" 15 false
+    fi
+
+    echo "Script $SCRIPTNAME has finished"
 else
     readAnswer "\"https://$DNS_CONSUMER\" has failed (RC=$RC). Review the logs and the value file used by helm for some clues" "" 15 false
 fi
 
-echo "Script $SCRIPTNAME has finished"
 cd ..
