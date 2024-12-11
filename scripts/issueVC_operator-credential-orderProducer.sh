@@ -20,4 +20,6 @@ USER_01=op-user
 USER_01_PASSWORD=test
 CREDENTIAL_TYPE=operator-credential
 
-eval $BASEDIR/_issueVC.sh --vcIssuer $URL_VCISSUER --user $USER_01 --password $USER_01_PASSWORD --credentialType $CREDENTIAL_TYPE $@
+VERIFIABLE_CREDENTIAL=$($BASEDIR/_issueVC.sh --vcIssuer $URL_VCISSUER --user $USER_01 --password $USER_01_PASSWORD --credentialType $CREDENTIAL_TYPE $@)
+echo VERIFIABLE_CREDENTIAL=$VERIFIABLE_CREDENTIAL > /dev/tty
+echo $VERIFIABLE_CREDENTIAL
