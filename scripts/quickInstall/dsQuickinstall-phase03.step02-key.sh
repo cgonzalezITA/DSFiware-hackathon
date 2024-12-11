@@ -35,6 +35,8 @@ echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
 cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
 
+echo "# Removes previously existing namespace %$NAMESPACE"
+kRemoveRestart ns $NAMESPACE -y
 echo "# Deployment of the VCIssuer (Keycloak)"
 hFileCommand consumer -f key r -v -y -b
 

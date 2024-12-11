@@ -17,6 +17,15 @@
     - [Verification](#verification-1)
   - [_step02.key-Deployment of the VCIssuer (Keycloak)_](#step02key-deployment-of-the-vcissuer-keycloak)
     - [Verification](#verification-2)
+  - [step03-First access to the Keycloak route](#step03-first-access-to-the-keycloak-route)
+    - [Roles](#roles)
+    - [Users Registered](#users-registered)
+  - [step04-Issuance of VCs](#step04-issuance-of-vcs)
+    - [Issue VCs through a M2M flow (Using API Rest calls)](#issue-vcs-through-a-m2m-flow-using-api-rest-calls)
+    - [Issue VCs for a H2M interaction using a browser](#issue-vcs-for-a-h2m-interaction-using-a-browser)
+  - [Bottom line](#bottom-line)
+    - [Issue VCs using a browser](#issue-vcs-using-a-browser)
+  - [Bottom line](#bottom-line-1)
 
 Any participant willing to consume services offered at the data space is required to count on a minimum infrastructure to enable the management of its **Verifiable Credentials (VCs)** and a **Decentralized Identifier (DID)** that will be its identity used to sign any VC request issued by it.  
 This section describes the components and the steps deploy a consumer's infrastructure. The step number is duplicated given that they focus on the use of a DID web or a DID key as explained below.
@@ -230,7 +239,7 @@ git checkout phase03.step02-key
 ```
 
 ## step01.web: Publication of the did:web VCIssuer routes
-As explained before, one of the requirements of the did:web DIDs is that they must be accessible from the internet at the well known endpoint `/.well-known/did.json`. To setup a new route to access this json document it is mandatory to have the control of the chosen DNS having its certificates (these certificates will have to be signed by an Certification Authority (CA)):
+As explained before, one of the requirements of the did:web DIDs is that they must be accessible from the internet at the well known endpoint `/.well-known/did.json`. To setup a new route to access this json document it is mandatory to have the control of the chosen DNS having its certificates (these certificates will have to be signed by a Certification Authority (CA)):
 1. Create a tls secret containing the certificate files. Customize the following commands according to your organization methodology to manage certificates.
       ```shell
       # Creates the tls certificate at the apisix namespace to manage the *.ita.es tls.
@@ -241,7 +250,7 @@ As explained before, one of the requirements of the did:web DIDs is that they mu
       
 2. Modify the Apisix to manage a new DNS (`fiwaredsc-consumer.ita.es`) using the tls `wildcard-ita.es-tls` and upgrade the Apisix Helm chart and enable the keycloack component at the [values-did.web.yaml](../../Helms/consumer/values-did.web.yaml).
       ```script
-      hFileCommand consumer -y restart -v -f web
+      hFileCommand consumer -y restart -v -f web -b
       ```
 
 3. Once deployed, new routes must be registered to expose:
@@ -263,6 +272,7 @@ As explained before, one of the requirements of the did:web DIDs is that they mu
 To test it is working, browse this URL `https://fiwaredsc-consumer.ita.es`:
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/did-web.json.png"><br/>
     did-web.json exposed at a well known URL</p>
+
 
 ## step01.key: Publication of the did:key VCIssuer route
 Unlike the did:web deployment, this did:key does not require the exposition of any global DNS, so a local DNS will be used instead. In previous examples, the DNS was linked to a demo service, but now it will be linked to the consumer VCIssuer, the `fiwaredns-consumer.local`, so no new secret will have to be registered.
@@ -321,6 +331,10 @@ As the DNS was published at [step01.web](#step01web-publication-of-the-didweb-vc
     Keycloak exposed at a global DNS</p>
 
 ## _step02.key-Deployment of the VCIssuer (Keycloak)_
+```shell
+# To show the structure of the github after the completion of this step
+git checkout phase03.step02-key
+```
 [Keycloak](https://www.keycloak.org/) is an open source identity and access management solution that on its [release v25](https://www.keycloak.org/docs/latest/release_notes/index.html#openid-for-verifiable-credential-issuance-experimental-support) supports the protocol [OpenID for Verifiable Credential Issuance (OID4VCI) OID4VC](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) to manage Verifiable Credentials, and so, it can play the role of VCIssuer in the data space architecture.  
 The values of the Keycloak are more complex than previous helms, so it is recomended to analyze them to get familiar with.  
 This step focuses in the values of the `values-did.key.yaml` file.  
@@ -355,3 +369,296 @@ utils-nettools-8554c96795-b6ssf   1/1     Running   0          3m37s
 As the DNS was published at [step01.key](#step01key-publication-of-the-didkey-vcissuer-route), the `https://fiwaredsc-consumer.local` is linked to the Keycloak front end:
    <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-consumer-local.png"><br/>
     Keycloak exposed at a local DNS</p>
+
+```shell
+# To show the structure of the github after the completion of the next step
+git checkout phase03.step04
+```
+
+## step03-First access to the Keycloak route
+Regardless the consumer VCIssuer's endpoint and the did used, the access to the keycloak admin console, requires a user and a password.  
+**NOTE**: From now on, this guideline document will refer to the local URLs, but for sake of clarification, the DIDs mentioned will be the did:web.
+
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-login.png"><br/>
+    Keycloak exposed at the URL https://fiwaredsc-consumer.local</p>
+
+To know the user and the password, again, the values file must be revisited:
+```yaml
+keycloak:
+  extraEnvVars:
+    - name: KEYCLOAK_ADMIN
+    value: "admin0"
+```
+
+To know the password, the k8s components generated can be revisited to discover an env var containing the secret that keeps this password. `KEYCLOAK_ADMIN_PASSWORD`. To get it, instead of analyzing the secret, a simple `echo` will do the trick:
+```shell
+kExec keycloak -n consumer -v -c keycloak -- printenv KEYCLOAK_ADMIN_PASSWORD
+```
+
+
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-1stacces.png"><br/>
+    First access to the keycloak portal at the URL https://fiwaredsc-consumer.ita.es</p>
+
+At this point, the different sections of the realm (`consumerRealm`) can be visited. 
+### Roles
+The following image shows the roles defined for the `did:web:fiwaredsc-consumer.ita.es` client at the consumerRealm realm:
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-consumerRealm-didweb-roles.png"><br/>
+    consumerRealm roles for its `did:web:fiwaredsc-consumer.ita.es` client</p>
+
+### Users Registered
+The Keycloak UI allows the management of users for this Realm, but this deployment has created a couple of them just for testing. `oc-user` and `op-user` with their password present at the value file used.
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-consumerRealm-oc-user-roles.png"><br/>
+    oc-user roles</p>
+
+## step04-Issuance of VCs
+```shell
+# To show the structure of the github after the completion of this step
+git checkout phase03.step04
+```
+Once the infrastructure has been validated, Keycloak can be used as a VCIssuer. 
+### Issue VCs through a M2M flow (Using API Rest calls)
+This step is the first step of the _Life of a Verifiable Credential_ described at the [www.w3.org vc-data-model](https://www.w3.org/TR/vc-data-model/#lifecycle-details) and as the w3 specification does not describe how a VC has to be issued, the flow here used is based on the [OpenID for Verifiable Credentials Issuance specification](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html). 
+
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/VCIssuance-VC.png"><br/>
+    VCIssuance sequence diagram</p>
+
+---
+
+The flow can be executed using:
+- Shell file: [`_issueVC.sh`](../../scripts/_issueVC.sh)
+- Juypter Notebook document [`issueVC_user-credential.ipynb`](../../scripts/issueVC_user-credential.ipynb)  
+
+We will focus on the jupyter notebook [`hackathon-retrieveConsumerVC.ipynb`](../../scripts/issueVC_user-credential.ipynb). It can be run on a Jupyter notebook server, but in this guideline, we are going to use [VSCode](https://code.visualstudio.com/) and its [VSCode Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter)    
+Alternatively, to use the script version ([`hackathon-retrieveConsumerVC.sh`](../../scripts/hackathon-retrieveConsumerVC.sh)) just run any of the following script files: 
+```shell
+./scripts/_issueVC.sh -h # This is the base script. It can be customized with parameters. Run it with the -h param to view help.
+./scripts/issueVC_operator-credential-orderConsumer.sh -s # To issue a VC for the user with ORDERCONSUMER role
+.scripts/issueVC_operator-credential-orderProducer.sh -s # # To issue a VC for the user with ORDERPRODUCER role
+```
+
+0. Before the Jupyter Notebook can be run, a [conda working environment](https://edcarp.github.io/introduction-to-conda-for-data-scientists/02-working-with-environments/index.html) is required. A brief guideline can be found at [Install and setup an environment using Conda](https://github.com/cgonzalezITA/devopsTools/blob/master/pTools/README.md#install-and-setup-an-environment-using-conda).  
+
+1. Set the VSCode Kernel to be used
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/VCIssuance-usingVSCodeJupyterNB.png"><br/>
+    Jupyter notebook Kernel selection</p>
+
+2. The following env vars have to be customized to your environment: 
+   
+```shell
+URL_VCISSUER=https://fiwaredsc-consumer.local/realms/consumerRealm
+ADMIN_CLI=admin-cli
+USER_01=oc-user
+USER_01_PASSWORD=test
+CREDENTIAL_TYPE=user-credential
+```
+3. Get the URL from the well known openid configuration to retrieve the Token to access the VC
+```python
+url=f"{URL_VCISSUER}/.well-known/openid-configuration"
+response = requests.get(url)
+response.raise_for_status()
+jsonResponse=response.json()
+URL_VCISSUER_TOKEN=jsonResponse["token_endpoint"]
+# URL_VCISSUER_TOKEN=https://fiwaredsc-consumer.local/realms/consumerRealm/protocol/openid-connect/token
+```  
+4. Get Token to access the credential's offer URI
+```python
+url=URL_VCISSUER_TOKEN
+data={"grant_type": "password",
+      "client_id": ADMIN_CLI,
+      "username": USER_01,
+      "password": USER_01_PASSWORD
+}
+headers={'Content-Type': 'application/x-www-form-urlencoded'}
+response = requests.post(url, data=data, headers=headers)
+jsonResponse=response.json()
+response.raise_for_status()
+ACCESS_TOKEN=jsonResponse["access_token"]
+# ACCESS_TOKEN=eyJhbGciOiJSUz...
+```
+5. Get a credential offer uri, using the retrieved AccessToken
+```python
+URL_CREDENTIAL_OFFER=f"{URL_VCISSUER}/protocol/oid4vc/credential-offer-uri"
+url=URL_CREDENTIAL_OFFER
+params={"credential_configuration_id": CREDENTIAL_TYPE}
+headers={'Authorization': f"Bearer {ACCESS_TOKEN}"}
+response = requests.get(url, params=params, headers=headers)
+jsonResponse=response.json()
+response.raise_for_status()
+OFFER_URI=f'{jsonResponse["issuer"]}{jsonResponse["nonce"]}'
+# OFFER_URI=https://fiwaredsc-consumer.local/realms/consumerRealm/protocol/oid4vc/credential-offer/xDPxU4hPo...
+```
+
+6. Use the offer uri, to retrieve a preauthorized code
+```python
+url=OFFER_URI
+headers={'Authorization': f"Bearer {ACCESS_TOKEN}"}
+response = requests.get(url, headers=headers)
+jsonResponse=response.json()
+response.raise_for_status()
+PRE_AUTHORIZED_CODE=jsonResponse["grants"]["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"]
+# PRE_AUTHORIZED_CODE=5bcc0ea1-2571-4127-a07
+```
+
+7. Uses the pre-authorized code to get a credential AccessToken at the authorization server
+```python
+url=URL_VCISSUER_TOKEN
+data={"grant_type": "urn:ietf:params:oauth:grant-type:pre-authorized_code",
+      "pre-authorized_code": PRE_AUTHORIZED_CODE,
+      "code": PRE_AUTHORIZED_CODE
+}
+headers={'Content-Type': 'application/x-www-form-urlencoded'}
+response = requests.post(url, data=data, headers=headers)
+jsonResponse=response.json()
+response.raise_for_status()
+CREDENTIAL_ACCESS_TOKEN=jsonResponse["access_token"]
+# CREDENTIAL_ACCESS_TOKEN=eyJhbGciOiJSUzI1...
+```
+
+8. Finally Use the returned access token to get your goal, **the Verifiable Credential**
+```python
+url=URL_CREDENTIAL_ENDPOINT
+data={"credential_identifier": CREDENTIAL_TYPE,
+      "format": "jwt_vc" }
+headers={'Accept': '*/*',
+         'Content-Type': 'application/json',
+         'Authorization': f'Bearer {CREDENTIAL_ACCESS_TOKEN}'}
+response = requests.post(url, json=data, headers=headers)
+jsonResponse=response.json()
+response.raise_for_status()
+VERIFIABLE_CREDENTIAL=jsonResponse["credential"]
+```
+
+```python
+# Verifiable Credential user-credential For user oc-user
+# VERIFIABLE_CREDENTIAL=eyJhbGciOiJFUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJkaWQ6a2V5OnpEbmFldEJ1d21mQlphZE5vTTZQY2Vxdkt5NnBOQkc4b0hQdUpXSFZlb204a0pIM1AifQ.eyJuYmYiOjE3MzM5MzEyOTIsImp0aSI6InVybjp1dWlkOmRlMzU1Mzc3LWMxNjEtNDRmNS04OWEzLWY0MTYzNTdkNjM1YyIsImlzcyI6ImRpZDprZXk6ekRuYWV0QnV3bWZCWmFkTm9NNlBjZXF2S3k2cE5CRzhvSFB1SldIVmVvbThrSkgzUCIsInZjIjp7InR5cGUiOlsiT3BlcmF0b3JDcmVkZW50aWFsIl0sImlzc3VlciI6ImRpZDprZXk6ekRuYWV0QnV3bWZCWmFkTm9NNlBjZXF2S3k2cE5CRzhvSFB1SldIVmVvbThrSkgzUCIsImlzc3VhbmNlRGF0ZSI6MTczMzkzMTI5Mi40OTUwMDAwMDAsImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImZpcnN0TmFtZSI6Ik9yZGVyUHJvZHVjZXIiLCJsYXN0TmFtZSI6IlVzZXIiLCJyb2xlcyI6W3sibmFtZXMiOlsiT1JERVJfUFJPRFVDRVIiXSwidGFyZ2V0IjoiZGlkOmtleTp6RG5hZXRCdXdtZkJaYWROb002UGNlcXZLeTZwTkJHOG9IUHVKV0hWZW9tOGtKSDNQIn1dLCJlbWFpbCI6Im9yZGVycHJvZHVjZXJ1c2VyQGNvbnN1bWVyLm9yZyJ9LCJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vd3d3LnczLm9yZy9ucy9jcmVkZW50aWFscy92MSJdfX0.AccsK90ryk7Ir2idT-tBSeJuSg29eJMesjMDLl5DYXQUqH8BoFJpfUu831XTSptDNTegB1A3kCpPEUExMWaBUg
+```
+
+This VC will be later used to access the Data Space.
+
+### Issue VCs for a H2M interaction using a browser
+It has not been possible to fully document this issuance mechanism due to incompatibilities between the Keycloak version and the VCWallet used. It will be described as soon as the proper software versions are tested.
+
+
+
+
+```shell
+# To show the structure of the github after the completion of the next step
+git checkout phase04.step02
+```
+## Bottom line
+The deployment of the consumer components enable the issuance of Verifiable Credentials, although some issue is still opened. At this stage, the Fiware Data Space architecture deployed looks like:
+   <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/Fiware-DataSpaceGlobalArch-phase03.png"><br/>
+    Deployed architecture after phase 2 completed</p>
+    
+```shell
+./scripts/hackathon-retrieveConsumerVC.sh -h # To obtain info about the params
+./scripts/hackathon-retrieveConsumerVC.sh -s # To run it stopping after each step
+```
+
+0. Before the Jupyter Notebook can be run, a [conda working environment](https://edcarp.github.io/introduction-to-conda-for-data-scientists/02-working-with-environments/index.html) is required. A brief guideline can be found at [Install and setup an environment using Conda](https://github.com/cgonzalezITA/devopsTools/blob/master/pTools/README.md#install-and-setup-an-environment-using-conda).  
+
+1. Set the VSCode Kernel to be used
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/VCIssuance-usingVSCodeJupyterNB.png"><br/>
+    Jupyter notebook Kernel selection</p>
+
+2. The following env vars have to be customized to your environment: 
+   
+```shell
+URL_VCISSUER=https://fiwaredsc-consumer.local/realms/consumerRealm
+ADMIN_CLI=admin-cli
+USER_01=oc-user
+USER_01_PASSWORD=test
+CREDENTIAL_TYPE=user-credential
+```
+3. Get the URL from the well known openid configuration to retrieve the Token to access the VC
+```python
+url=f"{URL_VCISSUER}/.well-known/openid-configuration"
+response = requests.get(url)
+response.raise_for_status()
+jsonResponse=response.json()
+URL_VCISSUER_TOKEN=jsonResponse["token_endpoint"]
+# URL_VCISSUER_TOKEN=https://fiwaredsc-consumer.local/realms/consumerRealm/protocol/openid-connect/token
+```  
+4. Get Token to access the credential's offer URI
+```python
+url=URL_VCISSUER_TOKEN
+data={"grant_type": "password",
+      "client_id": ADMIN_CLI,
+      "username": USER_01,
+      "password": USER_01_PASSWORD
+}
+headers={'Content-Type': 'application/x-www-form-urlencoded'}
+response = requests.post(url, data=data, headers=headers)
+jsonResponse=response.json()
+response.raise_for_status()
+ACCESS_TOKEN=jsonResponse["access_token"]
+# ACCESS_TOKEN=eyJhbGciOiJSUz...
+```
+5. Get a credential offer uri, using the retrieved AccessToken
+```python
+URL_CREDENTIAL_OFFER=f"{URL_VCISSUER}/protocol/oid4vc/credential-offer-uri"
+url=URL_CREDENTIAL_OFFER
+params={"credential_configuration_id": CREDENTIAL_TYPE}
+headers={'Authorization': f"Bearer {ACCESS_TOKEN}"}
+response = requests.get(url, params=params, headers=headers)
+jsonResponse=response.json()
+response.raise_for_status()
+OFFER_URI=f'{jsonResponse["issuer"]}{jsonResponse["nonce"]}'
+# OFFER_URI=https://fiwaredsc-consumer.local/realms/consumerRealm/protocol/oid4vc/credential-offer/xDPxU4hPo...
+```
+
+6. Use the offer uri, to retrieve a preauthorized code
+```python
+url=OFFER_URI
+headers={'Authorization': f"Bearer {ACCESS_TOKEN}"}
+response = requests.get(url, headers=headers)
+jsonResponse=response.json()
+response.raise_for_status()
+PRE_AUTHORIZED_CODE=jsonResponse["grants"]["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"]
+# PRE_AUTHORIZED_CODE=5bcc0ea1-2571-4127-a07
+```
+
+7. Uses the pre-authorized code to get a credential AccessToken at the authorization server
+```python
+url=URL_VCISSUER_TOKEN
+data={"grant_type": "urn:ietf:params:oauth:grant-type:pre-authorized_code",
+      "pre-authorized_code": PRE_AUTHORIZED_CODE,
+      "code": PRE_AUTHORIZED_CODE
+}
+headers={'Content-Type': 'application/x-www-form-urlencoded'}
+response = requests.post(url, data=data, headers=headers)
+jsonResponse=response.json()
+response.raise_for_status()
+CREDENTIAL_ACCESS_TOKEN=jsonResponse["access_token"]
+# CREDENTIAL_ACCESS_TOKEN=eyJhbGciOiJSUzI1...
+```
+
+8. Finally Use the returned access token to get your goal, **the Verifiable Credential**
+```python
+url=URL_CREDENTIAL_ENDPOINT
+data={"credential_identifier": CREDENTIAL_TYPE,
+      "format": "jwt_vc" }
+headers={'Accept': '*/*',
+         'Content-Type': 'application/json',
+         'Authorization': f'Bearer {CREDENTIAL_ACCESS_TOKEN}'}
+response = requests.post(url, json=data, headers=headers)
+jsonResponse=response.json()
+response.raise_for_status()
+VERIFIABLE_CREDENTIAL=jsonResponse["credential"]
+```
+
+```python
+# Verifiable Credential user-credential For user oc-user
+# VERIFIABLE_CREDENTIAL=eyJhbGciOiJFUzI1NiIsInR5c...
+```
+
+This VC will be later used to access the Data Space.
+
+### Issue VCs using a browser
+It has not been possible to fully document this issuance mechanism due to incompatibilities between the Keycloak version and the VCWallet used. It will be described as soon as the proper software versions are tested.
+
+
+## Bottom line
+The deployment of the consumer components enable the issuance of Verifiable Credentials, although some issue is still opened. At this stage, the Fiware Data Space architecture deployed looks like:
+   <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/Fiware-DataSpaceGlobalArch-phase03.png"><br/>
+    Deployed architecture after phase 2 completed</p>
