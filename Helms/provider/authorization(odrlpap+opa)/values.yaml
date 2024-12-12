@@ -1,0 +1,222 @@
+# -- configuration for the postgresql to be deployed as part of the connector, see https://github.com/bitnami/charts/tree/main/bitnami/postgresql for all options
+postgresql:
+  enabled: true
+  fullnameOverride: postgresql
+  generatePasswords:
+    # -- should a password for the database be generated in the cluster
+    enabled: true
+    secretName: postgresql-secret
+  auth:
+    # .generatePasswords.secretName
+    existingSecret: postgresql-secret
+    secretKeys:
+      adminPasswordKey: postgres-admin-password
+      userPasswordKey: postgres-user-password
+  # -- configuration for the primary of the db
+  primary:
+    # -- scripts to be run on intialization
+    initdb:
+      scripts:
+        create.sh: |
+          psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE DATABASE pap;"
+    persistence:
+      size: 2Gi
+      accessModes: 
+      - ReadWriteOnce
+
+odrl-pap:
+  # -- should it be enabled? set to false if one outside the chart is used.
+  enabled: true
+  # -- allows to set a fixed name for the services
+  fullnameOverride: odrl-pap
+  # -- connection to the database
+  database:
+    # -- url to connect the db at
+    url: jdbc:postgresql://postgresql:5432/pap
+    # -- username to access the db
+    username: postgres
+    # -- secret to take the password from
+    existingSecret:
+      enabled: true
+      name: postgresql-secret
+      key: postgres-admin-password
+  deployment:
+    image:
+      repository: quay.io/fiware/odrl-pap
+      tag: 0.1.4
+      
+opa:
+  enabled: true
+  fullname: opa
+  
+  # Setup the webhook using cert-manager
+  certManager:
+    enabled: false
+  authz:
+  # Disable if you don't want authorization.
+  # Mostly useful for debugging.
+    enabled: false
+
+  # Docker image and tag to deploy.
+  image: openpolicyagent/opa
+  imageTag: 0.69.0
+  # imagePullPolicy: IfNotPresent
+
+  # Port to which the opa pod will bind itself
+  # NOTE IF you use a different port make sure it maches the ones in the readinessProbe
+  # and livenessProbe
+  port: 8181
+  diagnostic_port: 8282
+
+  log_level: info
+  log_format: text
+  mgmt:
+    enabled: false
+
+  # Log level for OPA ('debug', 'info', 'error') (app default=info)
+  logLevel: info
+
+  # Log format for OPA ('text', 'json') (app default=text)
+  logFormat: text
+
+  rbac:
+    # If true, create & use RBAC resources
+    #
+    create: false
+
+  serviceAccount:
+    # Specifies whether a ServiceAccount should be created
+    create: false
+
+  # This proxy allows opa to make Kubernetes SubjectAccessReview checks against the
+  # Kubernetes API. You can get a rego function at github.com/open-policy-agent/library
+  sar:
+    enabled: false
+
+  # To control the liveness and readiness probes change the fields below.
+  # initialDelaySeconds: 3
+  # periodSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /
+      scheme: HTTPS
+      port: 8181
+  livenessProbe:
+    # initialDelaySeconds: 3
+    # periodSeconds: 5
+    httpGet:
+      path: /
+      scheme: HTTPS
+      port: 8181
+  opa:
+    # server:
+    #   status: false   # Disable server status reporting
+    services:
+      - name: pap_server
+        url: http://odrl-pap.provider.svc.cluster.local:8080/bundles/service/v1
+    bundles:
+      policies:
+          service: pap_server
+          resource: policies.tar.gz
+          polling:
+            min_delay_seconds: 30
+            max_delay_seconds: 60
+      methods:
+          service: pap_server
+          resource: methods.tar.gz
+          polling:
+            min_delay_seconds: 110
+            max_delay_seconds: 230
+      data:
+          service: pap_server
+          resource: data.tar.gz
+          polling:
+            min_delay_seconds: 100
+            max_delay_seconds: 220
+    default_decision: /policy/main/deny
+    decision_logs: 
+      console: true 
+    status: 
+      console: true
+  ingress:
+    enabled: false
+    tls:
+      # []
+      - hosts: [ fdsc-provider-opa.local ]
+        secretName: secret.ita.es-tls
+    hosts: 
+      # []
+      ## provide a hosts and the paths that should be available   
+      - host: fdsc-provider-opa.local
+        path: /
+        port: 8181
+
+odrlPolicyRegistration:
+  enabled: false
+  job:
+    hookDeletePolicy: before-hook-creation
+    hook: post-install,post-upgrade
+    backoffLimit: 1
+  # -- service id of the hackathon-service to be used
+  id: hackathon-service
+  # -- endpoint of the ccs to regsiter at
+  odrlPAPEndpoint: http://odrl-pap.provider.svc.cluster.local:8080/policy
+  odrlPolicies:
+    ODRL_ORDER_READER:
+      "@context":
+        dc: http://purl.org/dc/elements/1.1/
+        dct: http://purl.org/dc/terms/
+        owl: http://www.w3.org/2002/07/owl#
+        odrl: http://www.w3.org/ns/odrl/2/
+        rdfs: http://www.w3.org/2000/01/rdf-schema#
+        skos: http://www.w3.org/2004/02/skos/core#
+      "@id": https://fiwaredsc-provider.ita.es/policy/common/type-order-reader
+      "@type": odrl:Policy
+      odrl:permission:
+        odrl:assigner:
+          "@id": https://fiwaredsc-provider.ita.es
+        odrl:target:
+          "@type": odrl:AssetCollection
+          odrl:source: urn:asset
+          odrl:refinement:
+          - "@type": odrl:Constraint
+            odrl:leftOperand: ngsi-ld:entityType
+            odrl:operator:
+              "@id": odrl:eq
+            odrl:rightOperand: Order
+        odrl:assignee:
+          # "@id": vc:any
+          # "@type": odrl:PartyCollection
+          # odrl:source: urn:user
+          # odrl:refinement:
+          #   "@type": odrl:Constraint
+          #   odrl:leftOperand:
+          #     "@id": vc:role
+          #   odrl:operator:
+          #     "@id": odrl:hasPart
+          #   odrl:rightOperand:
+          #     "@value": ORDER_CONSUMER
+          "@type": odrl:PartyCollection
+          odrl:source: urn:user
+          odrl:refinement:
+            # "@type": odrl:LogicalConstraint
+            # odrl:and:
+            # - "@type": odrl:Constraint
+            #   odrl:leftOperand:
+            #     "@id": dome-op:role
+            #   odrl:operator:
+            #     "@id": odrl:hasPart
+            #   odrl:rightOperand:
+            #     "@value": ORDER_CONSUMER
+            #     "@type": xsd:string
+            - "@type": odrl:Constraint
+              odrl:leftOperand:
+                "@id": vc:type
+              odrl:operator:
+                "@id": odrl:hasPart
+              odrl:rightOperand:
+                "@value": OperatorCredential
+                "@type": xsd:string
+
+        odrl:action:
+          "@id": odrl:read
