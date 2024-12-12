@@ -69,13 +69,13 @@ vcverifier:
     hosts:
       # []
       ## provide a hosts and the paths that should be available
-      - host: fiwaredsc-vcverifier.ita.es
+      - host: fiwaredsc-vcverifier.local
         paths:
           - /
     # -- configure the ingress' tls
     tls:
       # []
-      - hosts: [fiwaredsc-vcverifier.ita.es]
+      - hosts: [fiwaredsc-vcverifier.local]
         # secretName: secret.ita.es-tls
   # -- if a specific service account should be used, it can be configured here
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
@@ -86,7 +86,7 @@ vcverifier:
     port: 8080 # Mandatory. If it is not specified, it fails!
     server:
       port: 8080
-      host: https://fiwaredsc-provider.ita.es
+      host: https://fiwaredsc-provider.local
     logging:
       # -- the log level, can be DEBUG, INFO, WARN, ERROR
       level: DEBUG

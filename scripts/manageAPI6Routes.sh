@@ -217,6 +217,83 @@ ROUTES=$(cat <<EOF
             }
         }
     },
+
+
+
+    "ROUTE_WELLKNOWN_JWKS_fiwaredsc_vcverifier_local": {
+        "uri": "/.well-known/jwks*",
+        "name": "provider-verifier-JWKS",
+        "host": "fiwaredsc-provider.local",
+        "methods": ["GET", "POST"],
+        "upstream": {
+            "type": "roundrobin",
+            "nodes": {
+            "verifier.provider.svc.cluster.local:3000": 1
+            }
+        }
+    },
+    "ROUTE_WELLKNOWN_OIDC_fiwaredsc_vcverifier_local": {
+        "uri": "/.well-known/*",
+        "name": "provider-verifier-OIDC",
+        "host": "fiwaredsc-provider.local",
+        "methods": [
+            "GET"
+        ],
+        "upstream": {
+            "type": "roundrobin",
+            "nodes": {
+                "verifier.provider.svc.cluster.local:3000": 1
+            }
+        },
+        "plugins": {
+            "proxy-rewrite": {
+                "regex_uri": [
+                    "^/.well-known/(.*)",
+                    "/services/hackathon-service/.well-known/\$1"
+                ]
+            }
+        }
+    },
+    "ROUTE_WELLKNOWN_OIDC_Service_fiwaredsc_vcverifier_local": {
+        "name": "provider-service-OIDC",
+        "uri": "/services/hackathon-service/*",
+        "host": "fiwaredsc-provider.local",
+        "methods": ["GET", "POST"],
+        "upstream": {
+            "type": "roundrobin",
+            "nodes": {
+                "verifier.provider.svc.cluster.local:3000": 1
+            }
+        },
+        "plugins": {
+            "proxy-rewrite": {
+                "regex_uri": ["^/services/hackathon-service/(.*)", "/services/hackathon-service/\$1"]
+            }
+        }
+    },
+    "ROUTE_OIDC_TOKEN_fiwaredsc_vcverifier_local": {
+        "uri": "/services/hackathon-service/token",
+        "name": "provider-verifier-OIDC-Token",
+        "host": "fiwaredsc-provider.local",
+        "methods": [
+            "GET",
+            "POST"
+        ],
+        "upstream": {
+            "type": "roundrobin",
+            "nodes": {
+                "verifier.provider.svc.cluster.local:3000": 1
+            }
+        },
+        "plugins": {
+            "proxy-rewrite": {
+                "uri": "/services/hackathon-service/token"
+            }
+        }
+    },
+
+
+    
     "ROUTE_WALLET_fiwaredsc_wallet_ita_es": {
         "uri": "/*",
         "name": "Wallet",
@@ -382,8 +459,12 @@ INFO_ROUTES=$(cat <<EOF
 	},
     "ROUTE_WELLKNOWN_OIDC_fiwaredsc_vcverifier_ita_es": {
         "info": [
-            "# https://fiwaredsc-provider.ita.es/.well-known/openid-configuration",
-            "# https://fiwaredsc-provider.ita.es/.well-known/jwks"
+            "# https://fiwaredsc-provider.ita.es/.well-known/openid-configuration"
+        ]
+	},
+    "ROUTE_WELLKNOWN_OIDC_Service_fiwaredsc_vcverifier_local": {
+        "info": [
+            "# https://fiwaredsc-provider.local/services/hackathon-service/.well-known/openid-configuration"
         ]
 	},
     "ROUTE_OIDC_TOKEN_fiwaredsc_vcverifier_ita_es": {

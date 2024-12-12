@@ -2,3 +2,4 @@ Helms/**/charts/*.tgz
 .tmp/*
 tmp/*
 **/.certs
+**/Chart.lock

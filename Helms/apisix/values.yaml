@@ -64,6 +64,8 @@ apisix:
           path: /
         - name: fiwaredsc-trustanchor.local
           path: /
+        - name: fiwaredsc-provider.local
+          path: /
         - name: fiwaredsc-consumer.ita.es
           path: /
         - name: fiwaredsc-provider.ita.es
@@ -71,9 +73,11 @@ apisix:
       extraTls:
         - hosts: [fiwaredsc-consumer.local, 
                   fiwaredsc-api6dashboard.local,
-                  fiwaredsc-trustanchor.local]
+                  fiwaredsc-trustanchor.local,
+                  fiwaredsc-provider.local]
           secretName: wildcardlocal-tls
         - hosts: [fiwaredsc-consumer.ita.es,
+                  fiwaredsc-provider.ita.es,
                   fiwaredsc-tir.ita.es]
           secretName: ita.es-tls
     extraConfig:
