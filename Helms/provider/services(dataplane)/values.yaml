@@ -1,0 +1,161 @@
+utils:
+  enabled: true
+  
+postgis:
+  # This is a postgreSQL supporting geospatial data
+  enabled: true
+  # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
+  fullnameOverride: postgis
+  # -- overrides the generated name, provides stable service names - this should be avoided if multiple instances are available in the same namespace
+  nameOverride: postgis
+  generatePasswords:
+    # -- should a password for the database be generated in the cluster
+    enabled: true
+    secretName: postgis-secret
+  auth:
+    # .generatePasswords.secretName
+    existingSecret: postgis-secret
+    secretKeys:
+      adminPasswordKey: postgres-admin-password
+      userPasswordKey: postgres-user-password
+  ## configuration of the postgres primary replicas
+  primary:
+    ## provide db initialization
+    initdb:
+      ## provide scripts for initialization
+      scripts:
+        # -- enable the postgis extension and create the database as expected by scorpio
+        enable.sh: |
+          psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE EXTENSION postgis;"
+          psql postgresql://postgres:${POSTGRES_PASSWORD}@localhost:5432 -c "CREATE DATABASE ngb;"
+    persistence:
+      size: 2Gi
+      accessModes: 
+      - ReadWriteOnce
+
+scorpio:
+  enabled: true
+  fullnameOverride: ds-scorpio
+
+  ## configuration of the image to be used
+  env:
+    LOG_LEVEL: DEBUG
+  image:
+    # -- repository to be used - resource friendly all-in-one-runner without kafka
+    repository: scorpiobroker/all-in-one-runner
+    # -- tag of the image to be used - latest java image without kafka
+    tag: java-4.1.11
+  ## configuration of the database to be used by broker
+  db:
+    # -- host of the db
+    dbhost: postgis
+    # -- username to be used
+    user: postgres
+    existingSecret:
+      enabled: true
+      name: postgis-secret
+      key: postgres-admin-password
+  ## configuration of the readiness probe
+  readinessProbe:
+    # -- path to be used for the readiness probe, older versions used /actuator/health
+    path: /q/health
+  ## configuration of the liveness probe
+  livenessProbe:
+    # -- path to be used for the readiness probe, older versions used /actuator/health
+    path: /q/health
+  ## configuration to be used for the service offered by scorpio
+  service:
+    # -- ClusterIP is the recommended type for most clusters
+    type: ClusterIP
+    # port: 4000
+
+  initData:
+    initEnabled: true
+    hookDeletePolicy: before-hook-creation
+    numberDeploymentTries: 40
+    entities:
+      # Once deployed, this curl from inside should work:
+      # curl -X GET http://scorpio:1026/ngsi-ld/v1/entities?type=Building
+      # Or this one from outside
+      - name: entity001.json
+        data: |
+          {
+            "@context": {
+              "dc": "http://purl.org/dc/elements/1.1/",
+              "dct": "http://purl.org/dc/terms/",
+              "owl": "http://www.w3.org/2002/07/owl#",
+              "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+              "skos": "http://www.w3.org/2004/02/skos/core#"
+            },
+            "id": "urn:ngsi-ld:Order:SDBrokerId-Spain.2411331.000003",
+            "type": "Order",
+            "dateCreated": {
+              "type": "Property",
+              "value": {
+                "@type": "DateTime",
+                "@value": "2022-03-31T13:20:00Z"
+              }
+            },
+            "location": {
+              "type": "GeoProperty",
+              "value": {
+                "type": "Point",
+                "coordinates": [
+                  50.832967,
+                  43.811340
+                ]
+              }
+            },
+            "mode":{
+              "value": "delivery"
+            },
+            "refHub": {
+              "type": "Relationship",
+              "object": "urn:ngsi-ld:Hub:Hub-00001"
+            },
+            "earlyTime":{
+              "type": "Property",
+              "value": {
+                "@type": "DateTime",
+                "@value": "2024-10-08T07:00:00.00Z"
+              }
+            },
+            "lateTime":{
+              "type": "Property",
+              "value": {
+                "@type": "DateTime",
+                "@value": "2024-10-08T09:00:00.00Z"
+              }
+            },
+            "numberItems": {
+              "type": "Property",
+              "value": 3
+            },
+            "weight": {
+              "type": "Property",
+              "value": 30.3,
+              "unitCode": "KGM"
+            }
+          }
+
+dataPlaneRegistration:
+  enabled: true
+  # -- service id of the hackathon-service to be used
+  id: hackathon-service
+  # -- endpoint of the ccs to regsiter at
+  endpoint: http://cconfig.provider.svc.cluster.local:8080
+  defaultOidcScope:
+      name: default
+      oidcScope:
+        type: UserCredential
+        trustedParticipantsLists:
+          - http://tir.trust-anchor.svc.cluster.local:8080
+        trustedIssuersLists:
+          - http://til.provider.svc.cluster.local:8080  
+  otherOidcScopes:
+    operator:
+      - type: OperatorCredential
+        trustedParticipantsLists:
+          - http://tir.trust-anchor.svc.cluster.local:8080
+        trustedIssuersLists:
+          - http://til.provider.svc.cluster.local:8080
