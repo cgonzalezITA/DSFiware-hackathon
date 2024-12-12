@@ -16,6 +16,7 @@ Once deployed the whole infrastructure, this github can be used as a playground 
     - [Deployment of apisix as gateway](#deployment-of-apisix-as-gateway)
     - [Deployment of the Verifiable Data Registry components (Trust-Anchor)](#deployment-of-the-verifiable-data-registry-components-trust-anchor)
     - [Consumer's infrastructure](#consumers-infrastructure)
+    - [Provider's infrastructure](#providers-infrastructure)
   - [Quick deployment from scratch](#quick-deployment-from-scratch)
 
 ## Organization
@@ -52,6 +53,14 @@ See the [trust-anchor deployment guide](./assets/docs/README-trustAnchor.md).
 Any participant willing to consume services provided by the data space will require a minimum infrastructure that will enable the management of Verifiable Credentials besides a Decentralized Identifier that will constitue the signing mechanism to authenticate any message, any request made by the consumer.   
 This section describes the steps and the components to be deployed.  
 See the [consumer deployment guide](./assets/docs/README-consumer.md)
+
+### [Provider's infrastructure](./assets/docs/README-provider.md)
+Any organization willing to market their data and or services in a dataspace will require an infrastructure to manage:
+- The authentication phase: Analyze that any request made to their services are made by a known and verified participant.
+- The authorization phase: Analyze that any request made to their services are made by a participant entitled to perform the requested action.
+- The data and or services offered.  
+This section describes the steps and the components to be deployed at the provider's side
+See the [consumer deployment guide](./assets/docs/README-provider.md)
 
 
 ## Quick deployment from scratch

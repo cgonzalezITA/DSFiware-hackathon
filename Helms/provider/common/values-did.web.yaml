@@ -1,0 +1,46 @@
+utils:
+  enabled: true
+  echo:
+    enabled: true
+
+# -- configuration for the did-helper, should only be used for demonstrational deployments, 
+# see https://hub.docker.com/repository/docker/itainnovaprojects/ita-didweb-generator/general
+did:
+  enabled: true
+  type: web
+  port: 3000
+  pfx:
+    fileName: cert.pfx
+    alias: ita.es
+    secretName: did-secret
+    secretKeyField: store-pass
+  serviceType: ClusterIP
+  baseURL: https://fiwaredsc-provider.ita.es
+  outputFolder: /cert
+  cert:
+    country: es
+    state: ES-AR
+    locality: Zaragoza
+    organization: ITA
+    commonName: www.fiwaredsc-provider.ita.es
+    organizationunit: it
+  ingress:
+    enabled: false
+    host: fiwaredsc-provider.ita.es
+
+registration:
+  # Used to register the DID to the different TrustedIssuers 
+  enabled: true
+  name: registration-job
+  job:
+    hookDeletePolicy: before-hook-creation
+    hook: post-install,post-upgrade
+    backoffLimit: 10
+  trustedIssuersLists:
+    # Registers the connector DID:web in the Trusted Issuer Registry of the DS
+    # stating that this DID can participate in the DS
+    - name: tir
+      tiURL: http://tir.trust-anchor.svc.cluster.local:8080
+      issuerDetails: 
+        did: $DID      
+        credentials: []

@@ -147,8 +147,8 @@ export DEF_KTOOLS_NAMESPACE=apisix
 As you have seen, there is a dashboard component deployed, but just one DNS managed by the Apisix ingress. This step will modify the [apisix-routes.yaml file](../../Helms/apisix/apisix-routes.yaml) to include a new route to expose the dashboard to be consumed via browser.
 1. Decide the DNS to expose the Apisi dashboard (Local or global DNS)
 eg. fiwaredsc-api6dashboard.local ...
-1. For Local DNS register at the /etc/hosts (ubuntu) and/or C:\Windows\System32\drivers\etc\hosts (windows)
-2. Modify the apisix values file to manage the new DNS and the TLS certificate:
+2. For Local DNS register at the /etc/hosts (ubuntu) and/or C:\Windows\System32\drivers\etc\hosts (windows)
+3. Modify the apisix values file to manage the new DNS and the TLS certificate:
     ```yaml
     apisix:
       ...
