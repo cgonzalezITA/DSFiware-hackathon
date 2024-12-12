@@ -24,8 +24,6 @@
     - [Issue VCs through a M2M flow (Using API Rest calls)](#issue-vcs-through-a-m2m-flow-using-api-rest-calls)
     - [Issue VCs for a H2M interaction using a browser](#issue-vcs-for-a-h2m-interaction-using-a-browser)
   - [Bottom line](#bottom-line)
-    - [Issue VCs using a browser](#issue-vcs-using-a-browser)
-  - [Bottom line](#bottom-line-1)
 
 Any participant willing to consume services offered at the data space is required to count on a minimum infrastructure to enable the management of its **Verifiable Credentials (VCs)** and a **Decentralized Identifier (DID)** that will be its identity used to sign any VC request issued by it.  
 This section describes the components and the steps deploy a consumer's infrastructure. The step number is duplicated given that they focus on the use of a DID web or a DID key as explained below.
@@ -355,9 +353,9 @@ hFileCommand consumer -f key -o .tmp/componentsconsumer.yaml
 ```
 
 ### Verification
-Once the consumer helm has been deployed, it status should look similar to this:
+Once the consumer helm has been deployed, its status should look similar to this:
 ```shell
-kGet 
+kGet -n consumer
 #   Running command [kubectl get pod  -n consumer  ]
 NAME                              READY   STATUS    RESTARTS   AGE
 consumer-keycloak-0               1/1     Running   0          3m37s
@@ -538,127 +536,12 @@ This VC will be later used to access the Data Space.
 ### Issue VCs for a H2M interaction using a browser
 It has not been possible to fully document this issuance mechanism due to incompatibilities between the Keycloak version and the VCWallet used. It will be described as soon as the proper software versions are tested.
 
-
-
-
 ```shell
 # To show the structure of the github after the completion of the next step
 git checkout phase04.step02
 ```
-## Bottom line
-The deployment of the consumer components enable the issuance of Verifiable Credentials, although some issue is still opened. At this stage, the Fiware Data Space architecture deployed looks like:
-   <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/Fiware-DataSpaceGlobalArch-phase03.png"><br/>
-    Deployed architecture after phase 2 completed</p>
-    
-```shell
-./scripts/hackathon-retrieveConsumerVC.sh -h # To obtain info about the params
-./scripts/hackathon-retrieveConsumerVC.sh -s # To run it stopping after each step
-```
-
-0. Before the Jupyter Notebook can be run, a [conda working environment](https://edcarp.github.io/introduction-to-conda-for-data-scientists/02-working-with-environments/index.html) is required. A brief guideline can be found at [Install and setup an environment using Conda](https://github.com/cgonzalezITA/devopsTools/blob/master/pTools/README.md#install-and-setup-an-environment-using-conda).  
-
-1. Set the VSCode Kernel to be used
-<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/VCIssuance-usingVSCodeJupyterNB.png"><br/>
-    Jupyter notebook Kernel selection</p>
-
-2. The following env vars have to be customized to your environment: 
-   
-```shell
-URL_VCISSUER=https://fiwaredsc-consumer.local/realms/consumerRealm
-ADMIN_CLI=admin-cli
-USER_01=oc-user
-USER_01_PASSWORD=test
-CREDENTIAL_TYPE=user-credential
-```
-3. Get the URL from the well known openid configuration to retrieve the Token to access the VC
-```python
-url=f"{URL_VCISSUER}/.well-known/openid-configuration"
-response = requests.get(url)
-response.raise_for_status()
-jsonResponse=response.json()
-URL_VCISSUER_TOKEN=jsonResponse["token_endpoint"]
-# URL_VCISSUER_TOKEN=https://fiwaredsc-consumer.local/realms/consumerRealm/protocol/openid-connect/token
-```  
-4. Get Token to access the credential's offer URI
-```python
-url=URL_VCISSUER_TOKEN
-data={"grant_type": "password",
-      "client_id": ADMIN_CLI,
-      "username": USER_01,
-      "password": USER_01_PASSWORD
-}
-headers={'Content-Type': 'application/x-www-form-urlencoded'}
-response = requests.post(url, data=data, headers=headers)
-jsonResponse=response.json()
-response.raise_for_status()
-ACCESS_TOKEN=jsonResponse["access_token"]
-# ACCESS_TOKEN=eyJhbGciOiJSUz...
-```
-5. Get a credential offer uri, using the retrieved AccessToken
-```python
-URL_CREDENTIAL_OFFER=f"{URL_VCISSUER}/protocol/oid4vc/credential-offer-uri"
-url=URL_CREDENTIAL_OFFER
-params={"credential_configuration_id": CREDENTIAL_TYPE}
-headers={'Authorization': f"Bearer {ACCESS_TOKEN}"}
-response = requests.get(url, params=params, headers=headers)
-jsonResponse=response.json()
-response.raise_for_status()
-OFFER_URI=f'{jsonResponse["issuer"]}{jsonResponse["nonce"]}'
-# OFFER_URI=https://fiwaredsc-consumer.local/realms/consumerRealm/protocol/oid4vc/credential-offer/xDPxU4hPo...
-```
-
-6. Use the offer uri, to retrieve a preauthorized code
-```python
-url=OFFER_URI
-headers={'Authorization': f"Bearer {ACCESS_TOKEN}"}
-response = requests.get(url, headers=headers)
-jsonResponse=response.json()
-response.raise_for_status()
-PRE_AUTHORIZED_CODE=jsonResponse["grants"]["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"]
-# PRE_AUTHORIZED_CODE=5bcc0ea1-2571-4127-a07
-```
-
-7. Uses the pre-authorized code to get a credential AccessToken at the authorization server
-```python
-url=URL_VCISSUER_TOKEN
-data={"grant_type": "urn:ietf:params:oauth:grant-type:pre-authorized_code",
-      "pre-authorized_code": PRE_AUTHORIZED_CODE,
-      "code": PRE_AUTHORIZED_CODE
-}
-headers={'Content-Type': 'application/x-www-form-urlencoded'}
-response = requests.post(url, data=data, headers=headers)
-jsonResponse=response.json()
-response.raise_for_status()
-CREDENTIAL_ACCESS_TOKEN=jsonResponse["access_token"]
-# CREDENTIAL_ACCESS_TOKEN=eyJhbGciOiJSUzI1...
-```
-
-8. Finally Use the returned access token to get your goal, **the Verifiable Credential**
-```python
-url=URL_CREDENTIAL_ENDPOINT
-data={"credential_identifier": CREDENTIAL_TYPE,
-      "format": "jwt_vc" }
-headers={'Accept': '*/*',
-         'Content-Type': 'application/json',
-         'Authorization': f'Bearer {CREDENTIAL_ACCESS_TOKEN}'}
-response = requests.post(url, json=data, headers=headers)
-jsonResponse=response.json()
-response.raise_for_status()
-VERIFIABLE_CREDENTIAL=jsonResponse["credential"]
-```
-
-```python
-# Verifiable Credential user-credential For user oc-user
-# VERIFIABLE_CREDENTIAL=eyJhbGciOiJFUzI1NiIsInR5c...
-```
-
-This VC will be later used to access the Data Space.
-
-### Issue VCs using a browser
-It has not been possible to fully document this issuance mechanism due to incompatibilities between the Keycloak version and the VCWallet used. It will be described as soon as the proper software versions are tested.
-
 
 ## Bottom line
-The deployment of the consumer components enable the issuance of Verifiable Credentials, although some issue is still opened. At this stage, the Fiware Data Space architecture deployed looks like:
+The deployment of the consumer components enables the issuance of Verifiable Credentials, although some issue is still opened. At this stage, the Fiware Data Space architecture deployed looks like:
    <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/Fiware-DataSpaceGlobalArch-phase03.png"><br/>
     Deployed architecture after phase 2 completed</p>
