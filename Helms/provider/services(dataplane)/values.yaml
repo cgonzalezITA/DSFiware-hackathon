@@ -68,24 +68,6 @@ scorpio:
     # -- ClusterIP is the recommended type for most clusters
     type: ClusterIP
     # port: 4000
-  # -- configuration to register the dataplane at the credentials-config-service
-
-  # -- additional init containers to be used for the dataplane
-  initContainers:
-    # -- curl container to register at the credentials config service
-    - name: register-credential-config
-      image: quay.io/curl/curl:8.1.2
-      command: [ "/bin/sh", "-c", "/bin/init.sh" ]
-      volumeMounts:
-        - name: scorpio-registration
-          mountPath: /bin/init.sh
-          subPath: init.sh
-  # -- additonal volumes to be mounted for the dataplane
-  additionalVolumes:
-    - name: scorpio-registration
-      configMap:
-        name: scorpio-registration
-        defaultMode: 0755
 
   initData:
     initEnabled: true
@@ -158,7 +140,6 @@ scorpio:
 
 dataPlaneRegistration:
   enabled: true
-  configMapName: data-plane-registration
   # -- service id of the hackathon-service to be used
   id: hackathon-service
   # -- endpoint of the ccs to regsiter at
