@@ -3,6 +3,10 @@
   - [step04.1- _Deployment of the common components_](#step041--deployment-of-the-common-components)
   - [step04.2- _Deployment of the authentication components_](#step042--deployment-of-the-authentication-components)
     - [Verification of the deployment so far](#verification-of-the-deployment-so-far)
+  - [step04.3- _Deployment of the authorization components_](#step043--deployment-of-the-authorization-components)
+  - [Step 4.4- _Deployment of the service components_](#step-44--deployment-of-the-service-components)
+  - [Step 4.5-Addition of the service route to the Apisix without security](#step-45-addition-of-the-service-route-to-the-apisix-without-security)
+  - [Bottom line](#bottom-line)
 
     
 The objective of this phase is to deploy the following infrastructure.
@@ -169,7 +173,138 @@ curl -k https://fiwaredsc-provider.local/.well-known/openid-configuration
       ]
     }
 ```
+
 ```shell
 # To show the structure of the github after the completion of the next step
 git checkout phase04.step03
 ```
+
+## step04.3- _Deployment of the authorization components_
+```shell
+# To show the structure of the github after the completion of this step
+git checkout phase04.step03
+```
+This Helm chart will deploy the following components:
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/provider-components-authorization.png"><br/>
+    Authorization components</p>
+
+  - The _**PEP (Policy Enforcement Point)**_ has two main tasks.  
+    - First, it is the entry point for enforcement, meaning it is the point where data or metadata is stopped and transferred to the Policy Decission Point (PDP), the PDP makes a decision regarding the right of the request to be accepted and returns it to the PEP.  
+    - Secondly, the PEP will subsequently manipulate or lock the data according to the decision.  
+  
+    This role is played by the [Apache APISIX](https://apisix.apache.org/). This component has been already deployed in previous phases, but at this stage, it is setup to enable its role as PEP for the routes bound to the access to the provider's data or services enabling the interactions shown in the _Provider authorization components and interactions_ diagram shown below.
+
+  - A **PDP (Policy Decision Point)**: Entity responsible for evaluating access requests and determining whether to permit or deny them based on predefined policies.  
+  This role is played by the [**Styra OPA (Open Policy Agent**)](https://www.openpolicyagent.org/) is an open source, general-purpose policy engine that unifies policy enforcement across the stack. OPA provides a high-level declarative language that lets you specify policy as code and simple APIs to offload policy decision-making from your software.
+
+  - The [**ODRL-PAP**](https://github.com/wistefan/odrl-pap) is used to configure policies written in [ODRL](https://www.w3.org/TR/odrl-model/) language to be consumed by the Open Policy Agent(OPA). Therefore it translates the ODRL policies into [Rego language](https://www.openpolicyagent.org/docs/latest/policy-language/). These policies will be later used to check if the incoming requests are authorized. 
+  - A **PostgreSql DB server** to support the storage of these ODRL policies.  
+
+    <p style="text-align:center;font-style:italic;font-size: 75%"><img src="../images/provider-authorization.png"><br/>
+      Provider authorization components and interactions</p>
+
+The diagram shows the interactions on this block. In it, the _Administrator_ is responsible for creating the ODRL policies that are used by the OPA when required.  
+On the other side, requests to access the provider's data or services made by the _user_ are forwarded to the OPA to evaluate if they are authorized based on the ODRL policies and the credentials (Verifiable Credentials) presented by the user.  
+Finally, the request is forwarded to the requested endpoint or rejected.
+
+To deploy the authorization components:
+```shell
+hFileCommand provider/authorization -b
+    # Running CMD=[helm -n provider install -f "./Helms/provider/authorization(odrlpap+opa)/./values.yaml" provider-authorization "./Helms/provider/authorization(odrlpap+opa)/./"  --create-namespace]
+kGet -n provider
+    #   Running command [kubectl get pod  -n provider  ]
+    # Showing pod in namespace [provider]
+    NAME                              READY   STATUS    RESTARTS      AGE
+    cconfig-6f88d6f88f-fd65f          1/1     Running   2 (10h ago)   10h
+    did-key-7789dd6dc7-8h477          1/1     Running   0             10h
+    mysql-0                           1/1     Running   0             10h
+    odrl-pap-588c44bc47-nsw47         1/1     Running   0             11h
+    postgresql-0                      1/1     Running   0             11h
+    til-5bb9996596-h5wq8              1/1     Running   2 (10h ago)   10h
+    verifier-64965b55f9-w4762         1/1     Running   0             10h
+```
+
+```shell
+# To show the structure of the github after the completion of the next step
+git checkout phase04.step04
+```
+
+## Step 4.4- _Deployment of the service components_
+```shell
+# To show the structure of the github after the completion of this step
+git checkout phase04.step04
+```
+This Helm chart will deploy the following components:
+
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/provider-components-services.png"><br/>
+    Service components (Will vary depending on the offered services)</p>
+
+- **Target Service**: This walkthrough will deploy a [Context Data broker Scorpio](https://scorpio.readthedocs.io/en/latest/) to provide NGSI-LD data access. The DNS `fiwaredsc-provider.ita.es` will route requests to this service.  
+- A **Postgis DB server** to support the storage of the NGSI-LD records. Postgis is used by the Scorpio Context Broker as it can manage spatial data.
+- A **Job to initialize data**: In this scenario, it just inserts some data into de Scorpio CB
+  
+```shell
+hFileCommand provider/service
+    # Running CMD=[helm -n service install -f "./Helms/provider/services(dataplane)/values.yaml" services "./Helms/provider/services(dataplane)/"  --create-namespace]
+kGet -n service
+    #   Running command [kubectl get pod  -n service  ]
+    # Showing pod in namespace [service]
+    NAME                          READY   STATUS      RESTARTS   AGE
+    ds-scorpio-57889c6cc8-95ht7   1/1     Running     0          23m
+    ds-scorpio-init-data-42kqk    0/1     Completed   0          21m
+    postgis-0                     1/1     Running     0          23m
+```
+
+```shell
+# To show the structure of the github after the completion of the next step
+git checkout phase04.step05
+```
+
+## Step 4.5-Addition of the service route to the Apisix without security
+1. Initially, we are going to modify the apisix values file to enable its management of the new route `fiwaredsc-provider.ita.es` and _upgrade_ the apisix helm chart to just renew the involved components (_apisix-control-plane_)
+    ```shell
+    hFileCommand api upgrade
+      # Running CMD=[helm -n apisix upgrade -f "./Helms/apisix/values.yaml" apisix "./Helms/apisix/"  --create-namespace]
+    ```
+2. Add a new route to the service
+   **NOTE**: This configuration exposes the service without any authentication nor authorization process. It is just created just for testing and should be replaced as soon as possible by the route managed by the Data Space Connector.  
+   We are going to redirect the requests to https://fiwaredsc-consumer.ita.es/ngsi-ld/* to the scorpio context broker
+    ```json
+    # https://fiwaredsc-provider.ita.es/ngsi-ld/...
+    ROUTE_PROVIDER_SERVICE_fiwaredsc_providerWithoutAutho_ita_es='{
+      "uri": "/ngsi-ld/*",
+      "name": "service",
+      "host": "fiwaredsc-provider.ita.es",
+      "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
+      "upstream": {
+        "type": "roundrobin",
+        "scheme": "http",
+        "nodes": {
+          "ds-scorpio.service.svc.cluster.local:9090": 1
+        }
+      },
+      "plugins": {
+        "proxy-rewrite": {
+            "regex_uri": ["^/ngsi-ld/(.*)", "/ngsi-ld/$1"]
+        }
+      }
+    }'
+    ```
+
+    ```shell
+    # Test the service
+    curl https://fiwaredsc-provider.ita.es/ngsi-ld/v1/entities?type=Order
+        [ {
+          "id" : "urn:ngsi-ld:Order:SDBrokerId-Spain.2411331.000003",
+          "type" : "Order",
+          "dateCreated" : {
+            "type" : "Property",
+        ...
+    ```
+    **NOTE**: The order shown has been inserted by the job created to initialize the data at the [Step 4.4- _Deployment of the service components_](#step-44--deployment-of-the-service-components).
+
+## Bottom line
+The deployment of the provider components leaves the data space ready to be setup and used. The next phase [Initial setup of the Dataspace](README-initialSetUpOfTheDS.md) will show the actions to register the participants in the dataspace and will continue the configuration to provide authentication and authorization mechanisms to the dataspace to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf):
+
+   <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/Fiware-DataSpaceGlobalArch-phase04.png"><br/>
+    Architecture after the provider components deployment is completed</p>
