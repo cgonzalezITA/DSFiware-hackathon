@@ -36,19 +36,19 @@ cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
 
 echo "# Upgrade the apisix configuration"
-# kRemoveRestart -n apisix data-plane -v -y
-# hFileCommand apisix upgrade -b -v -y
+kRemoveRestart -n apisix data-plane -v -y
+hFileCommand apisix upgrade -b -v -y
 
-# echo "# Removes previously existing namespace $NAMESPACE"
-# kRemoveRestart ns $NAMESPACE -y -v
-# echo "# Deployment of the provider common"
-# hFileCommand provider/common r -v -y -b
-# echo "# Deployment of the provider authentication"
-# hFileCommand provider/authentication r -v -y -b
-# echo "# Deployment of the provider authorization"
-# hFileCommand provider/authorization r -v -y -b
-# echo "# Deployment of the provider service"
-# hFileCommand provider/service r -v -y -b
+echo "# Removes previously existing namespace $NAMESPACE"
+kRemoveRestart ns $NAMESPACE -y -v
+echo "# Deployment of the provider common"
+hFileCommand provider/common r -v -y -b
+echo "# Deployment of the provider authentication"
+hFileCommand provider/authentication r -v -y -b
+echo "# Deployment of the provider authorization"
+hFileCommand provider/authorization r -v -y -b
+echo "# Deployment of the provider service"
+hFileCommand provider/service r -v -y -b
 
 
 echo "# Registration of the new apisix routes"
