@@ -159,3 +159,15 @@ dataPlaneRegistration:
           - http://tir.trust-anchor.svc.cluster.local:8080
         trustedIssuersLists:
           - http://til.provider.svc.cluster.local:8080
+
+dataSpaceConfig:
+  enabled: true
+  serviceType: ClusterIP
+  port: 3002
+  supportedModels:
+    - "https://raw.githubusercontent.com/cgonzalezITA/smart-data-models-incubated/refs/heads/master/SMARTLOGISTICS/GS1/Order/schema.json"
+  supportedProtocols:
+    - http
+    - https
+  authenticationProtocols:
+    - oid4vp

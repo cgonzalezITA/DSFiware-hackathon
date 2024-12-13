@@ -291,6 +291,44 @@ ROUTES=$(cat <<EOF
             }
         }
     },
+    "ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth": {
+        "uri": "/services/hackathon-service/ngsi-ld/*",
+        "name": "SERVICE_fiwaredsc_provider_local",
+        "host": "fiwaredsc-provider.local",
+        "methods": [ "GET" ],
+        "upstream": {
+            "type": "roundrobin",
+            "scheme": "http",
+            "nodes": {
+                "ds-scorpio.service.svc.cluster.local:9090": 1
+            }
+        },
+        "plugins": {
+            "proxy-rewrite": {
+                "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/\$1"]
+            }
+        }
+    },
+
+    "ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration": {
+        "uri": "/.well-known/data-space-configuration",
+        "name": "fiwaredsc_provider_dataSpaceConfiguration",
+        "host": "fiwaredsc-provider.local",
+        "methods": [ "GET" ],
+        "upstream": {
+            "type": "roundrobin",
+            "scheme": "http",
+            "nodes": {
+                "dsconfig.service.svc.cluster.local:3002": 1
+            }
+        },
+        "plugins": {
+            "proxy-rewrite": {
+                "uri": "/.well-known/data-space-configuration/data-space-configuration.json"
+            }
+        }
+    },
+
 
 
     

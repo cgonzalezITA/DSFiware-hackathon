@@ -5,6 +5,8 @@
     - [Verification of the deployment so far](#verification-of-the-deployment-so-far)
   - [step04.3- _Deployment of the authorization components_](#step043--deployment-of-the-authorization-components)
   - [Step 4.4- _Deployment of the service components_](#step-44--deployment-of-the-service-components)
+  - [Step 4.5-Addition of the service routes to the Apisix without security](#step-45-addition-of-the-service-routes-to-the-apisix-without-security)
+  - [Bottom line](#bottom-line)
 
     
 The objective of this phase is to deploy the following infrastructure.
@@ -232,15 +234,16 @@ git checkout phase04.step04
 git checkout phase04.step04
 ```
 
-This Helm chart will deploy the following components into the new namespace `services` to issolate it from the provider infrastructure:
+This Helm chart will deploy the following components into the new namespace `services` to isolate it from the provider infrastructure:
 
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/provider-components-services.png"><br/>
     Service components (Will vary depending on the offered services)</p>
 
 - **Target Service**: This walkthrough will deploy a [Context Data broker Scorpio](https://scorpio.readthedocs.io/en/latest/) to provide NGSI-LD data access. The DNS `fiwaredsc-provider.local` will route requests to this service.  
-- A **Postgis DB server** to support the storage of the NGSI-LD records. Postgis is used by the Scorpio Context Broker because it can manage spatial data.
+- A **Data space configuration service**: to expose information related to the exposed service at the well known url `/.well-known/data-space-configuration`.
 - A **Job to initialize data**: In this scenario, it just inserts some data into de Scorpio CB
 - A **Job to register the service** into the credential config service. This job will be explained in next phase ([Initial setup of th Data space](README-initialSetUpOfTheDS.md))
+- A **Postgis DB server** to support the storage of the NGSI-LD records. Postgis is used by the Scorpio Context Broker because it can manage spatial data.
   
 ```shell
 hFileCommand provider/service -b
@@ -257,3 +260,69 @@ kGet -n service
 # To show the structure of the github after the completion of the next step
 git checkout phase04.step05
 ```
+## Step 4.5-Addition of the service routes to the Apisix without security
+```shell
+# To show the structure of the github after the completion of this step
+git checkout phase04.step05
+```
+
+ This step exposes the service without any authentication nor authorization process. It is just created for testing and should be replaced as soon as possible by the route managed by the Data Space Connector (authentication and authorization processes enabled).
+ This step also exposes a well known endpoint to show details about the service. 
+ 
+
+To enable it, just register a new route to access the URL `https://fiwaredsc-provider.local/ngsi-ld/...`. This route redirects the requests to the scorpio context broker
+```json
+# https://fiwaredsc-provider.local/ngsi-ld/...
+ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth='{
+  "uri": "/services/hackathon-service/ngsi-ld/*",
+  "name": "hackathon_service",
+  "host": "fiwaredsc-provider.local",
+  "methods": ["GET"],
+  "upstream": {
+    "type": "roundrobin",
+    "scheme": "http",
+    "nodes": {
+      "ds-scorpio.service.svc.cluster.local:9090": 1
+    }
+  },
+  "plugins": { 
+    "proxy-rewrite": { "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/$1"] }
+  }
+}'
+```
+
+```shell
+. ./scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth
+. ./scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration
+```
+To test it, just run
+```shell
+# Test the service
+curl -k https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/entities?type=Order
+    [ {
+      "id" : "urn:ngsi-ld:Order:SDBrokerId-Spain.2411331.000003",
+      "type" : "Order",
+      "dateCreated" : {
+        "type" : "Property",
+    ...
+    
+# Test the well known data space configuration
+curl -k https://fiwaredsc-provider.local/.well-known/data-space-configuration
+{
+  "supported_models": ["https://raw.githubusercontent.com/cgonzalezITA/smart-data-models-incubated/refs/heads/master/SMARTLOGISTICS/GS1/Order/schema.json"],
+  "supported_protocols": ["http","https"],
+  "authentication_protocols": ["oid4vp"]
+}
+```
+**NOTE**: The order shown has been inserted by the job created to initialize the data at the [Step 4.4- _Deployment of the service components_](#step-44--deployment-of-the-service-components).
+
+```shell
+# To show the structure of the github after the completion of the next step
+git checkout phase05.step01
+```
+
+## Bottom line
+The deployment of the provider components leaves the data space ready to be setup and used. The next phase [Initial setup of the Dataspace](README-initialSetUpOfTheDS.md) will show the actions to register the participants in the dataspace and will continue the configuration to provide authentication and authorization mechanisms to the dataspace to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf):
+
+   <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/Fiware-DataSpaceGlobalArch-phase04.png"><br/>
+    Architecture after the provider components deployment is completed</p>
