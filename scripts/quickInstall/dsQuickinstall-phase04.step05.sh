@@ -13,7 +13,7 @@ unset DID1
 echo "##############################"
 echo "# Install the DSFiware-hackathon github repository"
 DSFIWAREHOL_GH_HTTPS="https://github.com/cgonzalezITA/DSFiware-hackathon.git"
-DSFIWAREHOL_TAG="phase04.step02" # TODO phase04.step05"
+DSFIWAREHOL_TAG="phase04.step05"
 DSFIWAREHOL_FOLDER="DSFiware-hackathon-$DSFIWAREHOL_TAG"
 REPLY='y'
 if [[ -d $DSFIWAREHOL_FOLDER ]]; then
@@ -30,7 +30,7 @@ fi
 echo "# $DSFIWAREHOL_TAG-Addition of the service route to the Apisix without security"
 export NAMESPACE="provider"
 
-DSFIWAREHOL_FOLDER="DSFiware-hackathon" # TODO DELETE
+# DSFIWAREHOL_FOLDER="DSFiware-hackathon" # TODO DELETE
 echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
 cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
