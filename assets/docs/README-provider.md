@@ -288,7 +288,25 @@ ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth='{
   "plugins": { 
     "proxy-rewrite": { "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/$1"] }
   }
-}'
+}',
+"ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration": {
+    "uri": "/.well-known/data-space-configuration",
+    "name": "fiwaredsc_provider_dataSpaceConfiguration",
+    "host": "fiwaredsc-provider.local",
+    "methods": [ "GET" ],
+    "upstream": {
+        "type": "roundrobin",
+        "scheme": "http",
+        "nodes": {
+            "dsconfig.service.svc.cluster.local:3002": 1
+        }
+    },
+    "plugins": {
+        "proxy-rewrite": {
+            "uri": "/.well-known/data-space-configuration/data-space-configuration.json"
+        }
+    }
+},
 ```
 
 ```shell

@@ -330,8 +330,26 @@ ROUTES=$(cat <<EOF
     },
 
 
+    "ROUTE_PROVIDER_fiwaredsc_provider_ita_es_dataSpaceConfiguration": {
+        "uri": "/.well-known/data-space-configuration",
+        "name": "fiwaredsc_provider_dataSpaceConfiguration",
+        "host": "fiwaredsc-provider.ita.es",
+        "methods": [ "GET" ],
+        "upstream": {
+            "type": "roundrobin",
+            "scheme": "http",
+            "nodes": {
+                "dsconfig.service.svc.cluster.local:3002": 1
+            }
+        },
+        "plugins": {
+            "proxy-rewrite": {
+                "uri": "/.well-known/data-space-configuration/data-space-configuration.json"
+            }
+        }
+    },
 
-    
+
     "ROUTE_WALLET_fiwaredsc_wallet_ita_es": {
         "uri": "/*",
         "name": "Wallet",
@@ -486,6 +504,16 @@ EOF
 # Info routes
 INFO_ROUTES=$(cat <<EOF
 {
+    "ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration": {
+        "info": [
+            "# https://fiwaredsc-provider.local/.well-known/data-space-configuration"
+        ]
+	},
+    "ROUTE_PROVIDER_fiwaredsc_provider_ita_es_dataSpaceConfiguration": {
+        "info": [
+            "# https://fiwaredsc-provider.ita.es/.well-known/data-space-configuration"
+        ]
+	},
     "ROUTE_WELLKNOWN_DID_WEB_fiwaredsc_consumer_ita_es": {
         "info": "# https://fiwaredsc-consumer.ita.es/.well-known/did.json"
 	},
