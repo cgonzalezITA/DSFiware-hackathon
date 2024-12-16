@@ -32,7 +32,7 @@ apisix:
     ##
     replicaCount: 1
     # -- persistence configuration of etcd
-    persistence:
+    # persistence:
   #     # -- should it be enabled
   #     enabled: false
   dashboard:
@@ -52,7 +52,10 @@ apisix:
     ## @param dashboard.existingSecretPasswordKey Key inside the secret containing the password for APISIX Dashboard
     existingSecretPasswordKey: apisix-dashboard-secret
   #   ## @param dashboard.defaultConfig [string] APISIX Dashboard configuration (evaluated as a template)
+  
   dataPlane:
+    image: docker.io/bitnami/apisix:3.11.0-debian-12-r0 # The same is also used at #dataPlane.initContainers["register-local-dns"].image
+    imagePullPolicy: IfNotPresent
     ingress:
       enabled: true
       hostname: fiwaredsc-consumer.local
@@ -104,6 +107,8 @@ apisix:
       - name: opa-lua
         configMap:
           name: opa-lua
+      - name: shared-hosts
+        emptyDir: {}
     extraVolumeMounts:
       - name: routes
         mountPath: /usr/local/apisix/conf/apisix.yaml
@@ -114,5 +119,67 @@ apisix:
       - name: opa-lua
         mountPath: /usr/local/apisix/apisix/plugins/opa.lua
         subPath: opa.lua
+      - name: shared-hosts
+        mountPath: /etc/hosts
+        subPath: hosts
+    # extraEnvVars:
+    #   - name: ENTRYSCRIPTFILE
+    #     value: /shared/entryPoint-apisixDataPlane.sh
+    #   - name: HOST_IP
+    #     valueFrom:
+    #       fieldRef:
+    #         fieldPath: status.hostIP        
+    # command: ["/bin/bash", "-c"]
+    # args:
+    #   - |
+    #     sleep 3600
+    #     # /shared/entryPoint-apisixDataPlane.sh
+    # containerSecurityContext:
+    #   enabled: true
+    #   # runAsUser: 0 # Ensure the container starts as root
+    #   # runAsGroup: 0 
+    #   # runAsNonRoot: false
+    #   allowPrivilegeEscalation: true  
+      # privileged: false
+    initContainers:
+      - name: register-local-dns
+        image: docker.io/bitnami/apisix:3.11.0-debian-12-r0 # Same values as data-plane.image
+        env:
+          - name: HOST_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP        
+        command:
+          - /bin/bash
+        args:
+          - -ec
+          - |
+            #!/bin/bash
+            touch /shared/hosts
+            cat /etc/hosts > /shared/hosts
+            chmod 777 /shared/hosts
+            # echo "Creating file $ENTRYSCRIPTFILE"
+            # cat <<EOF > $ENTRYSCRIPTFILE
+            # #!/bin/bash
+            echo "Define the DNSs as a space-separated list"
+            DNSs=("fiwaredsc-provider.local" "fiwaredsc-consumer.local")
+            echo "The DNSs are ${DNSs[@]}"
+            for DNS in "${DNSs[@]}"; do
+              echo "Registering DNS $DNS at IP $HOST_IP"
+              # Check if the entry already exists
+              if ! grep -q "$DNS" /shared/hosts; then
+                  echo "Appending $HOST_IP $DNS to /shared/hosts"
+                  echo "$HOST_IP $DNS" >> /shared/hosts
+              else
+                  echo "Entry for $DNS already exists in /shared/hosts"
+              fi
+            done
+            
+            echo "--- /etc/hosts ---"
+            cat /shared/hosts
+            echo "---"
+        volumeMounts:
+          - name: shared-hosts
+            mountPath: /shared
   controlPlane:
     enabled: true

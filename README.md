@@ -62,8 +62,8 @@ Any organization willing to market their data and or services in a dataspace wil
 This section describes the steps and the components to be deployed at the provider's side
 See the [consumer deployment guide](./assets/docs/README-provider.md)
 
-### [Initial setup of the Dataspace](README-initialSetUpOfTheDS.md) 
-This phase will show the actions to register the participants in the dataspace and will continue the configuration to provide authentication and authorization mechanisms to the dataspace to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf)
+### [Initial setup of the Dataspace](./assets/docs/README-initialSetUpOfTheDS.md) 
+This phase will show the actions to register the participants in the dataspace and will continue the configuration of the provider's service to provide authentication and authorization mechanisms to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf)
 
 ## Quick deployment from scratch
 To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions  

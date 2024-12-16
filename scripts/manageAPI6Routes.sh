@@ -80,6 +80,23 @@ shopt -s expand_aliases
 ADMINTOKEN=$(kSecret-show -f admin-token -n apisix plane-api -v)
 IP_APISIXCONTROL=$(kGet -a svc control- -o yaml -v -n apisix | yq eval '.spec.clusterIP' -)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ROUTES=$(cat <<EOF
 {
     "ROUTE_DEMO_JSON": {
@@ -228,7 +245,7 @@ ROUTES=$(cat <<EOF
         "upstream": {
             "type": "roundrobin",
             "nodes": {
-            "verifier.provider.svc.cluster.local:3000": 1
+                "verifier.provider.svc.cluster.local:3000": 1
             }
         }
     },
@@ -291,25 +308,6 @@ ROUTES=$(cat <<EOF
             }
         }
     },
-    "ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth": {
-        "uri": "/services/hackathon-service/ngsi-ld/*",
-        "name": "SERVICE_fiwaredsc_provider_local",
-        "host": "fiwaredsc-provider.local",
-        "methods": [ "GET" ],
-        "upstream": {
-            "type": "roundrobin",
-            "scheme": "http",
-            "nodes": {
-                "ds-scorpio.service.svc.cluster.local:9090": 1
-            }
-        },
-        "plugins": {
-            "proxy-rewrite": {
-                "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/\$1"]
-            }
-        }
-    },
-
     "ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration": {
         "uri": "/.well-known/data-space-configuration",
         "name": "fiwaredsc_provider_dataSpaceConfiguration",
@@ -328,10 +326,73 @@ ROUTES=$(cat <<EOF
             }
         }
     },
-
-
-
+    "ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth": {
+        "uri": "/services/hackathon-service/ngsi-ld/*",
+        "name": "SERVICE_fiwaredsc_provider_local",
+        "host": "fiwaredsc-provider.local",
+        "methods": [ "GET" ],
+        "upstream": {
+            "type": "roundrobin",
+            "scheme": "http",
+            "nodes": {
+                "ds-scorpio.service.svc.cluster.local:9090": 1
+            }
+        },
+        "plugins": {
+            "proxy-rewrite": {
+                "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/\$1"]
+            }
+        }
+    },
+    "ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_authentication": {
+        "uri": "/services/hackathon-service/ngsi-ld/*",
+        "name": "SERVICE_fiwaredsc_provider_local",
+        "host": "fiwaredsc-provider.local",
+        "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
+        "upstream": {
+            "type": "roundrobin",
+            "scheme": "http",
+            "nodes": {
+                "ds-scorpio.service.svc.cluster.local:9090": 1
+            }
+        },
+        "plugins": {
+            "proxy-rewrite": {
+                "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/\$1"]
+            },
+            "openid-connect": {
+                "bearer_only": true,
+                "use_jwks": true,
+                "client_id": "hackathon-service",
+                "client_secret": "unused",
+                "ssl_verify": false,
+                "discovery": "http://verifier.provider.svc.cluster.local:3000/services/hackathon-service/.well-known/openid-configuration"    
+            }
+        }
+    },
     
+
+    "ROUTE_PROVIDER_fiwaredsc_provider_ita_es_dataSpaceConfiguration": {
+        "uri": "/.well-known/data-space-configuration",
+        "name": "fiwaredsc_provider_dataSpaceConfiguration",
+        "host": "fiwaredsc-provider.ita.es",
+        "methods": [ "GET" ],
+        "upstream": {
+            "type": "roundrobin",
+            "scheme": "http",
+            "nodes": {
+                "dsconfig.service.svc.cluster.local:3002": 1
+            }
+        },
+        "plugins": {
+            "proxy-rewrite": {
+                "uri": "/.well-known/data-space-configuration/data-space-configuration.json"
+            }
+        }
+    },
+
+
+
     "ROUTE_WALLET_fiwaredsc_wallet_ita_es": {
         "uri": "/*",
         "name": "Wallet",
@@ -471,11 +532,11 @@ ROUTES=$(cat <<EOF
                 ]
             },
             "openid-connect": {
-                "bearer_only": true,
-                "use_jwks": true,
+                "bearer_only": "true",
+                "use_jwks": "true",
                 "client_id": "hackathon-service",
                 "client_secret": "unused",
-                "ssl_verify": false,
+                "ssl_verify": "false",
                 "discovery": "http://verifier.provider.svc.cluster.local:3000/services/hackathon-service/.well-known/openid-configuration"
             }
         }
@@ -486,6 +547,23 @@ EOF
 # Info routes
 INFO_ROUTES=$(cat <<EOF
 {
+
+    "ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_authentication"='{
+      "info": [
+            "# https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/entities?type=Order",
+            "# https://apisix.apache.org/docs/apisix/plugins/openid-connect/"
+        ]
+    },
+    "ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration": {
+        "info": [
+            "# https://fiwaredsc-provider.local/.well-known/data-space-configuration"
+        ]
+	},
+    "ROUTE_PROVIDER_fiwaredsc_provider_ita_es_dataSpaceConfiguration": {
+        "info": [
+            "# https://fiwaredsc-provider.ita.es/.well-known/data-space-configuration"
+        ]
+	},
     "ROUTE_WELLKNOWN_DID_WEB_fiwaredsc_consumer_ita_es": {
         "info": "# https://fiwaredsc-consumer.ita.es/.well-known/did.json"
 	},
@@ -556,15 +634,21 @@ if [[ "$ACTION" =~ ^(list|info|insert|update|delete)$ ]]; then
         # Search the ID
         # ROUTE_ID=$(echo $APISIXROUTES | jq -r --arg NAME "$ROUTE_NAME" --arg HOST "$ROUTE_HOST" --arg URI "$ROUTE_URI" \
         #     '.list[] | select(.name == $NAME and .host == $HOST and .uri == $URI) | .id // ""')
-        if [[ ${#ROUTE_NAME} -gt 0 ]] && [[ ${#ROUTE_URI} -gt 0 ]] && [[ ${#ROUTE_HOST} -gt 0 ]]; then
-            ROUTE_ID=$(echo $APISIXROUTES | jq -c --arg NAME "$ROUTE_NAME" --arg URI "$ROUTE_URI" --arg HOST "$ROUTE_HOST" \
-                '.list[] | select(.value.name == $NAME and .value.uri == $URI and .value.host == $HOST) | .value.id // ""')
-        elif [[ ${#ROUTE_NAME} -gt 0 ]] && ${#ROUTE_URI} -gt 0 ]]; then
-            ROUTE_ID=$(echo $APISIXROUTES | jq -c --arg NAME "$ROUTE_NAME" --arg URI "$ROUTE_URI" \
-                '.list[] | select(.value.name == $NAME and .value.uri == $URI) | .value.id // ""')
-        else
-            echo -e $(help "ERROR: Route $ROUTE must contain at least a name and a uri; optional a host")
-            [ "$CALLMODE" == "executed" ] && exit -1 || return -1; 
+        if [[ ${#ROUTE_NAME} -gt 0 ]]; then
+            ROUTE_ID=$(echo $APISIXROUTES | jq -c --arg NAME "$ROUTE_NAME" \
+                '.list[] | select(.value.name == $NAME) | .value.id // ""')
+        fi
+        if [ ${#ROUTE_ID} -eq 0 ]; then
+            if [[ ${#ROUTE_NAME} -gt 0 ]] && [[ ${#ROUTE_URI} -gt 0 ]] && [[ ${#ROUTE_HOST} -gt 0 ]]; then
+                ROUTE_ID=$(echo $APISIXROUTES | jq -c --arg NAME "$ROUTE_NAME" --arg URI "$ROUTE_URI" --arg HOST "$ROUTE_HOST" \
+                    '.list[] | select(.value.name == $NAME and .value.uri == $URI and .value.host == $HOST) | .value.id // ""')
+            elif [[ ${#ROUTE_NAME} -gt 0 ]] && ${#ROUTE_URI} -gt 0 ]]; then
+                ROUTE_ID=$(echo $APISIXROUTES | jq -c --arg NAME "$ROUTE_NAME" --arg URI "$ROUTE_URI" \
+                    '.list[] | select(.value.name == $NAME and .value.uri == $URI) | .value.id // ""')
+            else
+                echo -e $(help "ERROR: Route $ROUTE must contain at least a name and a uri; optional a host")
+                [ "$CALLMODE" == "executed" ] && exit -1 || return -1; 
+            fi
         fi
         if [ ${#ROUTE_ID} -eq 0 ]; then
             if [[ $ACTION =~ ^(update|delete)$ ]]; then

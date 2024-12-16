@@ -67,19 +67,19 @@ spec:
                 HTTPCODE=$($CMD)
                 HTTPCODE=${HTTPCODE:1:-1}
                 if [ $HTTPCODE = "200" ]; then
-                  echo "Issuer $DID is already registered"
+                  echo "Issuer $DID is already registered, so it is updated (PUT)"
                   CMD="curl -X 'PUT' $TIURLISSUERDID \
                     -H 'accept: */*' \
                     -H 'Content-Type: application/json' \
                     -d $ISSUERDETAILSJSON"
                 else
-                  echo "Issuer $DID does not exist at the TIList $TIURLISSUER"
+                  echo "Issuer $DID does not exist at the TIList $TIURLISSUER, so it is created (POST)"
                   CMD="curl -X 'POST' $TIURLISSUER \
                     -H 'accept: */*' \
                     -H 'Content-Type: application/json' \
                     -d $ISSUERDETAILSJSON"
                 fi
-                # echo CMD=$CMD
+                echo CMD=$CMD
                 eval "$CMD"
                 break;
               else

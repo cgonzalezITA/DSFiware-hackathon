@@ -288,7 +288,25 @@ ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth='{
   "plugins": { 
     "proxy-rewrite": { "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/$1"] }
   }
-}'
+}',
+"ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration": {
+    "uri": "/.well-known/data-space-configuration",
+    "name": "fiwaredsc_provider_dataSpaceConfiguration",
+    "host": "fiwaredsc-provider.local",
+    "methods": [ "GET" ],
+    "upstream": {
+        "type": "roundrobin",
+        "scheme": "http",
+        "nodes": {
+            "dsconfig.service.svc.cluster.local:3002": 1
+        }
+    },
+    "plugins": {
+        "proxy-rewrite": {
+            "uri": "/.well-known/data-space-configuration/data-space-configuration.json"
+        }
+    }
+},
 ```
 
 ```shell
@@ -318,7 +336,7 @@ curl -k https://fiwaredsc-provider.local/.well-known/data-space-configuration
 
 ```shell
 # To show the structure of the github after the completion of the next step
-git checkout phase05.step01
+git checkout phase05.step03
 ```
 
 ## Bottom line
