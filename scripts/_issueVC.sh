@@ -38,7 +38,7 @@ function help() {
     echo $HELP > /dev/tty
 }
 function runCommand() { #CMD, [#Message]
-    echo > /dev/tty;
+    [ "$VERBOSE" = true ] && echo > /dev/tty;
     FORMAT="runCommand <CMD> [<Debug message 2 be printed out>]"
     if test "$#" -lt 1; then
         echo -e "Error: Missing <CMD>:\n\t$FORMAT" > /dev/tty;
@@ -126,12 +126,12 @@ if [ "$INFO" = true ]; then
 fi
     
 
-echo "Phase 1- Retrieve an existing a Verifiable Credential (VC) from a VCIssuer (Keycloak in this use case)" > /dev/tty
+[ "$VERBOSE" = true ] && echo "Phase 1- Retrieve an existing a Verifiable Credential (VC) from a VCIssuer (Keycloak in this use case)" > /dev/tty
 
 MSG="---\n1.1- Get the URL from where to retrieve the Token to access the VC"
 CMD="curl -k -s -X GET $URL_VCISSUER/.well-known/openid-configuration | jq '.token_endpoint' -r"
 URL_VCISSUER_TOKEN=$(runCommand "$CMD" "$MSG")
-echo -e "\nURL_VCISSUER_TOKEN=$URL_VCISSUER_TOKEN" > /dev/tty
+[ "$VERBOSE" = true ] && echo -e "\nURL_VCISSUER_TOKEN=$URL_VCISSUER_TOKEN" > /dev/tty
 
 MSG="---\n1.2- Get Token to access the VC"
 CMD="curl -k -s -X POST \"$URL_VCISSUER_TOKEN\" \
@@ -142,20 +142,20 @@ CMD="curl -k -s -X POST \"$URL_VCISSUER_TOKEN\" \
       --data username=$USER_01 \
       --data password=$USER_01_PASSWORD | jq '.access_token' -r;"
 ACCESS_TOKEN=$(runCommand "$CMD" "$MSG")
-echo -e "\nACCESS_TOKEN=$ACCESS_TOKEN" > /dev/tty
+[ "$VERBOSE" = true ] && echo -e "\nACCESS_TOKEN=$ACCESS_TOKEN" > /dev/tty
 
 URL_CREDENTIAL_OFFER="$URL_VCISSUER/protocol/oid4vc/credential-offer-uri"
 MSG="---\n1.3- Gets a credential offer uri, using the retrieved AccessToken"
 CMD="curl -k -s -X GET \"$URL_CREDENTIAL_OFFER?credential_configuration_id=$CREDENTIAL_IDENTIFIER\" \
     --header \"Authorization: Bearer ${ACCESS_TOKEN}\" | jq '\"\(.issuer)\(.nonce)\"' -r;"
 OFFER_URI=$(runCommand "$CMD" "$MSG")
-echo -e "\nOFFER_URI=$OFFER_URI" > /dev/tty
+[ "$VERBOSE" = true ] && echo -e "\nOFFER_URI=$OFFER_URI" > /dev/tty
 
 MSG="---\n1.4- Use the offer uri(e.g. the issuer and nonce fields), to retrieve the actual offer:"
 CMD="curl -k -s -X GET ${OFFER_URI} \
             --header \"Authorization: Bearer ${ACCESS_TOKEN}\" | jq '.grants.\"urn:ietf:params:oauth:grant-type:pre-authorized_code\".\"pre-authorized_code\"' -r;"
 export PRE_AUTHORIZED_CODE=$(runCommand "$CMD" "$MSG")
-echo -e "\nPRE_AUTHORIZED_CODE=$PRE_AUTHORIZED_CODE" > /dev/tty
+[ "$VERBOSE" = true ] && echo -e "\nPRE_AUTHORIZED_CODE=$PRE_AUTHORIZED_CODE" > /dev/tty
 
 MSG="---\n1.5- Uses the pre-authorized code from the offer to get a credential AccessToken at the authorization server"
 CMD="curl -k -s -X POST $URL_VCISSUER_TOKEN \
@@ -165,7 +165,7 @@ CMD="curl -k -s -X POST $URL_VCISSUER_TOKEN \
       --data pre-authorized_code=${PRE_AUTHORIZED_CODE} \
       --data code=${PRE_AUTHORIZED_CODE} | jq '.access_token' -r;"
 export CREDENTIAL_ACCESS_TOKEN=$(runCommand "$CMD" "$MSG")
-echo -e "\nCREDENTIAL_ACCESS_TOKEN=$CREDENTIAL_ACCESS_TOKEN" > /dev/tty
+[ "$VERBOSE" = true ] && echo -e "\nCREDENTIAL_ACCESS_TOKEN=$CREDENTIAL_ACCESS_TOKEN" > /dev/tty
 
 URL_CREDENTIAL_ENDPOINT="$URL_VCISSUER/protocol/oid4vc/credential"
 MSG="---\n1.6- Finally Use the returned access token to get the actual credential"

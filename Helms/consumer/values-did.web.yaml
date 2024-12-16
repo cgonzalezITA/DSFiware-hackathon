@@ -386,7 +386,7 @@ keycloak:
 
 registration:
   # Used to register the DID to the different TrustedIssuers 
-  enabled: false
+  enabled: true
   name: registration-job
   job:
     hookDeletePolicy: before-hook-creation
@@ -401,22 +401,26 @@ registration:
         did: $DID      
         credentials: []
     # Registers the connector DID:web in the Trusted Issuer List of the provider 
-    # stating that this DID can access the Provider DSConnector with VC of type OperatorCredential
+    # stating that this DID can access the Provider DSConnector with a VC of type OperatorCredential with one of the roles: ORDER_PRODUCER or ORDER_CONSUMER
     - name: til
       tiURL: http://til.provider.svc.cluster.local:8080
       issuerDetails: 
         did: $DID 
         credentials: 
-          - credentialsType: OperatorCredential
-# validFor:
-#   from: "2024-07-21T17:32:28Z"
-#   to: "2040-07-21T17:32:28Z"
-# claims:
-#   - name: roles
-#     allowedValues: 
-#       - ORDER_PRODUCER
-#       - ORDER_CONSUMER
-#     target: $DID
+          # validFor:
+          #   from: "2024-11-26T08:45:00Z"
+          #   to: "2034-11-26T08:45:00Z"
+          credentialsType: OperatorCredential
+          claims:
+            # - name: firstName
+            #   allowedValues: [ OrderConsumer, OrderProducer ]
+            - name: roles.names
+              allowedValues:
+                - ORDER_CONSUMER
+                - ORDER_PROVIDER
+            # - name: roles.target
+            #   allowedValues:
+            #     - $DID
 
 vcwallet:
   enabled: false

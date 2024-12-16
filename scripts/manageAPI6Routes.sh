@@ -370,6 +370,7 @@ ROUTES=$(cat <<EOF
             }
         }
     },
+    
 
     "ROUTE_PROVIDER_fiwaredsc_provider_ita_es_dataSpaceConfiguration": {
         "uri": "/.well-known/data-space-configuration",

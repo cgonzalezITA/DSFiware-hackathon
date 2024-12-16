@@ -336,7 +336,7 @@ curl -k https://fiwaredsc-provider.local/.well-known/data-space-configuration
 
 ```shell
 # To show the structure of the github after the completion of the next step
-git checkout phase05.step01
+git checkout phase05.step03
 ```
 
 ## Bottom line
