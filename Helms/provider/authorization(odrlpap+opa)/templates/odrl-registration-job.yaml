@@ -30,6 +30,7 @@ spec:
           - /bin/sh
           - -ec
           - |
+            #!/bin/sh
             {{- range $policyKey, $policy := .Values.odrlPolicyRegistration.odrlPolicies }}
             POLICYKEYNAME= {{- $policyKey | quote }}
             echo -e "\n---\n\t*** Trying to register policy $POLICYKEYNAME ***"
@@ -38,19 +39,20 @@ spec:
             # echo "POLICYJSON=$POLICYJSON"
             POLICYJSON="'$POLICYJSON"
             POLICYJSON="$POLICYJSON'"
-            # echo "POLICYJSON2=$POLICYJSON"
+            # # echo "POLICYJSON=$POLICYJSON"
 
             # First Deletes the $POLICYKEYNAME as a PUT on an existing one returns error:
             # {"details":"Error id 4751258d-5d1e-4095-ab45-9e685d58d9ed-3","stack":""}
-            CMD="curl -s -X DELETE $ODRLPAPURL/$POLICYKEYNAME"
-            # echo "Running CMD=$CMD"
-            eval $CMD  
-            CMD="curl -X PUT $ODRLPAPURL/$POLICYKEYNAME \
+            CMD="curl -s -w \"%{http_code}\" -k -X DELETE $ODRLPAPURL/$POLICYKEYNAME"
+            echo "Running CMD=$CMD"
+            RC=$(eval "$CMD")
+            echo -e "\nRC=$RC"
+            CMD="curl -sS -X PUT $ODRLPAPURL/$POLICYKEYNAME \
                     -H 'accept: */*' \
                     -H 'Content-Type: application/json' \
                     -d $POLICYJSON"
-            # echo "Running CMD=$CMD"
-            eval $CMD  
-
+            echo "Running CMD=$CMD"
+            RC=$(eval "$CMD")
+            echo -e "\nRC=$RC"
             {{ end }}
 {{- end }}

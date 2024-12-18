@@ -68,22 +68,15 @@ opa:
   port: 8181
   diagnostic_port: 8282
 
-  log_level: info
-  log_format: text
+  # log_level: info
+  # log_format: text
   mgmt:
     enabled: false
-
-  # Log level for OPA ('debug', 'info', 'error') (app default=info)
-  logLevel: info
-
-  # Log format for OPA ('text', 'json') (app default=text)
-  logFormat: text
 
   rbac:
     # If true, create & use RBAC resources
     #
     create: false
-
   serviceAccount:
     # Specifies whether a ServiceAccount should be created
     create: false
@@ -108,6 +101,18 @@ opa:
       path: /
       scheme: HTTPS
       port: 8181
+  ingress:
+    enabled: false
+    tls:
+      # []
+      - hosts: [ fdsc-provider-opa.local ]
+        secretName: secret.ita.es-tls
+    hosts: 
+      # []
+      ## provide a hosts and the paths that should be available   
+      - host: fdsc-provider-opa.local
+        path: /
+        port: 8181
   opa:
     # server:
     #   status: false   # Disable server status reporting
@@ -119,8 +124,8 @@ opa:
           service: pap_server
           resource: policies.tar.gz
           polling:
-            min_delay_seconds: 30
-            max_delay_seconds: 60
+            min_delay_seconds: 10
+            max_delay_seconds: 15
       methods:
           service: pap_server
           resource: methods.tar.gz
@@ -138,21 +143,22 @@ opa:
       console: true 
     status: 
       console: true
-  ingress:
-    enabled: false
-    tls:
-      # []
-      - hosts: [ fdsc-provider-opa.local ]
-        secretName: secret.ita.es-tls
-    hosts: 
-      # []
-      ## provide a hosts and the paths that should be available   
-      - host: fdsc-provider-opa.local
-        path: /
-        port: 8181
-
+  # Log level for OPA ('debug', 'info', 'error') (app default=info)
+  log_level: debug
+  # Log format for OPA ('text', 'json') (app default=text)
+  log_format: text
+  extraEnvVars:
+    - name: OPA_LOG_LEVEL
+      value: debug
+  # config:
+  #   configFile: |-
+  #     {
+  #       "logging": {
+  #         "level": "debug"
+  #       }
+  #     }
 odrlPolicyRegistration:
-  enabled: false
+  enabled: true
   job:
     hookDeletePolicy: before-hook-creation
     hook: post-install,post-upgrade
@@ -170,11 +176,11 @@ odrlPolicyRegistration:
         odrl: http://www.w3.org/ns/odrl/2/
         rdfs: http://www.w3.org/2000/01/rdf-schema#
         skos: http://www.w3.org/2004/02/skos/core#
-      "@id": https://fiwaredsc-provider.ita.es/policy/common/type-order-reader
+      "@id": https://fiwaredsc-provider.local/policy/common/type-order-reader
       "@type": odrl:Policy
       odrl:permission:
-        odrl:assigner:
-          "@id": https://fiwaredsc-provider.ita.es
+        odrl:action:
+          "@id": odrl:read
         odrl:target:
           "@type": odrl:AssetCollection
           odrl:source: urn:asset
@@ -184,39 +190,66 @@ odrlPolicyRegistration:
             odrl:operator:
               "@id": odrl:eq
             odrl:rightOperand: Order
+              # 
         odrl:assignee:
-          # "@id": vc:any
-          # "@type": odrl:PartyCollection
-          # odrl:source: urn:user
-          # odrl:refinement:
-          #   "@type": odrl:Constraint
-          #   odrl:leftOperand:
-          #     "@id": vc:role
-          #   odrl:operator:
-          #     "@id": odrl:hasPart
-          #   odrl:rightOperand:
-          #     "@value": ORDER_CONSUMER
           "@type": odrl:PartyCollection
           odrl:source: urn:user
           odrl:refinement:
-            # "@type": odrl:LogicalConstraint
-            # odrl:and:
-            # - "@type": odrl:Constraint
-            #   odrl:leftOperand:
-            #     "@id": dome-op:role
-            #   odrl:operator:
-            #     "@id": odrl:hasPart
-            #   odrl:rightOperand:
-            #     "@value": ORDER_CONSUMER
-            #     "@type": xsd:string
-            - "@type": odrl:Constraint
-              odrl:leftOperand:
-                "@id": vc:type
-              odrl:operator:
-                "@id": odrl:hasPart
-              odrl:rightOperand:
-                "@value": OperatorCredential
-                "@type": xsd:string
+            "@type": odrl:LogicalConstraint
+            odrl:and:
 
-        odrl:action:
-          "@id": odrl:read
+        # # Policy 1: Any can access
+        # # odrl:assignee:
+        # #   "@id": vc:any
+
+        # # Policy2: "@id": vc:currentParty -> current_party(credential) := credential.issuer
+            # odrl:assignee:
+            # "@type": odrl:PartyCollection
+            # odrl:source: urn:user
+              # - odrl:refinement:
+                # - "@type": odrl:Constraint
+                #   odrl:leftOperand:
+                #     "@id": vc:currentParty
+                #   odrl:operator:
+                #     "@id": odrl:eq
+                #   odrl:rightOperand:
+                #     "@value": did:key:zDnaewJ2tgBDT1ah7U8XqFavKtDPgDxqvJLLBMFMyAVQQy2Bn
+                #     "@type": xsd:string
+
+        # Policy3: "@id": vc:type -> types(verifiable_credential) := verifiable_credential.type
+        # odrl:assignee:
+        #   "@type": odrl:PartyCollection
+        #   odrl:source: urn:user
+        #   odrl:refinement:
+                - "@type": odrl:Constraint
+                  odrl:leftOperand:
+                    "@id": vc:type
+                  odrl:operator:
+                    "@id": odrl:hasPart
+                  odrl:rightOperand:
+                    "@value": OperatorCredential
+                    "@type": xsd:string
+
+        # # Policy4: role(verifiable_credential,organization_id) := r if {
+        # # NOT WORKING
+        # # roles := verifiable_credential.credentialSubject.roles
+        # # role := [rad | some rad in roles; rad.target = organization_id ]
+        # # r = role[_].names; trace(organization_id)
+        # # The policy generates ODRL:
+        # # ...
+        # # odrl_operand.and_sequence_operand(
+        # #  [odrl_operator.has_part_operator(
+        # #    vc_lo.role(helper.verifiable_credential, helper.organization_did),
+        # #    "ORDER_CONSUMER")])
+        # odrl:assignee:
+        #   "@type": odrl:PartyCollection
+        #   odrl:source: urn:user
+        #   odrl:refinement:
+                # - "@type": odrl:Constraint
+                #   odrl:leftOperand:
+                #     "@id": vc:role
+                #   odrl:operator:
+                #     "@id": odrl:isAnyOf
+                #   odrl:rightOperand:
+                #     - ORDER_CONSUMER
+                #     - ORDER_PRODUCER

@@ -5,6 +5,9 @@
   - [Step 5.3-Addition of the service route to the Apisix with VC Authentication](#step-53-addition-of-the-service-route-to-the-apisix-with-vc-authentication)
     - [Retrieval of an Access Token from the VCVerifier](#retrieval-of-an-access-token-from-the-vcverifier)
     - [Access the service with the VCVerifier Access Token](#access-the-service-with-the-vcverifier-access-token)
+  - [Step 5.4-Addition of the authorization checking to the service route](#step-54-addition-of-the-authorization-checking-to-the-service-route)
+    - [Writing ODRL policies](#writing-odrl-policies)
+    - [Access the service with the authentication and authorization plugins enabled with the VCVerifier Access Token](#access-the-service-with-the-authentication-and-authorization-plugins-enabled-with-the-vcverifier-access-token)
   - [Bottom line](#bottom-line)
 
     
@@ -263,9 +266,18 @@ Next step asks for an access token to be used to request the service (This is a 
 DATA_SERVICE_ACCESS_TOKEN=eyJhbGciOiJSUzI1NiIsImtpZCI6ImI0S1FVdE5KQzdKamRQRnVnRWNlNkMzWnpTZ2VZam9fUXAzdlhUa0ZLNHciLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsiaGFja2F0aG9uLXNlcnZpY2UiXSwiY2xpZW50X2lkIjoiZGlkOmtleTp6RG5hZWpSQW5lODJ1TlZqcGZBSlNjdUVOaTJGNjJvOUg1QktUNXlKWGIzemNkckZqIiwiZXhwIjoxNzM0MzMzNDc0LCJpc3MiOiJkaWQ6a2V5OnpEbmFlalJBbmU4MnVOVmpwZkFKU2N1RU5pMkY2Mm85SDVCS1Q1eUpYYjN6Y2RyRmoiLCJraWQiOiJiNEtRVXROSkM3SmpkUEZ1Z0VjZTZDM1p6U2dlWWpvX1FwM3ZYVGtGSzR3Iiwic3ViIjoiIiwidmVyaWZpYWJsZUNyZWRlbnRpYWwiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLCJodHRwczovL3d3dy53My5vcmcvbnMvY3JlZGVudGlhbHMvdjEiXSwiY3JlZGVudGlhbFN1YmplY3QiOnsiZW1haWwiOiJvcmRlcmNvbnN1bWVydXNlckBjb25zdW1lci5vcmciLCJmaXJzdE5hbWUiOiJPcmRlckNvbnN1bWVyIiwibGFzdE5hbWUiOiJVc2VyIiwicm9sZXMiOlt7Im5hbWVzIjpbIk9SREVSX0NPTlNVTUVSIl0sInRhcmdldCI6ImRpZDprZXk6ekRuYWVyS0NMbmNvWGQ5WHYzTVhpM1p3ZWR6ck5WS2VYdVd2VzFBREtMNnVya3JlaSJ9XX0sImlkIjoidXJuOnV1aWQ6YzU2NzliMDQtYWE3Yy00ZGZjLWE0MDctMmUxNzBmODliMTQxIiwiaXNzdWFuY2VEYXRlIjoiMjAyNC0xMi0xNFQwNjo1MTozNFoiLCJpc3N1ZXIiOiJkaWQ6a2V5OnpEbmFlcktDTG5jb1hkOVh2M01YaTNad2VkenJOVktlWHVXdlcxQURLTDZ1cmtyZWkiLCJ0eXBlIjpbIk9wZXJhdG9yQ3JlZGVudGlhbCJdfX0.bnN3Giq0fMTb29zrvw38MAMUm53WSt-bKHKkCkOSx3zZBw5Yd3a3iwBfQ3G05T6qKaeADOCdPvw19FwPF6iJq1TXLPIIvIGexmkDzH4vMudu1CJo1vEKK0Rj6uMkqaw4zpzInRn82a7GgckOjqHL8CdyBqWi7yYqoLkbmqqdck80_DiLdAmYUGgRBLvCDNbFkNLDYngkfX3fqwQKuJX32h0C1YQuhbfsy-CjW_Vvzs58gA0vfYnM8CNwHQLd4ZaVIWB-rTpnAyO5Wgs_sWEFhECsW5MO5a-fHqiUCEOQT5oX3f9Y2Rx0erwZL3zhzxqCG_ZmOTy-Qgr0P13DHJYCXg
 ```
 
+**NOTE**: To avoid regenerating the VC and the DATA_SERVICE_ACCESS_TOKEN, bear in mind that the VC does not have an expiration date, but the DATA_SERVICE_ACCESS_TOKEN has a lifespan of 30 mins.
+
 ### Access the service with the VCVerifier Access Token
 At this stage the previous request attaching the Bearer _DATA_SERVICE_ACCESS_TOKEN_ token should be authenticated, but...
-```
+
+```shell
+# First of all, a VC is issued to the user with ORDERCONSUMER role
+VERIFIABLE_CREDENTIAL=$(./scripts/issueVC_operator-credential-orderConsumer.sh -v)
+
+# Now, this VC is used to retrieve the JWT validated to access the service
+DATA_SERVICE_ACCESS_TOKEN=$(. scripts/generateAccessTokenFromVC.sh $VERIFIABLE_CREDENTIAL)
+
 curl -k https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/entities?type=Order \
     --header "Accept: application/json" \
     --header "Authorization: Bearer ${DATA_SERVICE_ACCESS_TOKEN}"
@@ -277,11 +289,12 @@ curl -k https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/e
 The request is still failing. An analysis of the apisix logs shows the reason:
 ```shell
 kLogs -n apisix --since 1s data-plane -y
-    Running command [kubectl logs -n apisix --since 1s -f pod/apisix-data-plane-6d5f868b54-dqknb -c wait-for-control-plane]
+    # Running command [kubectl logs -n apisix --since 1s -f pod/apisix-data-plane-6d5f868b54-dqknb -c wait-for-control-plane]
     ...
     openidc.lua:740: openidc_jwks(): accessing jwks url (https://fiwaredsc-provider.local/.well-known/jwks) failed: failed to parse domain
     ...
 ```
+
 Among multiple messages, the interesting one points to the fact that a local DNS is used (fiwaredsc-provider.local), DNS which is unknown to the apisix-data plane. The best solution would be to use a global DNS (eg. `yourorganization.com`), but for shake of simplicity, an implemented alternative could be to add the used local DNSs (`apisix-data-plane`) to the apisix-data-plane:/etc/hosts file. The [apisix values file](../../Helms/apisix/values.yaml) has been modified to include such trick although is not recomended for production environments. 
 
 ```shell
@@ -300,7 +313,6 @@ hFileCommand apisix upgrade
 ```
 
 A new try to access the service does success using local DNSs:
-```shell
 ```shell
 echo "# First of all, a VC is issued to the user with ORDERCONSUMER role"
 VERIFIABLE_CREDENTIAL=$(./scripts/issueVC_operator-credential-orderConsumer.sh -v)
@@ -329,6 +341,183 @@ curl -k https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/e
 git checkout phase05.step04
 ```
 
+## Step 5.4-Addition of the authorization checking to the service route
+```shell
+# To show the structure of the github after the completion of this step
+git checkout phase05.step04
+```
+
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/provider-components-authorization.png"><br/>
+      Authorization components</p>
+
+At this step, new plugin (`opa`) will be added to the service route to perform authorization tasks. The plugin will forward any request already authenticated to the `Open Policy Agent (OPA)` to verify that the request complies with the ODRL policies defined.  
+Again, as new apisix route (`ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_2auth`) will be deployed enabling both authentication and authorization for the `https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/*` endpoints. 
+```json
+ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_2auth='{
+  "uri": "/services/hackathon-service/ngsi-ld/*",
+  "name": "SERVICE_fiwaredsc_provider_local",
+  "host": "fiwaredsc-provider.local",
+  "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
+  "upstream": {
+      "type": "roundrobin",
+      "scheme": "http",
+      "nodes": {
+          "ds-scorpio.service.svc.cluster.local:9090": 1
+      }
+  },
+  "plugins": {
+      "proxy-rewrite": {
+          "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/\$1"]
+      },
+      "openid-connect": {
+          "bearer_only": true,
+          "use_jwks": true,
+          "client_id": "hackathon-service",
+          "client_secret": "unused",
+          "ssl_verify": false,
+          "discovery": "http://verifier.provider.svc.cluster.local:3000/services/hackathon-service/.well-known/openid-configuration"    
+      },
+      "opa": {
+          "host": "http://opa.provider.svc.cluster.local:8181",
+          "policy": "policy/main",
+          "with_route": true,
+          "with_service": true,
+          "with_consumer": true,
+          "with_body": true
+      }
+  }
+}'
+```
+
+```shell
+# Update the apisix route
+. ./scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_2auth
+```
+
+The plugin redirects requests made to the ´/services/hackathon-service/ngsi-ld/*´ endpoint to the `OPA` service to verify its credentials.
+
+At this stage, a request to the service will fail again but with a 403 Forbidden error:
+```shell
+export VERIFIABLE_CREDENTIAL=$(. scripts/issueVC_operator-credential-orderConsumer.sh -v)
+export DATA_SERVICE_ACCESS_TOKEN=$(scripts/generateAccessTokenFromVC.sh $VERIFIABLE_CREDENTIAL -v)
+curl -k https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/entities?type=Order \
+  --header "Accept: application/json" \
+  --header "Authorization: Bearer ${DATA_SERVICE_ACCESS_TOKEN}"
+      <html>
+        <head><title>403 Forbidden</title></head>
+      ...
+```
+
+To gain access to the resource, a set of ODRL policies have to be addedd.
+
+### Writing ODRL policies
+This setup will deploy policies to authorize access to the service depending on the role that the VC provides.
+
+The authorization helm chart contains a `odrlPolicyRegistration` section with the policies to be deployed for this use case. These policies 
+
+```yaml
+odrlPolicyRegistration:
+  enabled: true
+  job:
+    hookDeletePolicy: before-hook-creation
+    hook: post-install,post-upgrade
+    backoffLimit: 1
+  # -- service id of the hackathon-service to be used
+  id: hackathon-service
+  # -- endpoint of the ccs to regsiter at
+  odrlPAPEndpoint: http://odrl-pap.provider.svc.cluster.local:8080/policy
+  odrlPolicies:
+    ODRL_ORDER_READER:
+      "@context":
+        dc: http://purl.org/dc/elements/1.1/
+        dct: http://purl.org/dc/terms/
+        owl: http://www.w3.org/2002/07/owl#
+        odrl: http://www.w3.org/ns/odrl/2/
+        rdfs: http://www.w3.org/2000/01/rdf-schema#
+        skos: http://www.w3.org/2004/02/skos/core#
+      "@id": https://fiwaredsc-provider.local/policy/common/type-order-reader
+      "@type": odrl:Policy
+      odrl:permission:
+        odrl:action:
+          "@id": odrl:read
+        odrl:target:
+          "@type": odrl:AssetCollection
+          odrl:source: urn:asset
+          odrl:refinement:
+          - "@type": odrl:Constraint
+            odrl:leftOperand: ngsi-ld:entityType
+            odrl:operator:
+              "@id": odrl:eq
+            odrl:rightOperand: Order
+              # 
+        odrl:assignee:
+          "@type": odrl:PartyCollection
+          odrl:source: urn:user
+          odrl:refinement:
+            "@type": odrl:LogicalConstraint
+            odrl:and:
+        # # Policy 1: Any can access
+        # # odrl:assignee:
+        # #   "@id": vc:any
+
+        # # Policy2: "@id": vc:currentParty -> current_party(credential) := credential.issuer
+                - "@type": odrl:Constraint
+                  odrl:leftOperand:
+                    "@id": vc:currentParty
+                  odrl:operator:
+                    "@id": odrl:eq
+                  odrl:rightOperand:
+                    "@value": did:key:zDnaewJ2tgBDT1ah7U8XqFavKtDPgDxqvJLLBMFMyAVQQy2Bn
+                    "@type": xsd:string
+
+        # Policy3: "@id": vc:type -> types(verifiable_credential) := verifiable_credential.type
+                - "@type": odrl:Constraint
+                  odrl:leftOperand:
+                    "@id": vc:type
+                  odrl:operator:
+                    "@id": odrl:hasPart
+                  odrl:rightOperand:
+                    "@value": OperatorCredential
+                    "@type": xsd:string
+```
+To apply the policies, simply enable the `odrlPolicyRegistration` section and upgrade the authorization helm chart:
+```shell
+hFileCommand authorization upgrade
+    # Running CMD=[helm -n provider upgrade -f "./Helms/provider/authorization(odrlpap+opa)/./values.yaml" provider-authorization "./Helms/provider/authorization(odrlpap+opa)/./"  --create-namespace]
+    ...
+kGet -n provider
+    ...
+```
+
+### Access the service with the authentication and authorization plugins enabled with the VCVerifier Access Token
+With the retrieved access token, the previous request could be launched again with success.  
+
+
+```shell
+export VERIFIABLE_CREDENTIAL_OCONSUMER=$(. scripts/issueVC_operator-credential-orderConsumer.sh -v)
+export DATA_SERVICE_ACCESS_TOKEN_OCONSUMER=$(scripts/generateAccessTokenFromVC.sh $VERIFIABLE_CREDENTIAL_OCONSUMER -v)
+curl -k https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/entities?type=Order \
+    --header "Accept: application/json" \
+    --header "Authorization: Bearer ${DATA_SERVICE_ACCESS_TOKEN_OCONSUMER}"
+export VERIFIABLE_CREDENTIAL_OPRODUCER=$(. scripts/issueVC_operator-credential-orderProducer.sh -v)
+export DATA_SERVICE_ACCESS_TOKEN_OPRODUCER=$(scripts/generateAccessTokenFromVC.sh $VERIFIABLE_CREDENTIAL_OPRODUCER -v)
+curl -k https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/entities?type=Order \
+  --header "Accept: application/json" \
+  --header "Authorization: Bearer ${DATA_SERVICE_ACCESS_TOKEN_OPRODUCER}"
+        [ {
+          "id" : "urn:ngsi-ld:Order:SDBrokerId-Spain.2411331.000003",
+          "type" : "Order",
+          "dateCreated" : {
+            "type" : "Property",
+            "value" : {
+              "type" : "DateTime",
+        ...
+```
+
 ## Bottom line
-The setup of the data space leaves a complete scenario enabling the customization defining _business, operational and organizational agreements among participants_ via the policy definitions.
-Each participant has control over their data and services _stablishing the conditions of their access while facilitating data sharing agreements_
+The setup of the data space leaves a complete scenario enabling the customization defining _business, operational and organizational agreements among participants_ via the policy definitions. Each participant has control over their data and services _stablishing the conditions of their access while facilitating data sharing agreements_
+
+<p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/Fiware-DataSpaceGlobalArch-phase05.png"><br/>
+Architecture after the provider components deployment is completed</p>
+
+From now on, the provider can replace the HOL service by its own one/ones and define its own ODRL policies to tailor access to these services.

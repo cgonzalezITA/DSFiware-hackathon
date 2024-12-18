@@ -370,6 +370,40 @@ ROUTES=$(cat <<EOF
             }
         }
     },
+    "ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_2auth": {
+        "uri": "/services/hackathon-service/ngsi-ld/*",
+        "name": "SERVICE_fiwaredsc_provider_local",
+        "host": "fiwaredsc-provider.local",
+        "methods": ["GET", "POST", "PUT", "HEAD", "CONNECT", "OPTIONS", "PATCH", "DELETE"],
+        "upstream": {
+            "type": "roundrobin",
+            "scheme": "http",
+            "nodes": {
+                "ds-scorpio.service.svc.cluster.local:9090": 1
+            }
+        },
+        "plugins": {
+            "proxy-rewrite": {
+                "regex_uri": ["^/services/hackathon-service/ngsi-ld/(.*)", "/ngsi-ld/\$1"]
+            },
+            "openid-connect": {
+                "bearer_only": true,
+                "use_jwks": true,
+                "client_id": "hackathon-service",
+                "client_secret": "unused",
+                "ssl_verify": false,
+                "discovery": "http://verifier.provider.svc.cluster.local:3000/services/hackathon-service/.well-known/openid-configuration"    
+            },
+            "opa": {
+                "host": "http://opa.provider.svc.cluster.local:8181",
+                "policy": "policy/main",
+                "with_route": true,
+                "with_service": true,
+                "with_consumer": true,
+                "with_body": true
+            }
+        }
+    },
     
 
     "ROUTE_PROVIDER_fiwaredsc_provider_ita_es_dataSpaceConfiguration": {
