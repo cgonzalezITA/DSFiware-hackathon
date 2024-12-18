@@ -13,7 +13,7 @@ unset DID1
 echo "##############################"
 echo "# Install the DSFiware-hackathon github repository"
 DSFIWAREHOL_GH_HTTPS="https://github.com/cgonzalezITA/DSFiware-hackathon.git"
-DSFIWAREHOL_TAG="phase05.step03" # replace by phase05.step04
+DSFIWAREHOL_TAG="phase05.step04"
 STEP_DESCRIPTION="Addition of the authorization checking to the service route"
 DSFIWAREHOL_FOLDER="DSFiware-hackathon-$DSFIWAREHOL_TAG"
 PUBLIC_IP=$(hostname -I | awk '{print $1}')
@@ -33,7 +33,7 @@ fi
 
 echo "# $DSFIWAREHOL_TAG-$STEP_DESCRIPTION"
 
-DSFIWAREHOL_FOLDER="DSFiware-hackathon" # TODO DELETE
+# DSFIWAREHOL_FOLDER="DSFiware-hackathon" # TODO DELETE
 echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
 cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
