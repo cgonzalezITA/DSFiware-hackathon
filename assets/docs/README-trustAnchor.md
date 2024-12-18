@@ -12,6 +12,8 @@ The main component to be deployed is the [Fiware Trusted Issuers List](https://g
 ```shell
 # To show the structure of the github after the completion of this step
 git checkout phase02.step01
+# Change the default namespace to be used:
+export DEF_KTOOLS_NAMESPACE=trust-anchor
 ```
 
 1. Deployment of the trustAnchor Helm chart.
@@ -37,9 +39,6 @@ git checkout phase02.step01
 
 3. Verify it is accessible.
       ```shell
-      # Change the default namespace to be used:
-      export DEF_KTOOLS_NAMESPACE=trust-anchor
-
       # Identify the names of the services
       kGet svc -n trust
       #   Running command [kubectl get svc  -n trust-anchor  ]

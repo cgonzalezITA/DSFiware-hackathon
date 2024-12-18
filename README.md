@@ -19,9 +19,6 @@ Once deployed the whole infrastructure, this github can be used as a playground 
     - [Provider's infrastructure](#providers-infrastructure)
     - [Initial setup of the Dataspace](#initial-setup-of-the-dataspace)
   - [Quick deployment from scratch](#quick-deployment-from-scratch)
-    - [Initial setup of the Dataspace](#initial-setup-of-the-dataspace-1)
-  - [Quick deployment from scratch](#quick-deployment-from-scratch-1)
-
 ## Organization
 There are two methods to deploy the infrastructure:
 - A [step by step guide](#step-by-step-deployment-guide) explaining the concepts introduced at every step and the commands to be run.
@@ -65,32 +62,9 @@ This section describes the steps and the components to be deployed at the provid
 See the [consumer deployment guide](./assets/docs/README-provider.md)
 
 ### [Initial setup of the Dataspace](./assets/docs/README-initialSetUpOfTheDS.md) 
-This phase will show the actions to register the participants in the dataspace and will continue the configuration of the provider's service to provide authentication and authorization mechanisms to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf)
-
-## Quick deployment from scratch
-To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions  
-**NOTE**: _although these scripts have been tested in an `Ubuntu 20.04.6 LTS`, they may contain steps that require manual actions (such as editting a file with sudo permissions), so in case of failure, please review the logs and perform the steps manually (copying, pasting) for a better understanding of the whole process)_
-1. In case you do not have a kubernetes cluster on hand, the [./scripts/quickInstall/installMicrok8s.sh](./scripts/quickInstall/installMicrok8s.sh)  contains the steps to quickly deploy a microK8s cluster on one node.
-    ```shell
-    . scripts/quickInstall/installMicrok8s.sh
-    # This scripts opens a new shell so, to continue the installation, the same command with a "2" param has to be run (2nd phase)
-    . scripts/quickInstall/installMicrok8s.sh 2
-    ```
-2. To deploy the devopTools, just run the [./scripts/quickInstall/installDevopTools.sh](./scripts/quickInstall/installDevopTools.sh)  
-    ```shell
-    # Syntax: installDevopTools.sh <DEVTOOLS_FOLDERNAME=devopTools>\
-    #       <DDEVTOOLS_FOLDERBASE=$(pwd)>
-    # eg The following command will create at the current terminal path a subfolder 'devopTools' with them
-    . ./scripts/quickInstall/installDevopTools.sh devopTools
-    ```
-3. For each of the phases and steps of this guideline, there will be a file at the [./scripts/quickInstall](./scripts/quickInstall) folder that deploys the specified step:
-    ```shell
-    . scripts/quickInstall/dsQuickinstall-phase01.step01.sh
-    . scripts/quickInstall/dsQuickinstall-phase01.step02.sh
-    ...
-    ```
-### [Initial setup of the Dataspace](./assets/docs/README-initialSetUpOfTheDS.md) 
 This phase will show the actions to register the participants in the dataspace and will continue the configuration of the provider's service to enable authentication and authorization mechanisms to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf)
+
+See the [initial setup of the dataspace guide](./assets/docs/README-initialSetUpOfTheDS.md).
 
 ## Quick deployment from scratch
 To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions  
