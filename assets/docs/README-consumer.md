@@ -271,7 +271,6 @@ To test it is working, browse this URL `https://fiwaredsc-consumer.ita.es`:
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/did-web.json.png"><br/>
     did-web.json exposed at a well known URL</p>
 
-
 ## step01.key: Publication of the did:key VCIssuer route
 Unlike the did:web deployment, this did:key does not require the exposition of any global DNS, so a local DNS will be used instead. In previous examples, the DNS was linked to a demo service, but now it will be linked to the consumer VCIssuer, the `fiwaredns-consumer.local`, so no new secret will have to be registered.
       
@@ -351,6 +350,14 @@ The deployment of the helm is taking around 3 minutes, so it is interesting to c
 ```shell
 hFileCommand consumer -f key -o .tmp/componentsconsumer.yaml
 ```
+[Keycloak](https://www.keycloak.org/) is an open source identity and access management solution that on its [release v25](https://www.keycloak.org/docs/latest/release_notes/index.html#openid-for-verifiable-credential-issuance-experimental-support) supports the protocol [OpenID for Verifiable Credential Issuance (OID4VCI) OID4VC](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) to manage Verifiable Credentials, and so, it can play the role of VCIssuer in the data space architecture.  
+The values of the Keycloak are more complex than previous helms, so it is recomended to analyze them to get familiar with.  
+This step focuses in the values of the `values-did.key.yaml` file.  
+As a brief summary, the values cover the following areas:
+- It setups a [postgresSql](https://www.postgresql.org/) instance.
+- No ingress is enabled as the Keycloak will be exposed via an apisix route. The DNS used to access the Keycloak will be `https://fiwaredsc-consumer.local`. Remember that up to now, this local DNS has been used for testing purposed.  
+Unlike the [step02.web deployment](#step02web-deployment-of-the-vcissuer-keycloak), this uses a local DNS to ease its deployment in environments in which the management of a global DNS is not possible.
+- A [Realm](https://mi-do.medium.com/understanding-realms-clients-and-roles-in-keycloak-c88a6e57d74f) `consumerRealm` is created at startup to manage a set of users, credentials, roles, and verifiable credentials to serve merely for this HOL.
 
 ### Verification
 Once the consumer helm has been deployed, its status should look similar to this:
