@@ -28,24 +28,16 @@ There are two methods to deploy the infrastructure:
 
 **NOTE**: All commands run on these guidelines are executed from the github root folder.
 
-The deployment is organized into phases, and depending on the complexity or the skills to be addressed, they can be split into steps.
-At the beginning of each one of these sections, the first command to be run is a checkout to the tag matching the content of the repo at the end of the section. eg. 
-```shell
-git checkout phase01.step01
-# The git will contain the documentation, configuration, files, etc. existing at the end of this phase01, step01 (Deploy a basic version of a helloWorld chart)
-```
-On the other side, the last comment of each section is the `git checkout <next phaseXX:stepYY>` of the next phase/step to be addressed.
-
-
 ## Step by step deployment guide
-### [_Installation of the devop tools to ease the life during deployment_](./assets/docs/README-preparationGuide.md)
+The deployment is organized into phases, and depending on the complexity or the skills to be addressed, they can be split into steps.  
+
+### [_Installation of the devop tools to ease the life during deployment_](./assets/docs/README-initialSetUpOfTheDS.md)
 This section installs a set of tools used during the deployment of the components.  
-See the [Preparation guide](./assets/docs/README-preparationGuide.md).
+See the [Preparation guide](./assets/docs/README-initialSetUpOfTheDS.md).
 
 ### [Deployment of apisix as gateway](./assets/docs/README-apisix.md)
 This section describes the steps to test the kubernetes environment while deploying the Apisix Gateway that is used to expose the required endpoints.
 See the [apisix deployment guide](./assets/docs/README-apisix.md).
-
 
 ### [Deployment of the Verifiable Data Registry components (Trust-Anchor)](./assets/docs/README-trustAnchor.md)
 This section describes the setup to deploy the components of the Verifiable Data Registry.  
@@ -61,13 +53,13 @@ Any organization willing to market their data and or services in a dataspace wil
 - The authentication phase: Analyze that any request made to their services are made by a known and verified participant.
 - The authorization phase: Analyze that any request made to their services are made by a participant entitled to perform the requested action.
 - The data and or services offered.  
+
 This section describes the steps and the components to be deployed at the provider's side
 See the [consumer deployment guide](./assets/docs/README-provider.md)
 
-
 ## Quick deployment from scratch
-To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions  
-**NOTE**: _although these scripts have been tested in an `Ubuntu 20.04.6 LTS`, they may contain steps that require manual actions (such as editting a file with sudo permissions), so in case of failure, please review the logs and perform the steps manually (copying, pasting) for a better understanding of the whole process)_
+To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions:  
+**NOTE**: _although these scripts have been tested in an `Ubuntu 20.04.6 LTS` OS, they may contain steps that require manual actions (such as editting a file with sudo permissions), so in case of failure, please review the logs and perform the steps manually (copying, pasting) for a better understanding of the whole process)_
 1. In case you do not have a kubernetes cluster on hand, the [./scripts/quickInstall/installMicrok8s.sh](./scripts/quickInstall/installMicrok8s.sh)  contains the steps to quickly deploy a microK8s cluster on one node.
     ```shell
     . scripts/quickInstall/installMicrok8s.sh
@@ -113,12 +105,12 @@ To speed up the deployment, this github contains a [folder with script files (./
     ...
     . scripts/quickInstall/dsQuickinstall-phase05.step04.sh
     ```
-These quickInstall scripts may take several minutes to finalize as the whole infrastructure has to be updated and some components have to be downloaded from the internet. They are split in three phases:
+These quickInstall scripts may take several minutes to finalize as the whole infrastructure has to be deployed and some components have to be downloaded from the internet. They are split in three phases:
 - Deployment
 - Configuration
 - Verification
 
-The `dsQuickinstall-phase05.step04.sh` deploys the complete data space infrastructure as shown in the following image. Among the multiple logs printed out at the console, the final ones -the verification of the correct deployment- should look something similar to:
+The final `dsQuickinstall-phase05.step04.sh` deploys the complete data space infrastructure as shown in the following image. Among the multiple logs printed out at the console, the final ones -the verification of the correct deployment- should look something similar to:
 ```shell
  . DSFiware-hackathon/scripts/quickInstall/dsQuickinstall-phase05.step04.sh 
     ...
