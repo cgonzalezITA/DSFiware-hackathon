@@ -77,7 +77,6 @@ if [[ "$RC" == "\"200\"" ]]; then
     echo "It has worked! This is the end of $DSFIWAREHOL_TAG. Congrats!"
     echo "Now you can try it running command \"curl -k https://$DNS_TRUSTANCHOR/v4/issuers\""
     SECRET=$(kSecret-show -n api apisix-dashboard-secrets -f apisix-dashboard-secret -v)
-    echo "Better to open it at a browser using \"user;$SECRET\"";
 else
     echo "It seems that something has failed (RC=$RC). You can wait some minutes and test again the command \"curl -k https://$DNS_TRUSTANCHOR/v4/issuers\", else review the logs for some clues"
 fi
