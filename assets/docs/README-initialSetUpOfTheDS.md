@@ -413,7 +413,7 @@ To gain access to the resource, a set of ODRL policies have to be addedd.
 ### Writing ODRL policies
 This setup will deploy policies to authorize access to the service depending on the role that the VC provides.
 
-The authorization helm chart contains a `odrlPolicyRegistration` section with the policies to be deployed for this use case. These policies 
+The [authorization helm values file](../../Helms/provider/authorization(odrlpap+opa)/values.yaml) contains a `odrlPolicyRegistration` section with the policies to be deployed for this use case. These policies 
 
 ```yaml
 odrlPolicyRegistration:

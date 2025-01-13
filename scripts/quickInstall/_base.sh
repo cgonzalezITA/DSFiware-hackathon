@@ -67,7 +67,7 @@ function wait4PodsDeploymentCompleted() {
     [[ "$#" -gt 0 ]] && TIMEOUT=$1; shift || TIMEOUT=20;
     [[ "$#" -gt 0 ]] && CUSTOMMSG_END=$1; shift || CUSTOMMSG_END="Please, be patient";
     [ "$FATAL_ERROR" == true ] && echo "Missing mandatory param at wait4PodsDeploymentCompleted func">&2 exit
-    CUSTOMMSG="On the next screen wait until all the artifacts are properly deployed, then press Ctrl+C and the process will continue. $CUSTOMMSG_END"
+    CUSTOMMSG="Waiting for [$NAMESPACE]. On the next screen wait until all the artifacts are properly deployed, then press Ctrl+C and the process will continue. $CUSTOMMSG_END"
 
     readAnswer "$CUSTOMMSG" "" $TIMEOUT false
     kGet -w -v -n $NAMESPACE

@@ -186,10 +186,40 @@ chmod 777 $CERT_FOLDER -R
 [ "$VERBOSE" = true ] && echo "- Certificates to sign the DID generated at '$CERT_FOLDER' folder." > /dev/tty
 # check the contents
 # keytool -v -keystore $CERT_FOLDER/cert.pfx -list -alias $PFX_ALIAS --storepass hello
-docker run -v $CERT_FOLDER:/cert -e STORE_PASS=hello quay.io/wi_stefan/did-helper:0.1.1 > /dev/null 2>&1
+[ "$VERBOSE" = true ] && echo "- Generating did at '$CERT_FOLDER' folder." > /dev/tty
+# docker run -v $CERT_FOLDER:/cert -e STORE_PASS=hello quay.io/wi_stefan/did-helper:0.1.1 > /dev/null 2>&1
+cat <<EOF > $CERT_FOLDER/job-generatedid.yaml 
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-generatedid
+spec:
+  ttlSecondsAfterFinished: 15
+  backoffLimit: 0
+  template:
+    spec:
+      containers:
+      - name: my-container
+        image: quay.io/wi_stefan/did-helper:0.1.1
+        volumeMounts:
+        - mountPath: /cert
+          name: tmp-volume
+        env:
+        - name: STORE_PASS
+          value: hello
+      restartPolicy: Never
+      volumes:
+      - name: tmp-volume
+        hostPath:
+          path: $(pwd)/$CERT_FOLDER
+          type: Directory
+EOF
+
+kubectl apply -f $CERT_FOLDER/job-generatedid.yaml > /dev/null
+kubectl wait --for=condition=complete --timeout=300s job/job-generatedid > /dev/tty
+CMD="cat $CERT_FOLDER/did.json | jq '.id' -r"
 [ "$STOP" = true ] && read -p "Press Enter to continue" || sleep 1;
 
-CMD="cat $CERT_FOLDER/did.json | jq '.id' -r"
 HOLDER_DID=$(runCommand "$CMD")
 [ "$VERBOSE" = true ] && echo "- DID [$HOLDER_DID] to sign the Verifiable Presentation generated" > /dev/tty
 [ "$STOP" = true ] && read -p "Press Enter to continue with the VP creation" || sleep 1;

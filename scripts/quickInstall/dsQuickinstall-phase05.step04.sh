@@ -38,37 +38,33 @@ echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
 cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
 
-echo "# Upgrade the apisix configuration"
-kRemoveRestart -n apisix data-plane -v -y
-hFileCommand apisix upgrade -b -v -y
 
-export NAMESPACE="consumer"
-echo "# Removes previously existing namespace $NAMESPACE"
-hFileCommand $NAMESPACE down -y
-kRemoveRestart ns $NAMESPACE -y
-echo "# Deployment of the $NAMESPACE helm"
-hFileCommand $NAMESPACE restart -v -y -b
 
-export NAMESPACE="provider"
+echo "# Removes previously existing apisix namespace"
+kRemoveRestart ns apisix -y -v
+
+echo "# Removes previously existing namespace consumer"
+kRemoveRestart ns consumer -y -v
+
+echo "# Removes previously existing namespace provider"
+kRemoveRestart ns provider -y -v
+
+echo "# Removes previously existing namespace trust-anchor"
+kRemoveRestart ns trust-anchor -y -v
+
+
+echo "# Deployment of the trust-anchor"
+hFileCommand trustAnchor r -v -y -b
+
+echo "# Deployment of the apisix"
+hFileCommand apisix r -v -y -b
+
 echo "# Deployment of the provider common"
-hFileCommand provider/common restart -v -y -b
+hFileCommand provider/common r -v -y -b
 echo "# Deployment of the provider authentication"
-hFileCommand provider/authentication restart -v -y -b
+hFileCommand provider/authentication r -v -y -b
 echo "# Deployment of the provider authorization"
-hFileCommand provider/authorization restart -v -y -b
-
-echo "# Deployment of the provider service"
-hFileCommand provider/service restart -v -y -b
-
-
-
-echo "# Registration of the new apisix routes"
-. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_fiwaredsc_vcverifier_local
-. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_JWKS_fiwaredsc_vcverifier_local
-. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_Service_fiwaredsc_vcverifier_local
-# . scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth
-. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_2auth
-. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration
+hFileCommand provider/authorization r -v -y -b
 
 echo "# Registers the fiwaredsc-provider.local at the /etc/hosts file to map the DNS with the IP address"
 LINE="$PUBLIC_IP  $DNS_PROVIDER"
@@ -91,9 +87,28 @@ readAnswer "To access it from a windows browser, add the same line into the 'C:\
 
 # Waits for the deployment
 wait4PodsDeploymentCompleted apisix 20
-wait4PodsDeploymentCompleted service 20 "Note that the init-data pod finishes when it is marked as '0/1 Completed'. Please, be patient"
 wait4PodsDeploymentCompleted provider 20
+
+echo "# Deployment of the provider service"
+hFileCommand provider/service r -v -y -b
+
+echo "# Deployment of the consumer"
+hFileCommand consumer r -v -y -b
+
+echo "# Registration of the new apisix routes"
+. scripts/manageAPI6Routes.sh insert -r ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_local
+. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_fiwaredsc_vcverifier_local
+. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_JWKS_fiwaredsc_vcverifier_local
+. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_Service_fiwaredsc_vcverifier_local
+. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_2auth
+. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration
+
+
+
+wait4PodsDeploymentCompleted service 20 "Note that the init-data pod finishes when it is marked as '0/1 Completed'. Please, be patient"
 wait4PodsDeploymentCompleted consumer 20
+
+
 
 
 echo "# Verification"
