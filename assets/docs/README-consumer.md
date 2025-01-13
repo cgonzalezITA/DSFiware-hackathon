@@ -26,7 +26,7 @@
   - [Bottom line](#bottom-line)
 
 Any participant willing to consume services offered at the data space is required to count on a minimum infrastructure to enable the management of its **Verifiable Credentials (VCs)** and a **Decentralized Identifier (DID)** that will be its identity used to sign any VC request issued by it.  
-This section describes the components and the steps deploy a consumer's infrastructure. The step number is duplicated given that they focus on the use of a DID web or a DID key as explained below.
+This section describes the components and the steps to deploy a consumer's infrastructure. The step number is duplicated given that they focus on the use of a DID web or a DID key as explained below.
 
 ## Decentralized Identifiers
 **Decentralized Identifiers (DIDs)** are a type of digital identifier designed to give users control over their own digital identities. Unlike traditional identifiers like email addresses or usernames, DIDs are decentralized and do not rely on a centralized authority for creation or verification.
@@ -52,7 +52,7 @@ All the DIDs used at this repository conform to the [W3C DID Spec v1.0](https://
 **Verifiable Credentials (VCs)** are tamper-evident digital claims that verify information about a person, organization, or asset, and they rely on **Decentralized Identifiers (DIDs)** for issuer and holder identification. Together, VCs and DIDs form a foundational system for decentralized identity and trust on the internet.
 
 ### Usage and actors around a VC
-In the use of a VC is very well described at this image: 
+The use of a VC is very well described at this image: 
    <p style="text-align:center;font-style:italic;font-size: 75%"><img src="https://www.w3.org/TR/vc-data-model/diagrams/ecosystem.svg"><br/>VC Usage and Actors around them</p>
     
 The roles of the actors related with the usage of a VC are:
@@ -68,7 +68,7 @@ The roles of the actors related with the usage of a VC are:
 
 ### Benefits of Using DIDs with VCs
 - **Decentralization**: DIDs eliminate the need for a central authority, making identity verification more privacy-respecting and resilient.
-- **Control and Privacy**: Holders have control over which VCs to share and with whom, which reduces unnecessary exposure of personal data. Besides, using protocols such as the [SD-JWT VC](https://drafts.oauth.net/oauth-sd-jwt-vc/draft-ietf-oauth-sd-jwt-vc.html#name-sd-jwt-as-a-credential-form) just some of the fields of a VC can be set as readable by a Verifier.
+- **Control and Privacy**: Holders have control over which VCs to share and with who, which reduces unnecessary exposure of personal data. Besides, using protocols such as the [SD-JWT VC](https://drafts.oauth.net/oauth-sd-jwt-vc/draft-ietf-oauth-sd-jwt-vc.html#name-sd-jwt-as-a-credential-form) just some of the fields of a VC can be set as readable by a Verifier.
 - **Interoperability**: VCs and DIDs are based on open standards, enabling them to work across different systems and applications.
 
 
@@ -79,13 +79,13 @@ To extend the knowledge of these concepts, the web offers a handful set of resou
 - ...
 
 In this phase, setups to deploy both did: `did:key` and `did:web` are shown.  
-The use of a did:web implies the control of a public DNS to publicly expose the well known did:web endpoint for being consumer by any 'verifier' and mainly to route cloud requests to the server bound to the did:web DNS.   
-_eg. to use the `did:web:fiwaredsc-consumer.ita.es`, The [Instituto Tecnológico de Aragón (ITA)](https://www.ita.es/) owner of the `ita.es` domain, must redirect web requests made to https://fiwaredsc-consumer.ita.es to the server in which the DID details is shown at the well known endpoint `https://fiwaredsc-consumer.ita.es/.well-known/did.json`_
+The use of a did:web implies the control of a public DNS to publicly expose the well known did:web endpoint for being visited by any 'verifier' and mainly to route cloud requests to the server bound to the did:web DNS.   
+_eg. to use the `did:web:fiwaredsc-consumer.ita.es`, The [Instituto Tecnológico de Aragón (ITA)](https://www.ita.es/) owner of the `ita.es` domain, must redirect web requests made to https://fiwaredsc-consumer.ita.es to the server in which the DID details are shown at the well known endpoint `https://fiwaredsc-consumer.ita.es/.well-known/did.json`_
 
 
 ## Infrastructure
 The following steps describe the different components to be deployed:
-- **Decentralized Identity (DID)**. Steps to deploy both, did:web and did:key will be explained. Two value files are at this Helm chart with the configuration to deploy both dids.
+- **Decentralized Identity (DID)**. Steps to deploy both, did:web and did:key will be explained. Two value files are at this Helm chart with the configurations to deploy both dids.
 - **Verifiable Credential Issuer**. Values to deploy a functional Keycloak are explained.
 - **Registration mechanism**. This component contains the steps to register a Consumer inside a data space. It does not follow the steps described at the [_Onboarding of an organization in the data space_](https://github.com/FIWARE/data-space-connector?tab=readme-ov-file#onboarding-of-an-organization-in-the-data-space) as it is tailored for demo scenarios and because the interactions with the [GaiaX Clearing Houses (GXDCH)](https://gaia-x.eu/gxdch/) have to be yet fully polished (at the moment this guideline was written).  
 Ths registration is not explained nor deployed at this phase as it requires the whole data space to be in place. It will be explained later at the [initial set up the DS infrastructure](README-initialSetUpOfTheDS.md) phase.
@@ -95,7 +95,7 @@ Ths registration is not explained nor deployed at this phase as it requires the 
 # To show the structure of the github after the completion of this  step
 git checkout phase03.step01
 ```
-The consumer Helm Chart provides two value files. One to deploy the DID:key component and another to deploy the DID:web one. To deploy the DID:key run:
+The consumer Helm Chart provides two value files. One to deploy the DID:key component and another to deploy the DID:web one.  
 At this first step, only the utils and the did are enabled to trace potential problems.
 ### values-did.key.yaml
 ```yaml
@@ -179,7 +179,7 @@ export DEF_KTOOLS_NAMESPACE=consumer
 
 # Check the value of the DID:
 kExec net -n $NAMESPACE -- curl -s http://did:3000/did-material/did.env
-    Running command [kubectl exec -it -n consumer utils-nettools-8554c96795-pbx9z  --  curl http://did:3000/did-material/did.env]
+    # Running command [kubectl exec -it -n consumer utils-nettools-8554c96795-pbx9z  --  curl http://did:3000/did-material/did.env]
     DID=did:key:zDnaeg4A7Qaic1XbFpX98Dqk4TexNpXShMynW6po8Mnksn3s9
 
 # Get the cert.pfx file and analyze it:
@@ -272,11 +272,12 @@ To test it is working, browse this URL `https://fiwaredsc-consumer.ita.es`:
     did-web.json exposed at a well known URL</p>
 
 ## step01.key: Publication of the did:key VCIssuer route
-Unlike the did:web deployment, this did:key does not require the exposition of any global DNS, so a local DNS will be used instead. In previous examples, the DNS was linked to a demo service, but now it will be linked to the consumer VCIssuer, the `fiwaredns-consumer.local`, so no new secret will have to be registered.
+Unlike the did:web deployment, this did:key does not require the exposition of any global DNS, so a local DNS will be used instead.  
+In previous examples, the DNS was linked to a demo service, but now it will be linked to the consumer VCIssuer, the `fiwaredns-consumer.local`, so no new secret will have to be registered.
       
 1. Modify the Apisix routes to reassign the already used DNS (`fiwaredns-consumer.local`) to expose:
 - The endpoint to access the VCIssuer. `https://fiwaredsc-consumer.local`,  `https://fiwaredsc-consumer.local/realms/consumerRealm/oid4vci`...  
-  This VCIssuer role implies that it exposes the OIDC well known endpoing. `https://fiwaredsc-consumer.local/realms/consumerRealm/.well-known/openid-configuration`
+  This VCIssuer role implies that it exposes the OIDC well known endpoints: `https://fiwaredsc-consumer.local/realms/consumerRealm/.well-known/openid-configuration`
 
     ```script
     # Remove the previously used route ROUTE_DEMO_JSON
@@ -291,6 +292,7 @@ Unlike the did:web deployment, this did:key does not require the exposition of a
 [Keycloak](https://www.keycloak.org/) is an open source identity and access management solution that on its [release v25](https://www.keycloak.org/docs/latest/release_notes/index.html#openid-for-verifiable-credential-issuance-experimental-support) supports the protocol [OpenID for Verifiable Credential Issuance (OID4VCI) OID4VC](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) to manage Verifiable Credentials, and so, it can play the role of VCIssuer in the data space architecture.  
 The values of the Keycloak are more complex than previous helms, so it is recomended to analyze them to get familiar with.  
 This step focuses in the values of the `values-did.web.yaml` file.  
+
 As a brief summary, the values cover the following areas:
 - It setups a [postgresSql](https://www.postgresql.org/) instance.
 - No ingress is enabled as the Keycloak will be exposed via an apisix route.
@@ -323,6 +325,11 @@ did-web-7b8f9b5d5d-lwwsf          1/1     Running   0          3m37s
 utils-nettools-8554c96795-b6ssf   1/1     Running   0          3m37s
 ```
 
+To know the Keycloak user and password, the k8s components generated can be revisited to discover the env vars containing these values: `KEYCLOAK_ADMIN` and `KEYCLOAK_ADMIN_PASSWORD`. To get their values, instead of analyzing the secret, a simple `echo` will do the trick:
+```shell
+kExec keycloak -n consumer -v -c keycloak -- printenv KEYCLOAK_ADMIN KEYCLOAK_ADMIN_PASSWORD
+```
+
 As the DNS was published at [step01.web](#step01web-publication-of-the-didweb-vcissuer-routes), the `https://fiwaredsc-consumer.ita.es` is linked to the Keycloak front end:
    <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-1stacces.png"><br/>
     Keycloak exposed at a global DNS</p>
@@ -337,7 +344,7 @@ The values of the Keycloak are more complex than previous helms, so it is recome
 This step focuses in the values of the `values-did.key.yaml` file.  
 As a brief summary, the values cover the following areas:
 - It setups a [postgresSql](https://www.postgresql.org/) instance.
-- No ingress is enabled as the Keycloak will be exposed via an apisix route. The DNS used to access the Keycloak will be `https://fiwaredsc-consumer.local`. Remember that up to now, this local DNS has been used for testing purposed.  
+- No ingress is enabled as the Keycloak will be exposed via an apisix route. The DNS used to access the Keycloak will be `https://fiwaredsc-consumer.local`. Remember that up to now, this local DNS has been used for testing purposes.  
 Unlike the [step02.web deployment](#step02web-deployment-of-the-vcissuer-keycloak), this uses a local DNS to ease its deployment in environments in which the management of a global DNS is not possible.
 - A [Realm](https://mi-do.medium.com/understanding-realms-clients-and-roles-in-keycloak-c88a6e57d74f) `consumerRealm` is created at startup to manage a set of users, credentials, roles, and verifiable credentials to serve merely for this HOL.
 
@@ -346,18 +353,11 @@ To enable this scenario, ensure that the keycloak section of the `values-did.key
 hFileCommand consumer -y restart -v -f key
 ```
 
-The deployment of the helm is taking around 3 minutes, so it is interesting to check to correct deployment of the chart, using the `devopTools` commands `kGet`, `kGet -w`, `kLog`, `kDescribe`, ... It is also interesting to analyze the k8s components generated using the command `hFileCommand debug`:
+**TIP**: The deployment of the helm is taking around 3 minutes, so it is interesting to check the correct deployment of the chart, using the `devopTools` commands `kGet`, `kGet -w`, `kLog`, `kDescribe`, ... It is also interesting to analyze the k8s components generated using the command `hFileCommand debug`:
+
 ```shell
 hFileCommand consumer -f key -o .tmp/componentsconsumer.yaml
 ```
-[Keycloak](https://www.keycloak.org/) is an open source identity and access management solution that on its [release v25](https://www.keycloak.org/docs/latest/release_notes/index.html#openid-for-verifiable-credential-issuance-experimental-support) supports the protocol [OpenID for Verifiable Credential Issuance (OID4VCI) OID4VC](https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html) to manage Verifiable Credentials, and so, it can play the role of VCIssuer in the data space architecture.  
-The values of the Keycloak are more complex than previous helms, so it is recomended to analyze them to get familiar with.  
-This step focuses in the values of the `values-did.key.yaml` file.  
-As a brief summary, the values cover the following areas:
-- It setups a [postgresSql](https://www.postgresql.org/) instance.
-- No ingress is enabled as the Keycloak will be exposed via an apisix route. The DNS used to access the Keycloak will be `https://fiwaredsc-consumer.local`. Remember that up to now, this local DNS has been used for testing purposed.  
-Unlike the [step02.web deployment](#step02web-deployment-of-the-vcissuer-keycloak), this uses a local DNS to ease its deployment in environments in which the management of a global DNS is not possible.
-- A [Realm](https://mi-do.medium.com/understanding-realms-clients-and-roles-in-keycloak-c88a6e57d74f) `consumerRealm` is created at startup to manage a set of users, credentials, roles, and verifiable credentials to serve merely for this HOL.
 
 ### Verification
 Once the consumer helm has been deployed, its status should look similar to this:
@@ -381,25 +381,15 @@ git checkout phase03.step04
 ```
 
 ## step03-First access to the Keycloak route
-Regardless the consumer VCIssuer's endpoint and the did used, the access to the keycloak admin console, requires a user and a password.  
 **NOTE**: From now on, this guideline document will refer to the local URLs, but for sake of clarification, the DIDs mentioned will be the did:web.
 
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-login.png"><br/>
     Keycloak exposed at the URL https://fiwaredsc-consumer.local</p>
 
-To know the user and the password, again, the values file must be revisited:
-```yaml
-keycloak:
-  extraEnvVars:
-    - name: KEYCLOAK_ADMIN
-    value: "admin0"
-```
-
-To know the password, the k8s components generated can be revisited to discover an env var containing the secret that keeps this password. `KEYCLOAK_ADMIN_PASSWORD`. To get it, instead of analyzing the secret, a simple `echo` will do the trick:
+Regardless the consumer VCIssuer's endpoint and the DID used, the access to the keycloak admin console, requires a user and a password. To know these values, the k8s components generated can be revisited to discover the env vars containing them: `KEYCLOAK_ADMIN` and `KEYCLOAK_ADMIN_PASSWORD`. To get their values, instead of analyzing the secret, a simple `echo` will do the trick:
 ```shell
-kExec keycloak -n consumer -v -c keycloak -- printenv KEYCLOAK_ADMIN_PASSWORD
+kExec keycloak -n consumer -v -c keycloak -- printenv KEYCLOAK_ADMIN KEYCLOAK_ADMIN_PASSWORD
 ```
-
 
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/keycloak-1stacces.png"><br/>
     First access to the keycloak portal at the URL https://fiwaredsc-consumer.ita.es</p>
@@ -552,3 +542,5 @@ git checkout phase04.step02
 The deployment of the consumer components enables the issuance of Verifiable Credentials, although some issue is still opened. At this stage, the Fiware Data Space architecture deployed looks like:
    <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/Fiware-DataSpaceGlobalArch-phase03.png"><br/>
     Deployed architecture after phase 2 completed</p>
+
+**NOTE**: Next phase is [Deployment of the Provider's infrastructure](./README-provider.md)
