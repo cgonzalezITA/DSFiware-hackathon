@@ -10,8 +10,8 @@
 This section installs the software tools used during the deployment of the fiware Data Space components.  
 
 ## Kubernetes 
-This guidelines used Kubernetes and Helm to deploy the infrastructure.  
-- In case you do not have a kubernetes cluster on hand, the [./scripts/quickInstall/installMicrok8s.sh](./scripts/quickInstall/installMicrok8s.sh)  contains the steps to quickly deploy a [microK8s](https://microk8s.io/) cluster on one node.
+This guideline uses Kubernetes and Helm to deploy the infrastructure.  
+- In case you do not have a kubernetes cluster on hand, the [./scripts/quickInstall/installMicrok8s.sh](./scripts/quickInstall/installMicrok8s.sh)  contains the steps to quickly deploy a [microK8s](https://microk8s.io/) cluster on the host server.
     ```shell
     . scripts/quickInstall/installMicrok8s.sh
     # This scripts opens a new shell so, to continue the installation, the same command with a "2" param has to be run (2nd phase)
@@ -19,7 +19,7 @@ This guidelines used Kubernetes and Helm to deploy the infrastructure.
     ```
 - You can also follow the [Helm install documentation](https://helm.sh/docs/intro/install/) to install the Helm tool.
 ## DevopTools
-They are a set of tools that based on clues, ease the life of people working with different devops tools: git, docker, k8s or helm.  
+There are a set of tools that based on clues, ease the life of people working with different devops tools: git, docker, k8s or helm.  
 **NOTE**: These tools are designed to work on Ubuntu based systems.
 
 Clone the [devopTools](https://github.com/cgonzalezITA/devopsTools) repository and follow its [README.md](https://github.com/cgonzalezITA/devopsTools/blob/master/README.md) to deploy the tools.  

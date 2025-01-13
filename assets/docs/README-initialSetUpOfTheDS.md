@@ -1,6 +1,6 @@
 # Initial setup of the DS
 - [Initial setup of the DS](#initial-setup-of-the-ds)
-  - [Step 5.1-Registration of the consumer into the data space](#step-51-registration-of-the-consumer-into-the-data-space)
+  - [Step 5.1-Registration of the Consumer into the data space](#step-51-registration-of-the-consumer-into-the-data-space)
   - [Step 6.2-Registation of the Service into the provider Credential Config Service](#step-62-registation-of-the-service-into-the-provider-credential-config-service)
   - [Step 5.3-Addition of the service route to the Apisix with VC Authentication](#step-53-addition-of-the-service-route-to-the-apisix-with-vc-authentication)
     - [Retrieval of an Access Token from the VCVerifier](#retrieval-of-an-access-token-from-the-vcverifier)
@@ -11,14 +11,14 @@
   - [Bottom line](#bottom-line)
 
     
-The objective of this phase is to explain the actions to register the participants in the dataspace to continue with the deployment of the required configuration to provide authentication and authorization mechanisms to the dataspace.  
-This phase is tailored for this walkthrough scenario. Some of the interactions to fully comply with the [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf) are mocked and by now, they are out of the scope of this guideline (by now the latest version is from _241105_) because the interactions with the [GaiaX Clearing Houses (GXDCH)](https://gaia-x.eu/gxdch/) have to be yet fully polished.  
+The objective of this phase is to explain the actions to register the participant organizations in the dataspace. The provider connection was not fully setup in the previous phase ([deployment of the Provider's infrastructure](README-provider.md)) so this phase will complete it by enabling authentication and authorization mechanisms to the provider.  
+This phase is tailored for this walkthrough scenario and hence, some of the interactions to fully comply with the [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf) are mocked and by now, they are out of the scope of this guideline (by now the latest version is from _250114_) because the interactions with the [GaiaX Clearing Houses (GXDCH)](https://gaia-x.eu/gxdch/) have to be yet fully polished.  
 
-The last step of the [deployment of a provider](README-provider.md#step-45-addition-of-the-service-route-to-the-apisix-without-security) left a [service accessible](https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/entities?type=Order) but without any authentication nor authorization implemented, so this phase will solve that scenario.
+As it has been mentioned, the last step of the [deployment of a provider phase](README-provider.md#step-45-addition-of-the-service-route-to-the-apisix-without-security) left a service accessible, but without any authentication nor authorization implemented, so this phase will solve that scenario.
 
-## Step 5.1-Registration of the consumer into the data space
-Any participant in a data space must be part of it and hence, it must be registered at the Trust Anchor and at the providers' Trust Issuer List to be able to access its services.
-This registration is made at the [consumer helm chart registration section](../../Helms/consumer/values-did.key.yaml).
+## Step 5.1-Registration of the Consumer into the data space
+Any participant in a data space must be part of it and so, it must be registered at the Trust Anchor and at the providers' Trust Issuer List to be able to access its services.
+This registration is made at the [consumer registration section at its helm's value file](../../Helms/consumer/values-did.key.yaml).
 ```yaml
 registration:
   # Used to register the DID to the different TrustedIssuers 
@@ -56,6 +56,7 @@ registration:
             #   allowedValues:
             #     - $DID
 ```
+
 To apply it, simply enable the registration section and upgrade the consumer helm chart. This will launch a k8s job to perform the action that will be destroyed around 30 seconds after its finalization:
 ```shell
 hFileCommand consumer u
@@ -71,7 +72,7 @@ kGet -n consumer
 
 ```
 
-The above shown yaml describes that the DID of the consumer will be registered at:
+The `registration` yaml describes that the DID of the consumer will be registered at:
 - The `Trusted Issuer Registry` of the Data Space (_tir at the trust-anchor namespace_) stating that the given DID belongs to the data space.
 - The `Trusted Issuer List` of the Provider (_til at the provider namespace_) stating that the consumer can only present `OperatorCredentials` to access the provider's infrastructure with a role of type ORDER_PRODUCER or ORDER_CONSUMER. This verification is made at the authentication phase of the OIDC protocol and any request from this consumer will be rejected if any other credential is presented.
 
@@ -79,7 +80,7 @@ The above shown yaml describes that the DID of the consumer will be registered a
 This setup will specify which Trust Issuer Registries and which Trust Issuer List must be visited by the VCVerifier to authenticate any request made to access the service.  
 The Fiware architecture enables several Trusted participants to be used and different ones depending on the service to be accessed.  
 At this scenario, only one service (_hackathon-service_), one Trusted Participant list and one Trusted Issuer list is setup.
-The Service value file contains a `dataPlaneRegistration` section describing this registration:
+The Service's value file contains a `dataPlaneRegistration` section describing this registration:
 
 ```yaml
 dataPlaneRegistration:
@@ -182,8 +183,8 @@ r.svc.cluster.local:3000/services/hackathon-service/.well-known/openid-configura
 ```
 
 The well known openid-configuration shows a set of urls to perform some operations or to retrieve some info besides some configuration parameters:  
-- The `token_endpoint` url used to request for a new token, used at the [Retrieval of an access token step](#retrieval-of-an-access-token-from-the-vcverifier).  
-- The `jwks_uri` url used to decypt the Access Token content provided at the [step to access the service with the VCVerifier access token](#access-the-service-with-the-vcverifier-access-token).  
+- The `token_endpoint` url is used to request a new token, it is used at the [Retrieval of an access token step](#retrieval-of-an-access-token-from-the-vcverifier).  
+- The `jwks_uri` url is used to decypt the Access Token content provided at the [step to access the service with the VCVerifier access token](#access-the-service-with-the-vcverifier-access-token).   
 **What is the JWKS?** The [**JSON Web Key Set (JWKS)**](https://auth0.com/docs/secure/tokens/json-web-tokens/json-web-key-sets) _is a set of keys containing the public keys used to verify any JSON Web Token (JWT) issued by the Authorization Server and signed using the RS256 signing algorithm_.
   ```shell
   curl https://fiwaredsc-provider.local/.well-known/jwks
@@ -200,7 +201,7 @@ The well known openid-configuration shows a set of urls to perform some operatio
   ```
     
 ### Retrieval of an Access Token from the VCVerifier
-Again, the same request previously made to get NGSI-LD data will show now a `401 Authorization Required` error
+Again, the same request previously made to get NGSI-LD data should show now a `401 Authorization Required` error
 ```shell
   # Test the service
   curl -k https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/entities?type=Order
@@ -215,9 +216,9 @@ Again, the same request previously made to get NGSI-LD data will show now a `401
 
 Requests to access the service will require from now on, the possession of a valid JWT token.
 The OIDC4VC conversation will require as a Bearer token the proper VC to grant access to the service, VC that has to be embedded inside a ([Verifiable Presentation](https://wiki.iota.org/identity.rs/explanations/verifiable-presentations/)).  
-The OIDC conversation begins at the well known url of the service to be accessed (`https://fiwaredsc-provider.local/services/hackathon-service/.well-known/openid-configuration`). From there, the OIDC-Token endpoint is retrieved (`https://fiwaredsc-provider.local/services/hackathon-service/token`) and the interaction following the rules stablished for the **_grant_type=vp_token_** standard to obtain an access token.
+The OIDC conversation begins at the well known url of the service to be accessed (`https://fiwaredsc-provider.local/services/hackathon-service/.well-known/openid-configuration`). From there, the OIDC-Token endpoint is retrieved (`https://fiwaredsc-provider.local/services/hackathon-service/token`) and the interaction following the steps stablished by the **_grant_type=vp_token_** standard to obtain an access token.
 
-The VC to be used is the one generated previously at the section [Issuance of  VCs through a M2M flow (Using API Rest calls)](README-consumer.md#issue-vcs-through-a-m2m-flow-using-api-rest-calls)
+The VC to be used is the one generated previously at the section [Issuance of  VCs through a M2M flow (Using API Rest calls)](./README-consumer.md#issue-vcs-through-a-m2m-flow-using-api-rest-calls)
 
 The script [generateAccessTokenFromVC](../../scripts/generateAccessTokenFromVC.sh) will perform this conversation similar to the one shwon in the following demo:
 
@@ -295,7 +296,7 @@ kLogs -n apisix --since 1s data-plane -y
     ...
 ```
 
-Among multiple messages, the interesting one points to the fact that a local DNS is used (fiwaredsc-provider.local), DNS which is unknown to the apisix-data plane. The best solution would be to use a global DNS (eg. `yourorganization.com`), but for shake of simplicity, an implemented alternative could be to add the used local DNSs (`apisix-data-plane`) to the apisix-data-plane:/etc/hosts file. The [apisix values file](../../Helms/apisix/values.yaml) has been modified to include such trick although is not recomended for production environments. 
+**NOTE**: Among multiple messages, one of the interesting ones points to the fact that a local DNS is used (`fiwaredsc-provider.local`), local DNS which is unknown to the apisix-data plane. The best solution would be to use a global DNS (eg. `yourorganization.com`), but for shake of simplicity, a solution would be to add the used local DNSs (`fiwaredsc-provider.local`) to the apisix-data-plane:/etc/hosts file. The [apisix values file](../../Helms/apisix/values.yaml) has been modified to include such trick although is not recomended for production environments. 
 
 ```shell
 # Redeployment of the apisix-data-plane with the local DNSs injected into the /etc/hosts file
@@ -350,8 +351,9 @@ git checkout phase05.step04
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/provider-components-authorization.png"><br/>
       Authorization components</p>
 
-At this step, new plugin (`opa`) will be added to the service route to perform authorization tasks. The plugin will forward any request already authenticated to the `Open Policy Agent (OPA)` to verify that the request complies with the ODRL policies defined.  
-Again, as new apisix route (`ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_2auth`) will be deployed enabling both authentication and authorization for the `https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/*` endpoints. 
+At this step, new plugin (`opa`) will be added to the service route to perform authorization tasks. The plugin will forward any request already authenticated to the `Open Policy Agent (OPA)` to verify that it complies with the ODRL policies defined.  
+Again, a new apisix route (`ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_2auth`) will be deployed enabling both authentication and authorization for the `https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/*` endpoints. 
+
 ```json
 ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_2auth='{
   "uri": "/services/hackathon-service/ngsi-ld/*",
@@ -411,9 +413,9 @@ curl -k https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/e
 To gain access to the resource, a set of ODRL policies have to be addedd.
 
 ### Writing ODRL policies
-This setup will deploy policies to authorize access to the service depending on the role that the VC provides.
+This setup will deploy policies to authorize access to the service depending on the provided credential.
 
-The [authorization helm values file](../../Helms/provider/authorization(odrlpap+opa)/values.yaml) contains a `odrlPolicyRegistration` section with the policies to be deployed for this use case. These policies 
+The [authorization helm's values file](../../Helms/provider/authorization(odrlpap+opa)/values.yaml) contains a `odrlPolicyRegistration` section with the policies to be deployed for this use case:
 
 ```yaml
 odrlPolicyRegistration:
