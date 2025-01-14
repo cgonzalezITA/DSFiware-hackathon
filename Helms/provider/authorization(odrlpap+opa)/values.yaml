@@ -162,7 +162,7 @@ odrlPolicyRegistration:
   job:
     hookDeletePolicy: before-hook-creation
     hook: post-install,post-upgrade
-    backoffLimit: 1
+    backoffLimit: 20
   # -- service id of the hackathon-service to be used
   id: hackathon-service
   # -- endpoint of the ccs to regsiter at

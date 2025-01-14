@@ -73,6 +73,7 @@ scorpio:
     initEnabled: true
     hookDeletePolicy: before-hook-creation
     numberDeploymentTries: 40
+    backoffLimit: 20
     entities:
       # Once deployed, this curl from inside should work:
       # curl -X GET http://scorpio:1026/ngsi-ld/v1/entities?type=Building
@@ -137,7 +138,7 @@ scorpio:
               "unitCode": "KGM"
             }
           }
-
+    
 dataPlaneRegistration:
   enabled: true
   # -- service id of the hackathon-service to be used
@@ -159,7 +160,8 @@ dataPlaneRegistration:
           - http://tir.trust-anchor.svc.cluster.local:8080
         trustedIssuersLists:
           - http://til.provider.svc.cluster.local:8080
-
+  job:
+    backoffLimit: 20
 dataSpaceConfig:
   enabled: true
   serviceType: ClusterIP

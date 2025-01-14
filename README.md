@@ -3,6 +3,8 @@
 - [DSFiware-hackathon](#dsfiware-hackathon)
   - [Organization](#organization)
     - [Prerequisites](#prerequisites)
+      - [Min hardware requirements:](#min-hardware-requirements)
+      - [Software requirements:](#software-requirements)
   - [Step by step deployment guide](#step-by-step-deployment-guide)
     - [_Installation of the devop tools to ease the life during deployment_](#installation-of-the-devop-tools-to-ease-the-life-during-deployment)
     - [Deployment of apisix as gateway](#deployment-of-apisix-as-gateway)
@@ -30,13 +32,18 @@ There are two methods to deploy the infrastructure:
 **NOTE**: All commands run on these guidelines are executed from the github root folder.
 
 ### Prerequisites
-This HOL has been deployed on an Ubuntu 20.04.6 LTS OS machine with 
+This HOL has been deployed on servers running OSs
+- Ubuntu 20.04.6 LTS
+- Ubuntu 24.04.1 LTS
+#### Min hardware requirements:
 ```
-RAM: 15Gi
+RAM: 8Gi
 Cores: 8
+HD: 32GB (Smaller sizes could result in errors similar to the [0/1 nodes are available: 1 node(s) had untolerated taint {node.kubernetes.io/disk-pressure: }])
 ```
-- Helm version min v3.16.4 (previous give problems with the oci protocol)
+#### Software requirements: 
 - Kubernetes: minikube, microk8s, use latests versions although no incompatibilities have been found. 
+- Helm version min v3.16.4 (previous give problems with the oci protocol)
 
 ## Step by step deployment guide
 The deployment is organized into phases, and depending on the complexity or the skills to be addressed, they can be split into steps.  
@@ -73,8 +80,9 @@ This phase will show the actions to register the participants in the dataspace a
 See the [initial setup of the dataspace guide](./assets/docs/README-initialSetUpOfTheDS.md).
 
 ## Quick deployment from scratch
-To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions  
-**NOTE**: _although these scripts have been tested in an `Ubuntu 20.04.6 LTS`, they may contain steps that require manual actions (such as editting a file with sudo permissions), althought they have been tried to be automated, so in case of failure, please review the logs and perform these steps manually (copying, pasting) for a better understanding of the whole process)_
+To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions:  
+  **NOTE**: _although these scripts have been tested in different  Ubuntu versions (See [Prerequisites](#prerequisites)), they may contain steps that require manual actions (such as editting a file with sudo permissions), althought they have been tried to be automated, so in case of failure, please review the logs and perform these steps manually (copying, pasting) for a better understanding of the whole process)_  
+  **TIP**: It is recommended to launch the scripts from the main branch as it contains the latests versions.
 1. In case you do not have a kubernetes cluster on hand, the [./scripts/quickInstall/installMicrok8s.sh](./scripts/quickInstall/installMicrok8s.sh)  contains the steps to quickly deploy a microK8s cluster on one node.
     ```shell
     . scripts/quickInstall/installMicrok8s.sh

@@ -49,9 +49,10 @@ echo "# Register the VCIssuer endpoint"
 echo "# Registers the fiwaredsc-consumer.local at the /etc/hosts file to map the DNS with the IP address"
 PUBLIC_IP=$(hostname -I | awk '{print $1}')
 DNS_CONSUMER="fiwaredsc-consumer.local"
-LINE="$PUBLIC_IP  $DNS_CONSUMER"
+LINE="$PUBLIC_IP  fiwaredsc-trustanchor.local fiwaredsc-consumer.local fiwaredsc-provider.local"
 echo "# Map the local DNS at your hosts file"
-MSG="# To use the DNS $DNS_CONSUMER at the host, it is required to add a new line \"$LINE\" to the '/etc/hosts' file.\n\
+MSG="# To use the local DNSs at the host, it is required to add a few lines to the '/etc/hosts' file:\n\
+$LINE\n
 Do you want to insert it automatically?";
 if [ $(readAnswer "$MSG (y|n*)" 'n') == 'y' ]; then
     sudo cat <<EOF >> /etc/hosts

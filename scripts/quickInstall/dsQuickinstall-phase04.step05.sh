@@ -28,19 +28,23 @@ if [[ $REPLY == 'y' ]]; then
 fi
 
 echo "# $DSFIWAREHOL_TAG-Addition of the service route to the Apisix without security"
-export NAMESPACE="provider"
 
 # DSFIWAREHOL_FOLDER="DSFiware-hackathon" # TODO DELETE
 echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
 cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
 
-echo "# Upgrade the apisix configuration"
-kRemoveRestart -n apisix data-plane -v -y
-hFileCommand apisix upgrade -b -v -y
 
-echo "# Removes previously existing namespace $NAMESPACE"
-kRemoveRestart ns $NAMESPACE -y -v
+echo "# Removes previously existing apisix namespace"
+kRemoveRestart ns apisix -y -v
+
+echo "# Removes previously existing namespace provider"
+kRemoveRestart ns provider -y -v
+
+export NAMESPACE="provider"
+
+echo "# Deployment of the apisix"
+hFileCommand apisix r -v -y -b
 echo "# Deployment of the provider common"
 hFileCommand provider/common r -v -y -b
 echo "# Deployment of the provider authentication"
@@ -51,19 +55,13 @@ echo "# Deployment of the provider service"
 hFileCommand provider/service r -v -y -b
 
 
-echo "# Registration of the new apisix routes"
-. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_fiwaredsc_vcverifier_local
-. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_JWKS_fiwaredsc_vcverifier_local
-. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_Service_fiwaredsc_vcverifier_local
-. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth
-. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration
-
 echo "# Registers the fiwaredsc-provider.local at the /etc/hosts file to map the DNS with the IP address"
 PUBLIC_IP=$(hostname -I | awk '{print $1}')
 DNS_PROVIDER="fiwaredsc-provider.local"
-LINE="$PUBLIC_IP  $DNS_PROVIDER"
+LINE="$PUBLIC_IP  fiwaredsc-trustanchor.local fiwaredsc-consumer.local fiwaredsc-provider.local"
 echo "# Map the local DNS at your hosts file"
-MSG="# To use the DNS $DNS_PROVIDER at the host, it is required to add a new line \"$LINE\" to the '/etc/hosts' file.\n\
+MSG="# To use the local DNSs at the host, it is required to add a few lines to the '/etc/hosts' file:\n\
+$LINE\n
 Do you want to insert it automatically?";
 if [ $(readAnswer "$MSG (y|n*)" 'n') == 'y' ]; then
     sudo cat <<EOF >> /etc/hosts
@@ -80,8 +78,16 @@ readAnswer "To access it from a windows browser, add the same line into the 'C:\
 
 
 # Waits for the deployment
+wait4PodsDeploymentCompleted apisix 20
 wait4PodsDeploymentCompleted service 20 "Note that the init-data pod finishes when it is marked as '0/1 Completed'. Please, be patient"
 wait4PodsDeploymentCompleted provider 20
+
+echo "# Registration of the new apisix routes"
+. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_fiwaredsc_vcverifier_local
+. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_JWKS_fiwaredsc_vcverifier_local
+. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_Service_fiwaredsc_vcverifier_local
+. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth
+. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration
 
 
 

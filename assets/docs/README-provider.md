@@ -15,9 +15,9 @@ The objective of this phase is to deploy the following infrastructure.
 
 Any organization willing to market their data and or services in a dataspace will require such infrastructure to manage:
 - **The authentication phase**: Its components are represented by the yellow blocks at the *Provider components diagram*.  
-  They analyze that any request made to the provider's services are made by a known and verified participant.
+  They analyze that any request made to the provider's services is made by a known and verified participant.
 - **The authorization phase**: Its components are represented by the green blocks at the *Provider components diagram*.  
-  They analyze that any request made to their services are made by a participant entitled to perform the requested action.
+  They analyze that any request made to their services is made by a participant entitled to perform the requested action.
 - **The access to the data and or services offered**. These components are represented by the purple blocks at the *Provider components diagram*.  
   This walkthrough shows the deployment of a [Context Data broker Scorpio](https://scorpio.readthedocs.io/en/latest/) to provide NGSI-LD data access.
     
@@ -26,13 +26,14 @@ To split the deployment of the provider's components, this phase has been split 
 - The **_authentication helm chart_** (yellow components of the diagram)
 - The **_authorization helm chart_** (green components of the diagram)
 - The **_services helm chart_** (purple components of the diagram)
-- 
+  
 ## step04.1- _Deployment of the common components_
 This Helm chart contains two value files:
 - values-did.key.yaml: Values to generate a did:key identifier.
 - values-did.web.yaml: Values to generate a did:web identifier.
 
-This guideline will use the `values-did.key.yaml` but the `did.web` is also available as a reference. It will deploy de following components:
+This guideline will use the `values-did.key.yaml` but the `did.web` is also available as a reference.  
+This step will deploy de following components:
 - A did:key `did:key:...` component to provide a decentralized identifier to the provider, used to sign the messages generated at the provider's side.
 - The already seen utilities pods.
 ```shell
@@ -194,7 +195,7 @@ This Helm chart will deploy the following components:
     This role is played by the [Apache APISIX](https://apisix.apache.org/). This component has been already deployed in previous phases, but at this stage, it is setup to enable its role as PEP for the routes bound to the access to the provider's data or services enabling the interactions shown in the _Provider authorization components and interactions_ diagram shown below.
 
   - A **PDP (Policy Decision Point)**: Entity responsible for evaluating access requests and determining whether to permit or deny them based on predefined policies.  
-  This role is played by the [**Styra OPA (Open Policy Agent**)](https://www.openpolicyagent.org/) is an open source, general-purpose policy engine that unifies policy enforcement across the stack. OPA provides a high-level declarative language that lets you specify policy as code and simple APIs to offload policy decision-making from your software.
+  This role is played by the [**Styra OPA (Open Policy Agent**)](https://www.openpolicyagent.org/), an open source, general-purpose policy engine that unifies policy enforcement across the stack. OPA provides a high-level declarative language that lets you specify policy as code and simple APIs to offload policy decision-making from your software.
 
   - The [**ODRL-PAP**](https://github.com/wistefan/odrl-pap) is used to configure policies written in [ODRL](https://www.w3.org/TR/odrl-model/) language to be consumed by the Open Policy Agent(OPA). Therefore it translates the ODRL policies into [Rego language](https://www.openpolicyagent.org/docs/latest/policy-language/). These policies will be later used to check if the incoming requests are authorized. 
   - A **PostgreSql DB server** to support the storage of these ODRL policies.  
