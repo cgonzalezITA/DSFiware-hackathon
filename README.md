@@ -1,12 +1,12 @@
 # DSFiware-hackathon
 
 - [DSFiware-hackathon](#dsfiware-hackathon)
-  - [Organization](#organization)
+  - [Organization of the repository](#organization-of-the-repository)
     - [Prerequisites](#prerequisites)
       - [Min hardware requirements:](#min-hardware-requirements)
       - [Software requirements:](#software-requirements)
   - [Step by step deployment guide](#step-by-step-deployment-guide)
-    - [_Installation of the devop tools to ease the life during deployment_](#installation-of-the-devop-tools-to-ease-the-life-during-deployment)
+    - [_Preparation of the working environment_](#preparation-of-the-working-environment)
     - [Deployment of apisix as gateway](#deployment-of-apisix-as-gateway)
     - [Deployment of the Verifiable Data Registry components (Trust-Anchor)](#deployment-of-the-verifiable-data-registry-components-trust-anchor)
     - [Consumer's infrastructure](#consumers-infrastructure)
@@ -14,22 +14,23 @@
     - [Initial setup of the Dataspace](#initial-setup-of-the-dataspace)
   - [Quick deployment from scratch](#quick-deployment-from-scratch)
 
-This repository contains a generic version of the Data Space infrastructure deployed at the [Decarbomile Hack](https://www.linkedin.com/feed/update/urn:li:activity:7266146265141301249/) that took place on _November 26-27 2024_ at the `ETSI Telecomunicación UPM Madrid`. The HOL was lead by [ITA](https://www.ita.es/) & [Capillar](https://capillarit.com) with the collaboration of the [UPM](https://www.upm.es) and [Fiware](https://www.fiware.org) under the umbrella of the [Decarbomile-Revolutionising last mile logistics in Europe](https://decarbomile.eu/).  
+This repository contains a generic version of the Data Space infrastructure deployed at the [Decarbomile Hands on Lab (HOL)](https://www.linkedin.com/feed/update/urn:li:activity:7266146265141301249/) that took place on _November 26-27 2024_ at the `ETSI Telecomunicación UPM Madrid`. The HOL was lead by [ITA](https://www.ita.es/) & [Capillar](https://capillarit.com) with the collaboration of the [UPM](https://www.upm.es) and [Fiware](https://www.fiware.org) under the umbrella of the [Decarbomile-Revolutionising last mile logistics in Europe](https://decarbomile.eu/).  
 The content of this github can be used to deploy a generic data space using the [Fiware Data Space Components](https://github.com/FIWARE/data-space-connector) and hence, aligned with the [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf) every organization participating in a data space should deploy.  
 Once finalized, you will be familiar with concepts related with:
 -  The `deployment of infrastructures` (_Kubernetes and Helm commands_)
 -  The `decentralized identity` (_DID, VC, VP, ..._) that any participant in a data space infrastructure must be familiar with.
 - How `the access to the services` is achieved. 
+- How to manage DNSs to access the infrastucture, both local DNSs for testing (eg: _fiwaredsc-provider.local_) and global DNS for production (eg: _fiwaredsc-provider.ita.es_)
 - How to identify and tailor the blocks you will need to participate in a data space depending on your role in it: Just as a Consumer?, as a Provider?, both as a Consumer and a Provider?
 - ...
 
 
-## Organization
+## Organization of the repository
 There are two methods to deploy the infrastructure:
-- A [step by step guide](#step-by-step-deployment-guide) explaining the concepts introduced at every step and the commands to be run.
-- A [quick deployment guide](#quick-deployment-from-scratch) with the same target, but focusing just on the commands.
+- A [step by step guide](#step-by-step-deployment-guide) explaining the concepts introduced at every step, the commands to be run and the configurations used. Besides, different variants are explained at the documentation not covered by the quick deployment guide. eg: _use of global DNSs_.
+- A [quick deployment guide](#quick-deployment-from-scratch) with the same target, but focusing just on the commands and just on a local deployment of the infrastructure (no global DNSs are used on the references scripts).
 
-**NOTE**: All commands run on these guidelines are executed from the github root folder.
+**NOTE**: All commands run on these guidelines are executed from the github root folder. eg: _/projects/DSFiware-hackathon_
 
 ### Prerequisites
 This HOL has been deployed on servers running OSs
@@ -40,16 +41,25 @@ This HOL has been deployed on servers running OSs
 RAM: 8Gi
 Cores: 8
 HD: 32GB (Smaller sizes could result in errors similar to the [0/1 nodes are available: 1 node(s) had untolerated taint {node.kubernetes.io/disk-pressure: }])
+# Just as a reference, the details of the CPUs running the HOL are:
+  ...
+  CPU(s):                 8
+  Vendor ID:              GenuineIntel
+  Model name:             Intel(R) Xeon(R) Gold 5218 CPU @ 2.30GHz
+  ...
 ```
+
+
 #### Software requirements: 
 - Kubernetes: minikube, microk8s, use latests versions although no incompatibilities have been found. 
 - Helm version min v3.16.4 (previous give problems with the oci protocol)
 
 ## Step by step deployment guide
-The deployment is organized into phases, and depending on the complexity or the skills to be addressed, they can be split into steps.  
+The deployment is organized into phases, and depending on the complexity of the task to be addressed, they can be split into steps.  
 
-### [_Installation of the devop tools to ease the life during deployment_](./assets/docs/README-preparationGuide.md)
-This section installs a set of tools used during the deployment of the components.  
+The phases are the following:
+### [_Preparation of the working environment_](./assets/docs/README-preparationGuide.md)
+This section prepares the host to be ready for the deployment of the components.  
 See the [Preparation guide](./assets/docs/README-preparationGuide.md).
 
 ### [Deployment of apisix as gateway](./assets/docs/README-apisix.md)
@@ -63,7 +73,7 @@ See the [trust-anchor deployment guide](./assets/docs/README-trustAnchor.md).
 ### [Consumer's infrastructure](./assets/docs/README-consumer.md)
 Any participant willing to consume services provided by the data space will require a minimum infrastructure that will enable the management of Verifiable Credentials besides a Decentralized Identifier that will constitue the signing mechanism to authenticate any message, any request made by the consumer.   
 This section describes the steps and the components to be deployed.  
-See the [consumer deployment guide](./assets/docs/README-consumer.md)
+See the [consumer deployment guide](./assets/docs/README-consumer.md).
 
 ### [Provider's infrastructure](./assets/docs/README-provider.md)
 Any organization willing to market their data and or services in a dataspace will require an infrastructure to manage:
@@ -72,7 +82,7 @@ Any organization willing to market their data and or services in a dataspace wil
 - The data and or services offered.  
 
 This section describes the steps and the components to be deployed at the provider's side
-See the [consumer deployment guide](./assets/docs/README-provider.md)
+See the [consumer deployment guide](./assets/docs/README-provider.md).
 
 ### [Initial setup of the Dataspace](./assets/docs/README-initialSetUpOfTheDS.md) 
 This phase will show the actions to register the participants in the dataspace and will continue the configuration of the provider's service to enable authentication and authorization mechanisms to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf)
@@ -80,35 +90,75 @@ This phase will show the actions to register the participants in the dataspace a
 See the [initial setup of the dataspace guide](./assets/docs/README-initialSetUpOfTheDS.md).
 
 ## Quick deployment from scratch
-To speed up the deployment, this github contains a [folder with script files (./scripts/quickinstall)](./scripts/quickInstall/) to perform the following actions:  
+This approach offers a set of scripts focused on the deployment of all the phases and steps explained at the [step by step guide](#step-by-step-deployment-guide). All these scripts use local DNSs (eg: fiwaredsc-consumer.local); to learn how to setup the components using global DNS (eg: fiwaredsc-consumer.ita.es) check the [Step by step deployment guide](#step-by-step-deployment-guide).
+
+Each script is standalone and does not require the execution of any other previous script. eg: Script [dsQuickinstall-phase05.step04](./scripts/quickInstall/dsQuickinstall-phase05.step04.sh) deploys the whole infrastructure and does not depend on any other script.  
+
   **NOTE**: _although these scripts have been tested in different  Ubuntu versions (See [Prerequisites](#prerequisites)), they may contain steps that require manual actions (such as editting a file with sudo permissions), althought they have been tried to be automated, so in case of failure, please review the logs and perform these steps manually (copying, pasting) for a better understanding of the whole process)_  
-  **TIP**: It is recommended to launch the scripts from the main branch as it contains the latests versions.
-1. In case you do not have a kubernetes cluster on hand, the [./scripts/quickInstall/installMicrok8s.sh](./scripts/quickInstall/installMicrok8s.sh)  contains the steps to quickly deploy a microK8s cluster on one node.
+  **TIP**: It is recommended to launch the scripts from the main branch as it contains the latests versions.  
+The [folder with the script files (./scripts/quickinstall)](./scripts/quickInstall/) contain script files to perform the following actions:  
+1. To grant the proper execution permissions to all the used scripts at the HOL, run the following command.
+**NOTE**: Remember that all commands run on these guidelines are executed from the github root folder. eg: _/projects/DSFiware-hackathon_
+    ```script
+    cd /projects/DSFiware-hackathon
+    echo "# add exec permissions to the Script files"
+    find ./ -name "*.sh" -type f -exec chmod +x {} +
+    ```
+2. In case you do not have a kubernetes cluster on hand, the [./scripts/quickInstall/installMicrok8s.sh](./scripts/quickInstall/installMicrok8s.sh)  contains the actions to quickly deploy a microK8s cluster on one node.
     ```shell
     . scripts/quickInstall/installMicrok8s.sh
     # This scripts opens a new shell so, to continue the installation, the same command with a "2" param has to be run (2nd phase)
     . scripts/quickInstall/installMicrok8s.sh 2
     ```
-2. To deploy the devopTools, just run the [./scripts/quickInstall/installDevopTools.sh](./scripts/quickInstall/installDevopTools.sh)  
+3. To deploy the devopTools, run the [./scripts/quickInstall/installDevopTools.sh](./scripts/quickInstall/installDevopTools.sh) script.  
     ```shell
-    # Syntax: installDevopTools.sh <DEVTOOLS_FOLDERNAME=devopTools>\
-    #       <DDEVTOOLS_FOLDERBASE=$(pwd)>
-    # eg The following command will create at the current terminal path a subfolder 'devopTools' with them
-    . ./scripts/quickInstall/installDevopTools.sh devopTools
+    # Syntax: installDevopTools.sh <DEVTOOLS_FOLDERNAME=devopTools> <DDEVTOOLS_FOLDERBASE=$(pwd)>
+    # eg The following command will deploy them at the 'devopTools' subfolder
+    ./scripts/quickInstall/installDevopTools.sh devopTools
     ```
-3. For each of the phases and steps of this guideline, there will be a file at the [./scripts/quickInstall](./scripts/quickInstall) folder that deploys the specified step:
+4. Registration of the local DNSs: The scripts require to access a number of local DNS that have to be registered at the '/etc/hosts' file (ubuntu). Root access is required to modify it. The [dsQuickinstall-dnsRegistration](./scripts/quickInstall/dsQuickinstall-dnsRegistration.sh) script can be run (as sudo) to register them
+    ```script
+    sudo ./scripts/quickInstall/dsQuickinstall-dnsRegistration.sh
+        # Registers the DNSs used by the dsQuickInstall* scripts at the '/etc/hosts' file to map them with the host IP address
+        QUESTION: (timeout=30s. def=y)--># To use the local DNSs at the host, it is required to add the following line to the '/etc/hosts' file:
+        
+        1.1.1.1  fiwaredsc-trustanchor.local fiwaredsc-consumer.local fiwaredsc-provider.local
+
+        Do you want to insert it automatically? (y*|n)
+        y
+        To access them from a windows browser, add the same line to the 'C:\Windows\System32\drivers\etc\hosts' file.
+        (timeout=5s)Press any key to review the /etc/hosts file
+            ...
+            # local DNS used by the https://github.com/cgonzalezITA/DSFiware-hackathon repository
+            1.1.1.1  fiwaredsc-trustanchor.local fiwaredsc-consumer.local fiwaredsc-provider.local
+    ```
+
+5. For each of the phases and steps of this guideline, there is a script file at the [./scripts/quickInstall](./scripts/quickInstall) folder that deploys the specified phase/step:  
+**NOTE**: Just in case the previous step (_4. Registration of the local DNSs:_)  was not run, the scripts still try to register the local DNSs at the /etc/hosts file. If you have already registered them, just answer 'n' to avoid trying its registration:  
+    ```script
+    ...
+    QUESTION: (timeout=15s. def=n)--># To use the local DNSs at the host, it is required to add a few lines to the '/etc/hosts' file:
+    
+    193.144.226.86  fiwaredsc-trustanchor.local fiwaredsc-consumer.local fiwaredsc-provider.local
+    Do you want to insert it automatically? (y|n*)
+    n
+    ```
+    **NOTE**: _Remember that each script is standalone and does not require the execution of any other previous script. eg: Script [dsQuickinstall-phase05.step04](./scripts/quickInstall/dsQuickinstall-phase05.step04.sh) deploys the whole infrastructure and does not depend on any other script_.  
+
+
     ```shell
+    # Standalone scripts to deploy and test the different phases/steps of the HOL.
     . scripts/quickInstall/dsQuickinstall-phase01.step01.sh
     . scripts/quickInstall/dsQuickinstall-phase01.step02.sh
     ...
     . scripts/quickInstall/dsQuickinstall-phase05.step04.sh
     ```
-These quickInstall scripts may take several minutes to finalize as the whole infrastructure has to be deployed and some components have to be downloaded from the internet. They are split in three phases:
-- Deployment
-- Configuration
-- Verification
+These quickInstall scripts may take several minutes to finalize as the whole infrastructure has to be recreated from scratch and some components have to be downloaded from the internet. The scripts are split in three different sections:
+- Removal of any previously existing component.
+- Deployment and configuration: Deployment of the components (helm charts, secrets, apisix routes, ...)
+- Verification: A curl command tests the proper response is returned once the complete infrastructure required for the specific phase and step is deployed (eg: _whereas the [dsQuickinstall-phase01.step01](./scripts/quickInstall/dsQuickinstall-phase01.step01.sh) only requires the deployment the apisix helm chart (besides a secret)_.
 
-The final `dsQuickinstall-phase05.step04.sh` deploys the complete data space infrastructure as shown in the following image. Among the multiple logs printed out at the console, the final ones -the verification of the correct deployment- should look something similar to:
+The final [dsQuickinstall-phase05.step04](./scripts/quickInstall/dsQuickinstall-phase05.step04.sh) deploys the complete data space infrastructure as shown in the bottom image. Among the multiple logs printed out at the console, the final ones -the verification of the correct deployment- should look something similar to:
 ```shell
  . DSFiware-hackathon/scripts/quickInstall/dsQuickinstall-phase05.step04.sh 
     ...
@@ -125,4 +175,4 @@ The final `dsQuickinstall-phase05.step04.sh` deploys the complete data space inf
 ```
 
 <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./assets/images/Fiware-DataSpaceGlobalArch-phase05.png"><br/>
-Architecture after the provider components deployment is completed</p>
+Architecture after the whole Data Space infrastructure is deployed</p>

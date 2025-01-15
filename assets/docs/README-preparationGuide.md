@@ -2,14 +2,15 @@
 
 - [Step00: Deployment of devops tools](#step00-deployment-of-devops-tools)
   - [Introduction](#introduction)
-  - [Kubernetes](#kubernetes)
+  - [Kubernetes and Helm](#kubernetes-and-helm)
   - [DevopTools](#devoptools)
+- [Registration of the local DNSs](#registration-of-the-local-dnss)
   - [Notes](#notes)
 
 ## Introduction
-This section installs the software tools used during the deployment of the fiware Data Space components.  
+This section prepares the host to be ready for the deployment of the components.  
 
-## Kubernetes 
+## Kubernetes and Helm
 This guideline uses Kubernetes and Helm to deploy the infrastructure.  
 - In case you do not have a kubernetes cluster on hand, the [installMicrok8s.sh](../../scripts/quickInstall/installMicrok8s.sh)  contains the steps to quickly deploy a [microK8s](https://microk8s.io/) cluster on the host server.
     ```shell
@@ -47,6 +48,24 @@ This guideline uses the devoptTools commands to execute the  required actions du
 kGet -n consu
   #   Running command [kubectl get pod  -n consumer  ]
   ...
+```
+
+# Registration of the local DNSs
+This HOL relies on different DNSs for the different phases. The documentation introduces them and explains how to register them when they are required. For the local DNSs used (eg: fiwaredsc-consumer.local), there is a script ([dsQuickinstall-dnsRegistration](../../scripts/quickInstall/dsQuickinstall-dnsRegistration.sh)) that registers all of them to avoid repeating the same steps several times.  
+```script
+sudo ./scripts/quickInstall/dsQuickinstall-dnsRegistration.sh
+    # Registers the DNSs used by the dsQuickInstall* scripts at the '/etc/hosts' file to map them with the host IP address
+    QUESTION: (timeout=30s. def=y)--># To use the local DNSs at the host, it is required to add the following line to the '/etc/hosts' file:
+    
+    1.1.1.1  fiwaredsc-trustanchor.local fiwaredsc-consumer.local fiwaredsc-provider.local
+
+    Do you want to insert it automatically? (y*|n)
+    y
+    To access them from a windows browser, add the same line to the 'C:\Windows\System32\drivers\etc\hosts' file.
+    (timeout=5s)Press any key to review the /etc/hosts file
+        ...
+        # local DNS used by the https://github.com/cgonzalezITA/DSFiware-hackathon repository
+        1.1.1.1  fiwaredsc-trustanchor.local fiwaredsc-consumer.local fiwaredsc-provider.local
 ```
 
 ## Notes
