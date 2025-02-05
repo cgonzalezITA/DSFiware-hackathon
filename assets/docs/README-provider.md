@@ -105,7 +105,7 @@ apisix:
           secretName: wildcardlocal-tls
 ```
 
-```script
+```shell
 # Upgrade the apisix configuration
 kRemoveRestart -n apisix data-plane
 hFileCommand apisix upgrade
@@ -113,7 +113,7 @@ hFileCommand apisix upgrade
 2- Register the local DNS `fiwaredsc-provider.local` at the `/etc/hosts` (ubuntu) and/or `C:\Windows\System32\drivers\etc\hosts` (windows)
 
 3- Registration of the new apisix routes
-```script
+```shell
 . scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_fiwaredsc_vcverifier_local
 
 . scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_JWKS_fiwaredsc_vcverifier_local

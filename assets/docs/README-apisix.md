@@ -256,7 +256,7 @@ This guideline will use the script file, but the Jupyter file can be customized 
               config_provider: etcd
     ```
 2. Upgrade the apisix helm chart
-    ```script
+    ```shell
     hFileCommand apisix upgrade
     # Wait till the pods have been properly deployed
     kGet -n api -w

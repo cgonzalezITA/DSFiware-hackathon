@@ -63,7 +63,7 @@ export DEF_KTOOLS_NAMESPACE=trust-anchor
 
 4. Identify the pieces to create a new apisix route.
    - Decide a DNS to expose the Trusted Issuer Registry. eg. `_fiwaredsc-trustanchor.local_` and for Local DNS register it as root at the '/etc/hosts' file (ubuntu) and/or 'C:\Windows\System32\drivers\etc\hosts' file (windows)
-      ```script
+      ```shell
       PUBLIC_IP=$(hostname -I | awk '{print $1}')
       DNS_CONSUMER="fiwaredsc-trustanchor.local"
       LINE="$PUBLIC_IP  $DNS_CONSUMER"
@@ -116,7 +116,7 @@ export DEF_KTOOLS_NAMESPACE=trust-anchor
     }'
     ```
 
-    ```script
+    ```shell
     # Insert api6 route ROUTE_TIR_JSON
     . scripts/manageAPI6Routes.sh insert -r ROUTE_TIR_JSON
     ```

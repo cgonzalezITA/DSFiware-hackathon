@@ -247,7 +247,7 @@ As explained before, one of the requirements of the did:web DIDs is that they mu
       ```
       
 2. Modify the Apisix to manage a new DNS (`fiwaredsc-consumer.ita.es`) using the tls `wildcard-ita.es-tls` and upgrade the Apisix Helm chart and enable the keycloack component at the [values-did.web.yaml](../../Helms/consumer/values-did.web.yaml).
-      ```script
+      ```shell
       hFileCommand consumer -y restart -v -f web -b
       ```
 
@@ -256,7 +256,7 @@ As explained before, one of the requirements of the did:web DIDs is that they mu
 - The endpoint to access the VCIssuer. `https://fiwaredsc-consumer.ita.es`,  `https://fiwaredsc-consumer.ita.es/realms/consumerRealm/oid4vci`...  
   This VCIssuer role implies that it exposes the OIDC well known endpoing. `https://fiwaredsc-consumer.ita.es/realms/consumerRealm/.well-known/openid-configuration`
 
-    ```script
+    ```shell
     # Remove the previously used route ROUTE_DEMO_JSON
     . scripts/manageAPI6Routes.sh delete -r ROUTE_DEMO_JSON
 
@@ -279,7 +279,7 @@ In previous examples, the DNS was linked to a demo service, but now it will be l
 - The endpoint to access the VCIssuer. `https://fiwaredsc-consumer.local`,  `https://fiwaredsc-consumer.local/realms/consumerRealm/oid4vci`...  
   This VCIssuer role implies that it exposes the OIDC well known endpoints: `https://fiwaredsc-consumer.local/realms/consumerRealm/.well-known/openid-configuration`
 
-    ```script
+    ```shell
     # Remove the previously used route ROUTE_DEMO_JSON
     . scripts/manageAPI6Routes.sh delete -r ROUTE_DEMO_JSON
 

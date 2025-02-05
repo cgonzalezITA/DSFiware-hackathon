@@ -52,7 +52,7 @@ kGet -n consu
 
 # Registration of the local DNSs
 This HOL relies on different DNSs for the different phases. The documentation introduces them and explains how to register them when they are required. For the local DNSs used (eg: fiwaredsc-consumer.local), there is a script ([dsQuickinstall-dnsRegistration](../../scripts/quickInstall/dsQuickinstall-dnsRegistration.sh)) that registers all of them to avoid repeating the same steps several times.  
-```script
+```shell
 sudo ./scripts/quickInstall/dsQuickinstall-dnsRegistration.sh
     # Registers the DNSs used by the dsQuickInstall* scripts at the '/etc/hosts' file to map them with the host IP address
     QUESTION: (timeout=30s. def=y)--># To use the local DNSs at the host, it is required to add the following line to the '/etc/hosts' file:

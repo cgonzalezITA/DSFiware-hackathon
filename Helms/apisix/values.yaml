@@ -56,6 +56,13 @@ apisix:
   dataPlane:
     image: docker.io/bitnami/apisix:3.11.0-debian-12-r0 # The same is also used at #dataPlane.initContainers["register-local-dns"].image
     imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "1"
+        memory: "1Gi"
     ingress:
       enabled: true
       hostname: fiwaredsc-consumer.local
@@ -183,3 +190,10 @@ apisix:
             mountPath: /shared
   controlPlane:
     enabled: true
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "1"
+        memory: "1Gi"

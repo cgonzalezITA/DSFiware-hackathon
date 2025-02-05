@@ -99,7 +99,7 @@ Each script is standalone and does not require the execution of any other previo
 The [folder with the script files (./scripts/quickinstall)](./scripts/quickInstall/) contain script files to perform the following actions:  
 1. To grant the proper execution permissions to all the used scripts at the HOL, run the following command.
 **NOTE**: Remember that all commands run on these guidelines are executed from the github root folder. eg: _/projects/DSFiware-hackathon_
-    ```script
+    ```shell
     cd /projects/DSFiware-hackathon
     echo "# add exec permissions to the Script files"
     find ./ -name "*.sh" -type f -exec chmod +x {} +
@@ -117,7 +117,7 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
     ./scripts/quickInstall/installDevopTools.sh devopTools
     ```
 4. Registration of the local DNSs: The scripts require to access a number of local DNS that have to be registered at the '/etc/hosts' file (ubuntu). Root access is required to modify it. The [dsQuickinstall-dnsRegistration](./scripts/quickInstall/dsQuickinstall-dnsRegistration.sh) script can be run (as sudo) to register them
-    ```script
+    ```shell
     sudo ./scripts/quickInstall/dsQuickinstall-dnsRegistration.sh
         # Registers the DNSs used by the dsQuickInstall* scripts at the '/etc/hosts' file to map them with the host IP address
         QUESTION: (timeout=30s. def=y)--># To use the local DNSs at the host, it is required to add the following line to the '/etc/hosts' file:
@@ -135,7 +135,7 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
 
 5. For each of the phases and steps of this guideline, there is a script file at the [./scripts/quickInstall](./scripts/quickInstall) folder that deploys the specified phase/step:  
 **NOTE**: Just in case the previous step (_4. Registration of the local DNSs:_)  was not run, the scripts still try to register the local DNSs at the /etc/hosts file. If you have already registered them, just answer 'n' to avoid trying its registration:  
-    ```script
+    ```shell
     ...
     QUESTION: (timeout=15s. def=n)--># To use the local DNSs at the host, it is required to add a few lines to the '/etc/hosts' file:
     
@@ -148,7 +148,7 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
 
     ```shell
     # Standalone scripts to deploy and test the different phases/steps of the HOL.
-    . scripts/quickInstall/dsQuickinstall-phase01.step01.sh
+    . scripts/quickInstall/phase01.01-qInstall-DeployABasicVersionOfHelloworld.sh
     . scripts/quickInstall/dsQuickinstall-phase01.step02.sh
     ...
     . scripts/quickInstall/dsQuickinstall-phase05.step04.sh
@@ -156,7 +156,7 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
 These quickInstall scripts may take several minutes to finalize as the whole infrastructure has to be recreated from scratch and some components have to be downloaded from the internet. The scripts are split in three different sections:
 - Removal of any previously existing component.
 - Deployment and configuration: Deployment of the components (helm charts, secrets, apisix routes, ...)
-- Verification: A curl command tests the proper response is returned once the complete infrastructure required for the specific phase and step is deployed (eg: _whereas the [dsQuickinstall-phase01.step01](./scripts/quickInstall/dsQuickinstall-phase01.step01.sh) only requires the deployment the apisix helm chart (besides a secret)_.
+- Verification: A curl command tests the proper response is returned once the complete infrastructure required for the specific phase and step is deployed (eg: _whereas the [phase01.01-qInstall-DeployABasicVersionOfHelloworld](./scripts/quickInstall/phase01.01-qInstall-DeployABasicVersionOfHelloworld.sh) only requires the deployment the apisix helm chart (besides a secret)_.
 
 The final [dsQuickinstall-phase05.step04](./scripts/quickInstall/dsQuickinstall-phase05.step04.sh) deploys the complete data space infrastructure as shown in the bottom image. Among the multiple logs printed out at the console, the final ones -the verification of the correct deployment- should look something similar to:
 ```shell
