@@ -41,7 +41,7 @@ LINE="$PUBLIC_IP  $DNS_APISIX"
 echo "# Map the local DNS at your hosts file"
 MSG="# To use the DNS $DNS_APISIX at the host, it is required to add a new line \"$LINE\" to the '/etc/hosts' file.\n\
 Do you want to insert it automatically?";
-if [ $(readAnswer "$MSG (y*|n)" 'y') == 'y' ]; then
+if [ $(readAnswer "$MSG (y|n*)" 'n') == 'y' ]; then
     sudo cat <<EOF >> /etc/hosts
 $LINE
 EOF

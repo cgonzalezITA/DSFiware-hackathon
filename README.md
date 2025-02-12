@@ -136,7 +136,7 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
     ```
 
 5. For each of the phases and steps of this guideline, there is a script file at the [./scripts/quickInstall](./scripts/quickInstall) folder that deploys the specified phase/step:  
-**NOTE**: Just in case the previous step (_4. Registration of the local DNSs:_)  was not run, the scripts still try to register the local DNSs at the /etc/hosts file. If you have already registered them, just answer 'n' to avoid trying its registration:  
+**NOTE**: Just in case the previous step (_4. Registration of the local DNSs:_)  was not run, the scripts still try to register the local DNSs at the /etc/hosts file. If you have already registered them, just answer 'n' (default answer) to avoid trying its registration:  
     ```shell
     ...
     QUESTION: (timeout=15s. def=n)--># To use the local DNSs at the host, it is required to add a few lines to the '/etc/hosts' file:
@@ -145,24 +145,32 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
     Do you want to insert it automatically? (y|n*)
     n
     ```
-    **NOTE**: _Remember that each script is standalone and does not require the execution of any other previous script. eg: Script [dsQuickinstall-phase05.step04](./scripts/quickInstall/dsQuickinstall-phase05.step04.sh) deploys the whole infrastructure and does not depend on any other script_.  
+    **NOTE**: _Remember that each script is standalone and does not require the execution of any other previous script. eg: Script [dsQuickinstall-phase05.step04](./scripts/quickInstall/phase05.04-qInstall-FinalSetup-AccessTheServiceWithAValidVC.sh) deploys the whole infrastructure and does not depend on any other script_.  
 
 
     ```shell
     # Standalone scripts to deploy and test the different phases/steps of the HOL.
-    . scripts/quickInstall/phase01.01-qInstall-DeployABasicVersionOfHelloworld.sh
-    . scripts/quickInstall/dsQuickinstall-phase01.step02.sh
-    ...
-    . scripts/quickInstall/dsQuickinstall-phase05.step04.sh
+    phase01.01-qInstall-KubernetesTesting-DeployABasicVersionOfHelloworld.sh
+    phase01.02-qInstall-Apisix-HelmDeployFirstFunctionalVersionOfApisix.sh
+    phase01.03-qInstall-Apisix-AddNewRoutesToApisix.sh
+    phase01.04-qInstall-Apisix-UseAdminAPIToManageRoutes.sh
+    phase02.01-qInstall-TrustAnchor-HelmDeployTrustAnchor.sh
+    phase03.01-qInstall-Consumer-HelmDeployDID.sh
+    phase03.02-qInstall-Consumer-HelmDeployVCIssuerKeycloak_withDIDKEY.sh
+    phase03.04-qInstall-Consumer-IssuanceOfVerifiableCredentials.sh
+    phase04.02-qInstall-Provider-DeployAuthenticationComponents.sh
+    phase04.05-qInstall-Provider-DeployProviderApisixRoutes.sh
+    phase05.03-qInstall-FinalSetup-RegistrationOfTheParticipantsIntoTheDS.sh
+    phase05.04-qInstall-FinalSetup-AccessTheServiceWithAValidVC.sh
     ```
 These quickInstall scripts may take several minutes to finalize as the whole infrastructure has to be recreated from scratch and some components have to be downloaded from the internet. The scripts are split in three different sections:
 - Removal of any previously existing component.
 - Deployment and configuration: Deployment of the components (helm charts, secrets, apisix routes, ...)
 - Verification: A curl command tests the proper response is returned once the complete infrastructure required for the specific phase and step is deployed (eg: _whereas the [phase01.01-qInstall-DeployABasicVersionOfHelloworld](./scripts/quickInstall/phase01.01-qInstall-DeployABasicVersionOfHelloworld.sh) only requires the deployment the apisix helm chart (besides a secret)_.
 
-The final [dsQuickinstall-phase05.step04](./scripts/quickInstall/dsQuickinstall-phase05.step04.sh) deploys the complete data space infrastructure as shown in the bottom image. Among the multiple logs printed out at the console, the final ones -the verification of the correct deployment- should look something similar to:
+The final [phase05.04-qInstall-FinalSetup-AccessTheServiceWithAValidVC](./scripts/quickInstall/phase05.04-qInstall-FinalSetup-AccessTheServiceWithAValidVC.sh) deploys the complete data space infrastructure as shown in the bottom image. Among the multiple logs printed out at the console, the final ones -the verification of the correct deployment- should look something similar to:
 ```shell
- . DSFiware-hackathon/scripts/quickInstall/dsQuickinstall-phase05.step04.sh 
+ . phase05.04-qInstall-FinalSetup-AccessTheServiceWithAValidVC.sh
     ...
     # Verification
     # First of all, a VC is issued to the user with ORDERCONSUMER role
