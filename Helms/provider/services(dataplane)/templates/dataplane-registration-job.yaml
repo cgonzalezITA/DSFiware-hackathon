@@ -38,11 +38,14 @@ spec:
               {{- if .Values.dataPlaneRegistration.defaultOidcScope.oidcScope }}
               {
                 {{ .Values.dataPlaneRegistration.defaultOidcScope.name | quote }}: [
-                {{- .Values.dataPlaneRegistration.defaultOidcScope.oidcScope | toJson -}}],
+                {{- .Values.dataPlaneRegistration.defaultOidcScope.oidcScope | toJson -}}]
               {{- end -}}
               {{- if .Values.dataPlaneRegistration.otherOidcScopes }}      
               {{- $otherOidcScopes := .Values.dataPlaneRegistration.otherOidcScopes | toJson }}
+              ,
               {{- trimPrefix "{" $otherOidcScopes | nindent 16 }}
+              {{- else }}
+              }
               {{- end }}
               {{- end }}
             }'

@@ -123,7 +123,7 @@ For this initial use, just one DNS and one TLS secret are required:
       ...
     ```
 
-2. The route `https://fiwaredsc-consumer.local` has been defined at the [apisix-routes.yaml file](../../../phase01.step02/Helms/apisix/apisix-routes.yaml).
+2. The route `https://fiwaredsc-consumer.local` has been defined at the [apisix-routes.yaml file](https://github.com/cgonzalezITA/DSFiware-hackathon/blob/phase01.step02/Helms/apisix/apisix-routes.yaml).
 This file is used to statically specify the routes the Apisix gateway will manage.
 ```shell
 cat Helms/apisix/apisix-routes.yaml
@@ -151,7 +151,7 @@ git checkout phase01.step03
 # NOTE to avoid refering to the namespace apisix at each command, the ENV VAR DEF_KTOOLS_NAMESPACE=apisix is set:
 export DEF_KTOOLS_NAMESPACE=apisix
 ```
-As you have seen, there is a dashboard component deployed, but just one DNS managed by the Apisix ingress. This step will modify the [apisix-routes.yaml file](../../../phase01.step03/Helms/apisix/apisix-routes.yaml) to include a new route to expose the dashboard to be consumed via browser.
+As you have seen, there is a dashboard component deployed, but just one DNS managed by the Apisix ingress. This step will modify the [apisix-routes.yaml file](https://github.com/cgonzalezITA/DSFiware-hackathon/blob/phase01.step03/Helms/apisix/apisix-routes.yaml) to include a new route to expose the dashboard to be consumed via browser.
 1. Decide the DNS to expose the Apisix dashboard (Local or global DNS)
 eg. fiwaredsc-api6dashboard.local ...
 2. For Local DNS register it at the /etc/hosts (ubuntu) and/or C:\Windows\System32\drivers\etc\hosts (windows)
@@ -176,7 +176,7 @@ eg. fiwaredsc-api6dashboard.local ...
             secretName: wildcard_local-tls
       ...
     ```
-5. Modify the [apisix-routes.yaml file](../../../phase01.step03/Helms/apisix/apisix-routes.yaml) to add the route for the Apisi dashboard:
+5. Modify the [apisix-routes.yaml file](https://github.com/cgonzalezITA/DSFiware-hackathon/blob/phase01.step03/Helms/apisix/apisix-routes.yaml) to add the route for the Apisi dashboard:
       ```yaml
       routes:
       - 

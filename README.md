@@ -94,7 +94,7 @@ See the [final setup of the dataspace guide](./assets/docs/README-finalSetUpOfTh
 ## Quick deployment from scratch
 This approach offers a set of scripts focused on the deployment of all the phases and steps explained at the [step by step guide](#step-by-step-deployment-guide). All these scripts use local DNSs (eg: fiwaredsc-consumer.local); to learn how to setup the components using global DNS (eg: fiwaredsc-consumer.ita.es) check the [Step by step deployment guide](#step-by-step-deployment-guide).
 
-Each script is standalone and does not require the execution of any other previous script. eg: Script [dsQuickinstall-phase05.step04](./scripts/quickInstall/dsQuickinstall-phase05.step04.sh) deploys the whole infrastructure and does not depend on any other script.  
+Each script is standalone and does not require the execution of any other previous script. eg: Script [qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC](./scripts/quickInstall/qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC.sh) deploys the whole infrastructure and does not depend on any other script.  
 
   **NOTE**: _although these scripts have been tested in different  Ubuntu versions (See [Prerequisites](#prerequisites)), they may contain steps that require manual actions (such as editting a file with sudo permissions), althought they have been tried to be automated, so in case of failure, please review the logs and perform these steps manually (copying, pasting) for a better understanding of the whole process)_  
   **TIP**: It is recommended to launch the scripts from the main branch as it contains the latests versions.  
@@ -118,7 +118,7 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
     # eg The following command will deploy them at the 'devopTools' subfolder
     ./scripts/quickInstall/installDevopTools.sh devopTools
     ```
-4. Registration of the local DNSs: The scripts require to access a number of local DNS that have to be registered at the '/etc/hosts' file (ubuntu). Root access is required to modify it. The [dsQuickinstall-dnsRegistration](./scripts/quickInstall/dsQuickinstall-dnsRegistration.sh) script can be run (as sudo) to register them
+4. Registration of the local DNSs: The scripts require to access a number of local DNS that have to be registered at the '/etc/hosts' file (ubuntu). Root access is required to modify it. The [dsQuickinstall-dnsRegistration](./scripts/quickInstall/qInstall-dnsRegistration.sh) script can be run (as sudo) to register them
     ```shell
     sudo ./scripts/quickInstall/dsQuickinstall-dnsRegistration.sh
         # Registers the DNSs used by the dsQuickInstall* scripts at the '/etc/hosts' file to map them with the host IP address
@@ -145,32 +145,36 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
     Do you want to insert it automatically? (y|n*)
     n
     ```
-    **NOTE**: _Remember that each script is standalone and does not require the execution of any other previous script. eg: Script [dsQuickinstall-phase05.step04](./scripts/quickInstall/phase05.04-qInstall-FinalSetup-AccessTheServiceWithAValidVC.sh) deploys the whole infrastructure and does not depend on any other script_.  
+    **NOTE**: _Remember that each script is standalone and does not require the execution of any other previous script. eg: Script [qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC](./scripts/quickInstall/qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC.sh) deploys the whole infrastructure and does not depend on any other script_.  
 
 
     ```shell
     # Standalone scripts to deploy and test the different phases/steps of the HOL.
-    phase01.01-qInstall-KubernetesTesting-DeployABasicVersionOfHelloworld.sh
-    phase01.02-qInstall-Apisix-HelmDeployFirstFunctionalVersionOfApisix.sh
-    phase01.03-qInstall-Apisix-AddNewRoutesToApisix.sh
-    phase01.04-qInstall-Apisix-UseAdminAPIToManageRoutes.sh
-    phase02.01-qInstall-TrustAnchor-HelmDeployTrustAnchor.sh
-    phase03.01-qInstall-Consumer-HelmDeployDID.sh
-    phase03.02-qInstall-Consumer-HelmDeployVCIssuerKeycloak_withDIDKEY.sh
-    phase03.04-qInstall-Consumer-IssuanceOfVerifiableCredentials.sh
-    phase04.02-qInstall-Provider-DeployAuthenticationComponents.sh
-    phase04.05-qInstall-Provider-DeployProviderApisixRoutes.sh
-    phase05.03-qInstall-FinalSetup-RegistrationOfTheParticipantsIntoTheDS.sh
-    phase05.04-qInstall-FinalSetup-AccessTheServiceWithAValidVC.sh
+    qInstall-main.sh
+    qInstall-phase01.01-KubernetesTesting-DeployABasicVersionOfHelloworld.sh
+    qInstall-phase01.02-Apisix-HelmDeployFirstFunctionalVersionOfApisix.sh
+    qInstall-phase01.03-Apisix-AddNewRoutesToApisix.sh
+    qInstall-phase01.04-Apisix-UseAdminAPIToManageRoutes.sh
+    qInstall-phase02.01-TrustAnchor-HelmDeployTrustAnchor.sh
+    qInstall-phase03.01-Consumer-HelmDeployDID.sh
+    qInstall-phase03.02-Consumer-HelmDeployVCIssuerKeycloak_withDIDKEY.sh
+    qInstall-phase03.04-Consumer-IssuanceOfVerifiableCredentials.sh
+    qInstall-phase04.02-Provider-DeployAuthenticationComponents.sh
+    qInstall-phase04.05-Provider-DeployProviderApisixRoutes.sh
+    qInstall-phase05.03-FinalSetup-RegistrationOfTheParticipantsIntoTheDS.sh
+    qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC.sh
     ```
+
+6- There is also a qInstall-main.sh script that deploys the current content of the different components, useful if you want to modify the values and try the complete deployment from scratch. 
+
 These quickInstall scripts may take several minutes to finalize as the whole infrastructure has to be recreated from scratch and some components have to be downloaded from the internet. The scripts are split in three different sections:
 - Removal of any previously existing component.
 - Deployment and configuration: Deployment of the components (helm charts, secrets, apisix routes, ...)
-- Verification: A curl command tests the proper response is returned once the complete infrastructure required for the specific phase and step is deployed (eg: _whereas the [phase01.01-qInstall-DeployABasicVersionOfHelloworld](./scripts/quickInstall/phase01.01-qInstall-DeployABasicVersionOfHelloworld.sh) only requires the deployment the apisix helm chart (besides a secret)_.
+- Verification: A curl command tests the proper response is returned once the complete infrastructure required for the specific phase and step is deployed (eg: _whereas the [qInstall-phase01.01-DeployABasicVersionOfHelloworld](./scripts/quickInstall/qInstall-phase01.01-KubernetesTesting-DeployABasicVersionOfHelloworld.sh) only requires the deployment the apisix helm chart (besides a secret)_.
 
-The final [phase05.04-qInstall-FinalSetup-AccessTheServiceWithAValidVC](./scripts/quickInstall/phase05.04-qInstall-FinalSetup-AccessTheServiceWithAValidVC.sh) deploys the complete data space infrastructure as shown in the bottom image. Among the multiple logs printed out at the console, the final ones -the verification of the correct deployment- should look something similar to:
+The final [qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC](./scripts/quickInstall/qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC.sh) deploys the complete data space infrastructure as shown in the bottom image. Among the multiple logs printed out at the console, the final ones -the verification of the correct deployment- should look something similar to:
 ```shell
- . phase05.04-qInstall-FinalSetup-AccessTheServiceWithAValidVC.sh
+ . qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC.sh
     ...
     # Verification
     # First of all, a VC is issued to the user with ORDERCONSUMER role

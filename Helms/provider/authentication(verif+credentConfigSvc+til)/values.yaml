@@ -164,10 +164,12 @@ vcverifier:
           - -ec
           - |
             #!/bin/sh
+            DIDURL=http://did:3000
+
             apk add --no-cache wget gettext && envsubst --help
             cd /did-material
-            wget http://did:3000/did-material/cert.pfx
-            wget http://did:3000/did-material/did.env
+            wget $DIDURL/did-material/cert.pfx
+            wget $DIDURL/did-material/did.env
             export $(cat /did-material/did.env)
             envsubst < /original-conf/server.yaml | tee /alternative-conf/server.yaml
         volumeMounts:

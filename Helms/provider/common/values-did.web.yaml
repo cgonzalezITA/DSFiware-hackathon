@@ -32,6 +32,9 @@ registration:
   # Used to register the DID to the different TrustedIssuers 
   enabled: true
   name: registration-job
+  did:
+    #did.provider is used here, but in other deployments, just one did may be used, eg. consumer and provider share the same did
+    url: http://did.provider.svc.cluster.local:3000  
   job:
     hookDeletePolicy: before-hook-creation
     hook: post-install,post-upgrade

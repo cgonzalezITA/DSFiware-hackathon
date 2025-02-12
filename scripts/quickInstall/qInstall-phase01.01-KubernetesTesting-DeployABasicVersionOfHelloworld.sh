@@ -83,6 +83,10 @@ echo "RC=$RC"
 if [[ "$RC" == "\"200\"" ]]; then
     echo "It has worked! This is the end of phase01.step01. Congrats!"
     readAnswer "Now you can try it running command \"curl -k https://$DNS_CONSUMER\"" 5
+    echo -e "**** This quick install has proved ****:\n
+    \t-The Kubernetes cluster is properly deployed\n
+    \t-The ingress component is properly managing the https port (443)\n
+    \t-Helm is also working as it has deployed the echo components"
 else
     echo "It seems that something has failed (RC=$RC). Review the process step by step reading the documentation"
 fi

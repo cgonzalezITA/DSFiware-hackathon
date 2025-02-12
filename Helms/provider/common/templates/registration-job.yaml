@@ -1,5 +1,6 @@
 {{- if and (.Values.registration).enabled -}}
 {{- $jobName := default "registration-job"  .Values.registration.name }}
+{{- $DIDURL := default "http://did:3000" .Values.registration.did.url }}
 {{- $backoffLimit := default 5 .Values.registration.job.backoffLimit | int }}
 apiVersion: batch/v1
 kind: Job
@@ -24,7 +25,7 @@ spec:
             - -ec
             - |
              cd /did-material
-              wget http://did:3000/did-material/did.env
+             {{ printf "wget %s/did-material/did.env" $DIDURL }}
           
           volumeMounts:
           - mountPath: /did-material
