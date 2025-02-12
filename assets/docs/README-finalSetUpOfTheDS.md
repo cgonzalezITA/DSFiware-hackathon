@@ -1,5 +1,5 @@
-# Initial setup of the DS
-- [Initial setup of the DS](#initial-setup-of-the-ds)
+# Final setup of the DS
+- [Final setup of the DS](#final-setup-of-the-ds)
   - [Step 5.1-Registration of the Consumer into the data space](#step-51-registration-of-the-consumer-into-the-data-space)
   - [Step 6.2-Registation of the Service into the provider Credential Config Service](#step-62-registation-of-the-service-into-the-provider-credential-config-service)
   - [Step 5.3-Addition of the service route to the Apisix with VC Authentication](#step-53-addition-of-the-service-route-to-the-apisix-with-vc-authentication)

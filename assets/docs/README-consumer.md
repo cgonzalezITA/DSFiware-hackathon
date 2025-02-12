@@ -88,7 +88,7 @@ The following steps describe the different components to be deployed:
 - **Decentralized Identity (DID)**. Steps to deploy both, did:web and did:key will be explained. Two value files are at this Helm chart with the configurations to deploy both dids.
 - **Verifiable Credential Issuer**. Values to deploy a functional Keycloak are explained.
 - **Registration mechanism**. This component contains the steps to register a Consumer inside a data space. It does not follow the steps described at the [_Onboarding of an organization in the data space_](https://github.com/FIWARE/data-space-connector?tab=readme-ov-file#onboarding-of-an-organization-in-the-data-space) as it is tailored for demo scenarios and because the interactions with the [GaiaX Clearing Houses (GXDCH)](https://gaia-x.eu/gxdch/) have to be yet fully polished (at the moment this guideline was written).  
-Ths registration is not explained nor deployed at this phase as it requires the whole data space to be in place. It will be explained later at the [initial set up the DS infrastructure](README-initialSetUpOfTheDS.md) phase.
+Ths registration is not explained nor deployed at this phase as it requires the whole data space to be in place. It will be explained later at the [initial set up the DS infrastructure](README-finalSetUpOfTheDS.md) phase.
   
 ## step01: _Deployment of the DID:key and DID:web_ 
 ```shell

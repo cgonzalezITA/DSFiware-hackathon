@@ -11,7 +11,7 @@
     - [Deployment of the Verifiable Data Registry components (Trust-Anchor)](#deployment-of-the-verifiable-data-registry-components-trust-anchor)
     - [Consumer's infrastructure](#consumers-infrastructure)
     - [Provider's infrastructure](#providers-infrastructure)
-    - [Initial setup of the Dataspace](#initial-setup-of-the-dataspace)
+    - [Final setup of the Dataspace](#final-setup-of-the-dataspace)
   - [Quick deployment from scratch](#quick-deployment-from-scratch)
 
 This repository contains a generic version of the Data Space infrastructure deployed at the [Decarbomile Hands on Lab (HOL)](https://www.linkedin.com/feed/update/urn:li:activity:7266146265141301249/) that took place on _November 26-27 2024_ at the `ETSI Telecomunicación UPM Madrid`. The HOL was lead by [ITA](https://www.ita.es/) & [Capillar](https://capillarit.com) with the collaboration of the [UPM](https://www.upm.es) and [Fiware](https://www.fiware.org) under the umbrella of the [Decarbomile-Revolutionising last mile logistics in Europe](https://decarbomile.eu/).  
@@ -36,6 +36,7 @@ There are two methods to deploy the infrastructure:
 This HOL has been deployed on servers running OSs
 - Ubuntu 20.04.6 LTS
 - Ubuntu 24.04.1 LTS
+- Debian GNU/Linux 12
 #### Min hardware requirements:
 ```
 RAM: 8Gi
@@ -46,6 +47,7 @@ HD: 32GB (Smaller sizes could result in errors similar to the [0/1 nodes are ava
   CPU(s):                 8
   Vendor ID:              GenuineIntel
   Model name:             Intel(R) Xeon(R) Gold 5218 CPU @ 2.30GHz
+  Model name:             Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz
   ...
 ```
 
@@ -84,10 +86,10 @@ Any organization willing to market their data and or services in a dataspace wil
 This section describes the steps and the components to be deployed at the provider's side
 See the [consumer deployment guide](./assets/docs/README-provider.md).
 
-### [Initial setup of the Dataspace](./assets/docs/README-initialSetUpOfTheDS.md) 
+### [Final setup of the Dataspace](./assets/docs/README-finalSetUpOfTheDS.md) 
 This phase will show the actions to register the participants in the dataspace and will continue the configuration of the provider's service to enable authentication and authorization mechanisms to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf)
 
-See the [initial setup of the dataspace guide](./assets/docs/README-initialSetUpOfTheDS.md).
+See the [final setup of the dataspace guide](./assets/docs/README-finalSetUpOfTheDS.md).
 
 ## Quick deployment from scratch
 This approach offers a set of scripts focused on the deployment of all the phases and steps explained at the [step by step guide](#step-by-step-deployment-guide). All these scripts use local DNSs (eg: fiwaredsc-consumer.local); to learn how to setup the components using global DNS (eg: fiwaredsc-consumer.ita.es) check the [Step by step deployment guide](#step-by-step-deployment-guide).

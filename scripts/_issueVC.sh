@@ -35,7 +35,7 @@ function help() {
             \t-u   | --user: User to use to retrieve its <credentialType>\n\
             \t-p   | --password: User's password \n\
             \t-ct  | --credentialType: Credential to be embedded into the generated Verifiable Credential (e.g. user-credential)"
-    echo $HELP > /dev/tty
+    echo -e $HELP > /dev/tty
 }
 function runCommand() { #CMD, [#Message]
     [ "$VERBOSE" = true ] && echo > /dev/tty;

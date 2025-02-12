@@ -243,7 +243,7 @@ This Helm chart will deploy the following components into the new namespace `ser
 - **Target Service**: This walkthrough will deploy a [Context Data broker Scorpio](https://scorpio.readthedocs.io/en/latest/) to provide NGSI-LD data access. The DNS `fiwaredsc-provider.local` will route requests to this service.  
 - A **Data space configuration service**: to expose information related to the exposed service at the well known url `/.well-known/data-space-configuration`.
 - A **Job to initialize data**: In this scenario, it just inserts some data into de Scorpio CB
-- A **Job to register the service** into the credential config service. This job will be explained in next phase ([Initial setup of th Data space](README-initialSetUpOfTheDS.md))
+- A **Job to register the service** into the credential config service. This job will be explained in next phase ([Final setup of th Data space](README-finalSetUpOfTheDS.md))
 - A **Postgis DB server** to support the storage of the NGSI-LD records. Postgis is used by the Scorpio Context Broker because it can manage spatial data.
   
 ```shell
@@ -341,7 +341,9 @@ git checkout phase05.step03
 ```
 
 ## Bottom line
-The deployment of the provider components leaves the data space ready to be setup and used. The next phase [Initial setup of the Dataspace](README-initialSetUpOfTheDS.md) will show the actions to register the participants in the dataspace and will continue the configuration to provide authentication and authorization mechanisms to the dataspace to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf):
+The deployment of the provider components leaves the data space ready to be setup and used. The next phase [Final setup of the Dataspace](README-finalSetUpOfTheDS.md) will show the actions to register the participants in the dataspace and will continue the configuration to provide authentication and authorization mechanisms to the dataspace to comply with the  [DSBA Technical Convergence recommendations](https://data-spaces-business-alliance.eu/wp-content/uploads/dlm_uploads/Data-Spaces-Business-Alliance-Technical-Convergence-V2.pdf):
 
    <p style="text-align:center;font-style:italic;font-size: 75%"><img src="./../images/Fiware-DataSpaceGlobalArch-phase04.png"><br/>
     Architecture after the provider components deployment is completed</p>
+
+The next phase [Final setup of the Dataspace](README-finalSetUpOfTheDS.md) will show the actions to register the participants in the dataspace.
