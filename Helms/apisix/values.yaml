@@ -1,7 +1,7 @@
 utils:
-  enabled: true
+  enabled: false
   echo:
-    enabled: true
+    enabled: false
     ingress: 
       enabled: false
       tls:

@@ -150,7 +150,7 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
 
     ```shell
     # Standalone scripts to deploy and test the different phases/steps of the HOL.
-    qInstall-main.sh
+    qInstall-full.sh
     qInstall-phase01.01-KubernetesTesting-DeployABasicVersionOfHelloworld.sh
     qInstall-phase01.02-Apisix-HelmDeployFirstFunctionalVersionOfApisix.sh
     qInstall-phase01.03-Apisix-AddNewRoutesToApisix.sh
@@ -165,7 +165,7 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
     qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC.sh
     ```
 
-6- There is also a qInstall-main.sh script that deploys the current content of the different components, useful if you want to modify the values and try the complete deployment from scratch. 
+6- There is also a qInstall-full.sh script that deploys the current content of the different components, useful if you want to modify the values and try the complete deployment from scratch. 
 
 These quickInstall scripts may take several minutes to finalize as the whole infrastructure has to be recreated from scratch and some components have to be downloaded from the internet. The scripts are split in three different sections:
 - Removal of any previously existing component.
