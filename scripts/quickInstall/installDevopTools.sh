@@ -9,41 +9,42 @@ SUBMODULE=""
 SCRIPTNAME=$BASH_SOURCE
 
 function installDevopTools() {
-    # installDevopTools <DEVTOOLS_FOLDERNAME=devopTools> \
-    #       <DDEVTOOLS_FOLDER=$(pwd)>
-    DEVTOOLS_GH_HTTPS="https://github.com/cgonzalezITA/devopsTools.git"
-    if [[ "$#" -gt 0 ]]; then DEVTOOLS_FOLDERNAME=$1 shift; else DEVTOOLS_FOLDERNAME="devopTools"; fi
-    if [[ "$#" -gt 0 ]]; then DEVTOOLS_FOLDERBASE=$1 shift; else DEVTOOLS_FOLDERBASE="$(pwd)"; fi
-    DEVTOOLS_FOLDER=$DEVTOOLS_FOLDERBASE/$DEVTOOLS_FOLDERNAME;
-    echo "DEVTOOLS_FOLDER=[$DEVTOOLS_FOLDER]"
-    REPLY='y'
-    if [[ ! -d $DEVTOOLS_FOLDERBASE ]]; then
-        echo "ERROR: Folder '$DEVTOOLS_FOLDERBASE' must exist";
-        [ "$CALLMODE" == "executed" ] && exit -1 || return -1;
-    fi
-    echo "# git clone devopTools into $DEVTOOLS_FOLDERNAME folder"
-    if [[ -d $DEVTOOLS_FOLDER ]]; then
-        REPLY=$(readAnswer "Folder $DEVTOOLS_FOLDER already exists. Do you want to delete it to reinstall the devopTools? (Y|n*)" \
-                'n')
-        if [ $REPLY == 'y' ]; then
-            sudo rm $DEVTOOLS_FOLDER -R
-        else
-            CURRENT_FOLDER=$(pwd)
-            cd $DEVTOOLS_FOLDER
-            git pull
-            cd $CURRENT_FOLDER
-        fi
-    fi
+    MSG="# Do you want to install the devopsTools (a mandatory set of tools used at this repository)?";
+    REPLY=$(readAnswer "$MSG (y*|n)" 'y' 25)
     if [ $REPLY == 'y' ]; then
+        # installDevopTools <DEVTOOLS_FOLDERNAME=devopTools> \
+        #       <DDEVTOOLS_FOLDER=$(pwd)>
+        DEVTOOLS_GH_HTTPS="https://github.com/cgonzalezITA/devopsTools.git"
+        if [[ "$#" -gt 0 ]]; then DEVTOOLS_FOLDERNAME=$1 shift; else DEVTOOLS_FOLDERNAME="devopTools"; fi
+        if [[ "$#" -gt 0 ]]; then DEVTOOLS_FOLDERBASE=$1 shift; else DEVTOOLS_FOLDERBASE="$(pwd)"; fi
+        DEVTOOLS_FOLDER=$DEVTOOLS_FOLDERBASE/$DEVTOOLS_FOLDERNAME;
+        echo "DEVTOOLS_FOLDER=[$DEVTOOLS_FOLDER]"
+        REPLY='y'
+        if [[ ! -d $DEVTOOLS_FOLDERBASE ]]; then
+            echo "ERROR: Folder '$DEVTOOLS_FOLDERBASE' must exist";
+            [ "$CALLMODE" == "executed" ] && exit -1 || return -1;
+        fi
+        if [[ -d $DEVTOOLS_FOLDER ]]; then
+            REPLY=$(readAnswer "Folder $DEVTOOLS_FOLDER already exists. Do you want to delete it to reinstall the devopTools? (Y|n*)" \
+                    'n')
+            if [ $REPLY == 'y' ]; then
+                sudo rm $DEVTOOLS_FOLDER -R
+            else
+                CURRENT_FOLDER=$(pwd)
+                git pull
+                cd $CURRENT_FOLDER
+            fi
+        fi
+    
         CMD="git clone $DEVTOOLS_GH_HTTPS \"$DEVTOOLS_FOLDER\""
         bash -c "$CMD"
         echo "# add exec permissions to the devopTools"
         CMD="find \"$DEVTOOLS_FOLDER\" -name \"*.sh\" -type f -exec chmod +x {} +"
         eval "$CMD"
-        
+            
         MSG="# To use aliases, the ~/.bash_aliases file must add a few aliases. Do you want to add them?"
         if [ $(readAnswer "$MSG (y*|n)" 'y') == 'y' ]; then
-    cat <<EOF >> ~/.bash_aliases
+            cat <<EOF >> ~/.bash_aliases
 
 # --- devopTools aliases (Visit $DEVTOOLS_GH_HTTPS)
 export _TOOLSFOLDER="$DEVTOOLS_FOLDER"
@@ -76,15 +77,27 @@ EOF
             $(readAnswer "Review the ~/.bash_aliases file to check the content is not duplicated nor contains errors.\n\
                 Press a key to continue" '' 15 false false);        
         fi
-    fi
-    echo "# Activating the aliases..."
-    shopt -s expand_aliases
-    . ~/.bash_aliases
 
+        echo "# Activating the aliases..."
+        shopt -s expand_aliases
+        . ~/.bash_aliases
+    fi
+
+    echo "Check yq is installed"
     VERSION=$(yq --version 2>/dev/null)
     if [[ "$?" -ne 0 ]]; then
-        echo "#install yq"
+        echo -e "❌\ninstall yq"
         wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O ./yq && chmod +x ./yq && sudo mv ./yq /usr/bin
+    else
+        echo ✅🆗
+    fi
+    echo "Checking jq is installed"
+    VERSION=$(jq --version 2>/dev/null)
+    if [[ "$?" -ne 0 ]]; then
+        echo -e "❌\ninstall yq"
+        sudo apt-get install jq -y
+    else
+        echo ✅🆗
     fi
 }
 
