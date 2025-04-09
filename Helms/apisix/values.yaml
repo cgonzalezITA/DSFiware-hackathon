@@ -34,7 +34,7 @@ apisix:
     # -- persistence configuration of etcd
     persistence:
   #     # -- should it be enabled
-  #     enabled: false
+     enabled: false
   dashboard:
     enabled: true
     service:
