@@ -34,41 +34,32 @@ echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
 cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
 
-ARTIFACT_NAME=trust
-echo "# Deploying the $ARTIFACT_NAME helm..."
-hFileCommand $ARTIFACT_NAME -v -y -b restart
+echo "# Removes previously existing apisix namespace"
+kRemoveRestart ns apisix -y -v       > /dev/null 2>&1 & disown 
+echo "# Removes previously existing namespace trust-anchor"
+kRemoveRestart ns trust-anchor -y -v > /dev/null 2>&1 & disown 
+
+echo "# Deployment of the apisix"
+kRemoveRestart ns apisix -y -v       > /dev/null 2>&1
+hFileCommand apisix r -v -y -b       > /dev/null 2>&1 & disown 
+
+echo "# Deployment of the trust-anchor"
+kRemoveRestart ns trust-anchor -y -v > /dev/null 2>&1 
+hFileCommand trustAnchor r -v -y -b  > /dev/null 2>&1 & disown 
+
+echo "# Waits for the deployment of the different components"
+wait4NamespaceCreated apisix
+wait4PodsDeploymentCompleted apisix       20
+wait4NamespaceCreated trust-anchor
+wait4PodsDeploymentCompleted trust-anchor 20
 
 DNS_TRUSTANCHOR="fiwaredsc-trustanchor.local"
-echo "# Restarts the apisix data plane to manage the new DNS $DNS_TRUSTANCHOR"
-kRemoveRestart deploy data-plane -n apisix -y -v
-hFileCommand apisix upgrade -v -b -y
+
+echo "# Registration of the new apisix routes"
+. scripts/manageAPI6Routes.sh insert -r ROUTE_TIR_JSON  > /dev/null      
 
 
-PUBLIC_IP=$(hostname -I | awk '{print $1}')
-LINE="$PUBLIC_IP  $DNS_TRUSTANCHOR"
-echo "# Map the local DNS at your hosts file"
-MSG="# To use the DNS $DNS_TRUSTANCHOR at the host, it is required to add a new line \"$LINE\" to the '/etc/hosts' file.\n\
-Do you want to insert it automatically?";
-if [ $(readAnswer "$MSG (y|n*)" 'n') == 'y' ]; then
-    sudo cat <<EOF >> /etc/hosts
-$LINE
-EOF
-    if [[ "$?" -ne 0 ]]; then
-        readAnswer "An error has happened. This operation requires sudo permission. Do it manually on another terminal and press any key to continue" \
-            "" 120 false false
-    fi
-fi
-readAnswer "To access it from a windows browser, add the same line into the 'C:\Windows\System32\drivers\etc\hosts' file\n\
-    Press a key to continue" "" 20 false false
-
-
-
-wait4PodsDeploymentCompleted trust 20
-wait4PodsDeploymentCompleted trust 20 "Even once available, the initialization of the apisix-data-plane can take several seconds, so be patient"
-
-# Insert api6 route ROUTE_TIR_JSON
-. scripts/manageAPI6Routes.sh insert -r ROUTE_TIR_JSON
-
+echo -e "\n\n#### Final Verification"
 CMD="curl -s -o /dev/null -w \"%{http_code}\" -k https://$DNS_TRUSTANCHOR/v4/issuers"
 echo "# Running CMD=$CMD"
 RC=$($CMD)
@@ -76,7 +67,10 @@ echo "RC=$RC"
 if [[ "$RC" == "\"200\"" ]]; then
     echo "It has worked! This is the end of $DSFIWAREHOL_TAG. Congrats!"
     echo "Now you can try it running command \"curl -k https://$DNS_TRUSTANCHOR/v4/issuers\""
-    SECRET=$(kSecret-show -n api apisix-dashboard-secrets -f apisix-dashboard-secret -v)
+    echo -e "\n**** This quick install ($SCRIPTNAME) has proved:****:
+    \t-The trush-anchor of the data space is deployed and in place to manage registration of new participants
+    \t-The trush-anchor can also be used to retrieve already registered identities (https://$DNS_TRUSTANCHOR/v4/issuers)"
+   
 else
     echo "It seems that something has failed (RC=$RC). You can wait some minutes and test again the command \"curl -k https://$DNS_TRUSTANCHOR/v4/issuers\", else review the logs for some clues"
 fi

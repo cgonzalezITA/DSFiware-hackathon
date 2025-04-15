@@ -72,3 +72,16 @@ function wait4PodsDeploymentCompleted() {
     readAnswer "$CUSTOMMSG" "" $TIMEOUT false
     kGet -w -v -n $NAMESPACE
 }
+
+function wait4NamespaceCreated() {
+    # wait4NamespaceCreated <NAMESPACE>
+    FATAL_ERROR=false;
+    VERBOSE=false;
+    [[ "$#" -gt 0 ]] && NAMESPACE=$1; shift || FATAL_ERROR=true;
+    [[ "$#" -gt 0 ]] && VERBOSE=true; echo "Waiting until namespace $NAMESPACE exists"; shift;
+    while ! kubectl get ns $NAMESPACE > /dev/null 2>&1; do
+      [ $VERBOSE == true ] && echo -n ".";
+      sleep 1
+    done
+    [ $VERBOSE == true ] && echo "Namespace $NAMESPACE exists";
+}

@@ -35,48 +35,38 @@ echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
 cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
 
-echo "# Removes previously existing namespace %$NAMESPACE"
-kRemoveRestart ns $NAMESPACE -y
-echo "# Deployment of the VCIssuer (Keycloak)"
-hFileCommand consumer -f key r -v -y -b
-
-echo "# Remove the previously used route ROUTE_DEMO_JSON"
-. scripts/manageAPI6Routes.sh delete -r ROUTE_DEMO_JSON
-
-echo "# Register the VCIssuer endpoint"
-. scripts/manageAPI6Routes.sh insert -r ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_local
-
-
-echo "# Registers the fiwaredsc-consumer.local at the /etc/hosts file to map the DNS with the IP address"
-PUBLIC_IP=$(hostname -I | awk '{print $1}')
 DNS_CONSUMER="fiwaredsc-consumer.local"
-LINE="$PUBLIC_IP  $DNS_CONSUMER"
-echo "# Map the local DNS at your hosts file"
-MSG="# To use the DNS $DNS_CONSUMER at the host, it is required to add a new line \"$LINE\" to the '/etc/hosts' file.\n\
-Do you want to insert it automatically?";
-if [ $(readAnswer "$MSG (y|n*)" 'n') == 'y' ]; then
-    sudo cat <<EOF >> /etc/hosts
-$LINE
-EOF
-    if [[ "$?" -ne 0 ]]; then
-        readAnswer "An error has happened. This operation requires sudo permission. Do it manually on another terminal and press any key to continue" \
-            "" 120 false false
-    fi
-fi
-readAnswer "To access it from a windows browser, add the same line into the 'C:\Windows\System32\drivers\etc\hosts' file\n\
-    Press a key to continue" "" 10 false false
+echo "# Removes previously existing apisix namespace"
+echo "# Removes previously existing namespace consumer"
+kRemoveRestart ns apisix -y -v       > /dev/null 2>&1 & disown 
+kRemoveRestart ns consumer -y -v     > /dev/null 2>&1 & disown 
 
 
+echo "# Deployment of the apisix"
+kRemoveRestart ns apisix -y -v       > /dev/null 2>&1
+hFileCommand apisix r -v -y -b       > /dev/null 2>&1 & disown 
 
-# Waits for the deployment
-wait4PodsDeploymentCompleted $NAMESPACE 20 "Keycloak may take a while to be available, so please, wait a few seconds after its status is (1/1)"
+echo "# Deployment of the consumer"
+kRemoveRestart ns consumer -y -v     > /dev/null 2>&1
+hFileCommand consumer r -v -y -b     > /dev/null 2>&1 & disown 
 
-echo "# Verification"
+echo "# Waits for the deployment of the different components"
+wait4NamespaceCreated apisix
+wait4PodsDeploymentCompleted apisix       20
+wait4NamespaceCreated consumer
+wait4PodsDeploymentCompleted consumer     20
+
+echo "# Registration of the new apisix routes"
+. scripts/manageAPI6Routes.sh insert -r ROUTE_CONSUMER_KEYCLOAK_fiwaredsc_consumer_local > /dev/null
+
+echo -e "\n\n#### Final Verification"
 CMD="curl -s -o /dev/null -w \"%{http_code}\" -k https://$DNS_CONSUMER/realms/consumerRealm/account/oid4vci"
 RC=$($CMD)
 echo -e "\nRC=$RC"
 if [[ "$RC" == "\"200\"" ]]; then
-    readAnswer "\"https://$DNS_CONSUMER\" has worked! Congrats!. Now with the proper configuration you can browse the \"https://$DNS_CONSUMER\" URL" "" 15 false
+    echo -e "\"https://$DNS_CONSUMER\" has worked! Congrats!. Now with the proper configuration you can browse the \"https://$DNS_CONSUMER\" URL"
+    echo -e "\n**** This quick install ($SCRIPTNAME) has proved:****:
+    \t-Keycloak has been deployed with a configuration able to issue VCredentials"
 else
     readAnswer "\"https://$DNS_CONSUMER\" has failed (RC=$RC). Review the logs and the value file used by helm for some clues" "" 15 false
 fi

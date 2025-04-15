@@ -92,15 +92,24 @@ This phase will show the actions to register the participants in the dataspace a
 See the [final setup of the dataspace guide](./assets/docs/README-finalSetUpOfTheDS.md).
 
 ## Quick deployment from scratch
-This approach offers a set of scripts focused on the deployment of all the phases and steps explained at the [step by step guide](#step-by-step-deployment-guide). All these scripts use local DNSs (eg: fiwaredsc-consumer.local); to learn how to setup the components using global DNS (eg: fiwaredsc-consumer.ita.es) check the [Step by step deployment guide](#step-by-step-deployment-guide).
+This repository contains a generic version of the Fiware Data Space infrastructure.  The repo organizes the deployment of the different parties in phases and steps explained at the [step by step guide](#step-by-step-deployment-guide) that you can review to understand the components and their configurations. Some of the concepts explained are:
+- The deployment of infrastructures (Kubernetes and Helm commands)
+- The decentralized identity (DID, VC, VP, ...) that any participant in a data space infrastructure must be familiar with.
+- How the access to the services is achieved.
+- How to manage DNSs to access the infrastucture, both local DNSs for testing (eg: fiwaredsc-provider.local) and global DNS for production (eg: fiwaredsc-provider.ita.es)
+- How to identify and tailor the blocks you will need to participate in a data space depending on your role in it: Just as a Consumer?, as a Provider?, both as a Consumer and a Provider?
+...
+
+
+This `quick` approach offers a set of scripts focused on the deployment of all the phases.  All these scripts use local DNSs (eg: fiwaredsc-consumer.local); to learn how to setup the components using global DNS (eg: fiwaredsc-consumer.ita.es) check the [Step by step deployment guide](#step-by-step-deployment-guide).
 
 Each script is standalone and does not require the execution of any other previous script. eg: Script [qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC](./scripts/quickInstall/qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC.sh) deploys the whole infrastructure and does not depend on any other script.  
 
   **NOTE**: _although these scripts have been tested in different  Ubuntu versions (See [Prerequisites](#prerequisites)), they may contain steps that require manual actions (such as editting a file with sudo permissions), althought they have been tried to be automated, so in case of failure, please review the logs and perform these steps manually (copying, pasting) for a better understanding of the whole process)_  
   **TIP**: It is recommended to launch the scripts from the main branch as it contains the latests versions.  
-The [folder with the script files (./scripts/quickinstall)](./scripts/quickInstall/) contain script files to perform the following actions:  
-1. To grant the proper execution permissions to all the used scripts at the HOL, run the following command.
-**NOTE**: Remember that all commands run on these guidelines are executed from the github root folder. eg: _/projects/DSFiware-hackathon_
+Before the quick deployment can be run, a number of previous steps have to be satisfied at the [folder with the script files (./scripts/quickinstall)](./scripts/quickInstall/):  
+1. To grant the proper execution permissions to the scripts at the HOL, run the following command.
+**NOTE**: Remember that all commands run on these guidelines are executed from the github base folder. eg: _/projects/DSFiware-hackathon_
     ```shell
     cd /projects/DSFiware-hackathon
     echo "# add exec permissions to the Script files"
@@ -151,21 +160,25 @@ The [folder with the script files (./scripts/quickinstall)](./scripts/quickInsta
     ```shell
     # Standalone scripts to deploy and test the different phases/steps of the HOL.
     qInstall-full.sh
+    # Phase 1 testing dev environment and correct deployment of Apisix
     qInstall-phase01.01-KubernetesTesting-DeployABasicVersionOfHelloworld.sh
     qInstall-phase01.02-Apisix-HelmDeployFirstFunctionalVersionOfApisix.sh
     qInstall-phase01.03-Apisix-AddNewRoutesToApisix.sh
     qInstall-phase01.04-Apisix-UseAdminAPIToManageRoutes.sh
+    # Phase 2 Deployment of the Trust Anchor
     qInstall-phase02.01-TrustAnchor-HelmDeployTrustAnchor.sh
+    # Phase 3 Deployment of the Consumer components
     qInstall-phase03.01-Consumer-HelmDeployDID.sh
     qInstall-phase03.02-Consumer-HelmDeployVCIssuerKeycloak_withDIDKEY.sh
     qInstall-phase03.04-Consumer-IssuanceOfVerifiableCredentials.sh
+    # Phase 4 Deployment of the Provider and Service components
     qInstall-phase04.02-Provider-DeployAuthenticationComponents.sh
     qInstall-phase04.05-Provider-DeployProviderApisixRoutes.sh
     qInstall-phase05.03-FinalSetup-RegistrationOfTheParticipantsIntoTheDS.sh
     qInstall-phase05.04-FinalSetup-AccessTheServiceWithAValidVC.sh
     ```
 
-6- There is also a qInstall-full.sh script that deploys the current content of the different components, useful if you want to modify the values and try the complete deployment from scratch. 
+6- The qInstall-full.sh script deploys the latest version of the different components, useful if you want to modify the values and try the complete deployment from scratch. 
 
 These quickInstall scripts may take several minutes to finalize as the whole infrastructure has to be recreated from scratch and some components have to be downloaded from the internet. The scripts are split in three different sections:
 - Removal of any previously existing component.

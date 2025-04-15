@@ -34,19 +34,25 @@ echo "# Jumping into the hackathon folder ($DSFIWAREHOL_FOLDER)"
 cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
 
-echo "# Deploying the apisix helm..."
-ARTIFACT_NAME=apisix
-hFileCommand $ARTIFACT_NAME -v -y -b restart
 
-readAnswer "On the next screen wait until all the artifacts are properly deployed (1/1)  then press Ctrl+C and the process will continue. Even once available, the initialization of the apisix-data-plane can take several seconds, so be patient" "" 20 false
-kGet -w -v -n $NAMESPACE
+echo "# Removes previously existing apisix namespace"
+kRemoveRestart ns apisix -y -v       > /dev/null 2>&1 & disown 
 
-echo "# Deploy the new routes"
-. scripts/manageAPI6Routes.sh insert -r ROUTE_DEMO_JSON
-. scripts/manageAPI6Routes.sh insert -r ROUTE_API6DASHBOARD_JSON
+echo "# Deployment of the apisix"
+kRemoveRestart ns apisix -y -v       > /dev/null 2>&1
+hFileCommand apisix r -v -y -b       > /dev/null 2>&1 & disown 
 
+echo "# Waits for the deployment of the different components"
+wait4NamespaceCreated apisix
+wait4PodsDeploymentCompleted apisix       20
+
+echo "# Registration of the new apisix routes"
+. scripts/manageAPI6Routes.sh insert -r ROUTE_DEMO_JSON          > /dev/null      
+. scripts/manageAPI6Routes.sh insert -r ROUTE_API6DASHBOARD_JSON > /dev/null      
+
+
+echo -e "\n\n#### Final Verification"
 DNS_CONSUMER="fiwaredsc-consumer.local"
-
 CMD="curl -s -o /dev/null -w \"%{http_code}\" -k https://$DNS_CONSUMER"
 echo "# Running CMD=$CMD"
 RC=$($CMD)
@@ -56,6 +62,10 @@ if [[ "$RC" == "\"200\"" ]]; then
     echo "Now you can try it running command \"curl -k https://$DNS_CONSUMER\""
     SECRET=$(kSecret-show -n api apisix-dashboard-secrets -f apisix-dashboard-secret -v)
     echo "Better to open it at a browser using \"user;$SECRET\"";
+    
+    echo -e "\n**** This quick install ($SCRIPTNAME) has proved:****:
+    \t-The apisix can register new routes at runtime via the REST Admin API
+    \t via the managerAPI6Routes.sh helper script"
 else
     echo "It seems that something has failed (RC=$RC). You can wait some minutes and test again the command \"curl -k https://$DNS_CONSUMER\", else review the logs for some clues"
 fi

@@ -1,7 +1,7 @@
 # Final setup of the DS
 - [Final setup of the DS](#final-setup-of-the-ds)
   - [Step 5.1-Registration of the Consumer into the data space](#step-51-registration-of-the-consumer-into-the-data-space)
-  - [Step 6.2-Registation of the Service into the provider Credential Config Service](#step-62-registation-of-the-service-into-the-provider-credential-config-service)
+  - [Step 5.2-Registation of the Service into the provider Credential Config Service](#step-52-registation-of-the-service-into-the-provider-credential-config-service)
   - [Step 5.3-Addition of the service route to the Apisix with VC Authentication](#step-53-addition-of-the-service-route-to-the-apisix-with-vc-authentication)
     - [Retrieval of an Access Token from the VCVerifier](#retrieval-of-an-access-token-from-the-vcverifier)
     - [Access the service with the VCVerifier Access Token](#access-the-service-with-the-vcverifier-access-token)
@@ -76,7 +76,7 @@ The `registration` yaml describes that the DID of the consumer will be registere
 - The `Trusted Issuer Registry` of the Data Space (_tir at the trust-anchor namespace_) stating that the given DID belongs to the data space.
 - The `Trusted Issuer List` of the Provider (_til at the provider namespace_) stating that the consumer can only present `OperatorCredentials` to access the provider's infrastructure with a role of type ORDER_PRODUCER or ORDER_CONSUMER. This verification is made at the authentication phase of the OIDC protocol and any request from this consumer will be rejected if any other credential is presented.
 
-## Step 6.2-Registation of the Service into the provider Credential Config Service
+## Step 5.2-Registation of the Service into the provider Credential Config Service
 This setup will specify which Trust Issuer Registries and which Trust Issuer List must be visited by the VCVerifier to authenticate any request made to access the service.  
 The Fiware architecture enables several Trusted participants to be used and different ones depending on the service to be accessed.  
 At this scenario, only one service (_hackathon-service_), one Trusted Participant list and one Trusted Issuer list is setup.

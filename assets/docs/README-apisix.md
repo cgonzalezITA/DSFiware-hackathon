@@ -2,7 +2,7 @@
 - [Apisix](#apisix)
   - [step01: _Deploy a basic version of a helloWorld chart_](#step01-deploy-a-basic-version-of-a-helloworld-chart)
   - [step02: Deploy a functional version of apisix](#step02-deploy-a-functional-version-of-apisix)
-  - [step03: Deploy a new route via the Apisix.yaml file](#step03-deploy-a-new-route-via-the-apisixyaml-file)
+  - [step03: Deploy a new route via the apisix-routes.yaml file](#step03-deploy-a-new-route-via-the-apisixyaml-file)
   - [step04: Use Admin API to manage routes](#step04-use-admin-api-to-manage-routes)
   - [Bottom line](#bottom-line)
 
@@ -144,7 +144,7 @@ cat Helms/apisix/apisix-routes.yaml
 # To show the structure of the github after the completion of the next step
 git checkout phase01.step03
 ```
-## step03: Deploy a new route via the Apisix.yaml file
+## step03: Deploy a new route via the apisix-routes.yaml file
 ```shell
 # To show the structure of the github after the completion of this step
 git checkout phase01.step03
@@ -237,7 +237,7 @@ git checkout phase01.step04
 git checkout phase01.step04
 ```
 
-Instead of modifying the apisix.yaml file, routes can also be managed via Admin API (the deployment **Apisix-control-plane** exposes the endpoints to manage them) or via the dashboard web interface shown  at the previous Step.  
+Instead of modifying the apisix-routes.yaml file, routes can also be managed via Admin API (the deployment **Apisix-control-plane** exposes the endpoints to manage them) or via the dashboard web interface shown  at the previous Step.  
 In this step, using one of the provided [_manageAPI6Routes.ypynb_](../../scripts/manageAPI6Routes.ipynb) or [_manageAPI6Routes.sh_](../../scripts/manageAPI6Routes.sh) files, recreate the route /hello using the Admin API. These scripts are at the [/scripts folder](../../scripts/):  
 This guideline will use the script file, but the Jupyter file can be customized to run the same actions.
 

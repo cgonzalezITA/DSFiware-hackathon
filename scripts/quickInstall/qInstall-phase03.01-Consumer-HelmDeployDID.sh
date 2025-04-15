@@ -36,16 +36,26 @@ cd $DSFIWAREHOL_FOLDER
 echo "Now at $(pwd) folder"
 
 
-echo "# Deploy the did:key"
-hFileCommand consumer -f key r -b -v -y
-wait4PodsDeploymentCompleted $NAMESPACE 20
+DNS_CONSUMER="fiwaredsc-consumer.local"
+echo "# Removes previously existing namespace consumer"
+kRemoveRestart ns consumer -y -v     > /dev/null 2>&1 & disown 
 
-echo "# Verification"
+echo "# Deployment of the did:key "
+kRemoveRestart ns consumer -y -v     > /dev/null 2>&1
+hFileCommand consumer r -v -y -b -f key     > /dev/null 2>&1 & disown 
+
+echo "# Waits for the deployment of the different components"
+wait4NamespaceCreated consumer
+wait4PodsDeploymentCompleted consumer     5
+
+echo -e "\n\n#### Verification (did:key)"
 DID1=$(kExec net -v -n $NAMESPACE -- curl -s http://did:3000/did-material/did.env)
 RC=$?
+MSG=""
 echo ""
 if [ "${DID1:0:3}" == "DID" ]; then
-    readAnswer "DID:KEY has worked! The generated DID:key is $DID1. Congrats!" "" 15 false
+    MSG="\n\t-The did:key ($DID1) has been generated and it is accessible"
+    readAnswer "DID:KEY has worked! The generated DID:key is $DID1. Congrats!" "" 5 false
 else
     readAnswer "DID:KEY has failed (RC=$RC). Review the logs and the value file used by helm for some clues" "" 15 false
 fi
@@ -53,21 +63,24 @@ fi
 
 
 unset DID1
-echo "# Deploy the did:web"
-hFileCommand consumer -f web r -v -y
+echo "# Deployment of the did:web"
+hFileCommand consumer -f web r -v -y > /dev/null 2>&1 
 
-wait4PodsDeploymentCompleted $NAMESPACE 20
+wait4PodsDeploymentCompleted $NAMESPACE 5
 
-echo "# Verification"
+echo -e "\n\n#### Verification (did:web)"
 DID1=$(kExec net -v -n $NAMESPACE -- curl -s http://did:3000/did-material/did.env)
 RC=$?
 echo ""
 if [ "${DID1:0:3}" == "DID" ]; then
+    MSG="${MSG}\n\t-The did:web ($DID1) has been generated and it is accessible"
     echo "DID:WEB has worked! The generated DID:key is $DID1. Congrats!"
 else
     echo "DID:WEB has failed (RC=$RC). Review the logs and the value file used by helm for some clues"
 fi
 
-
+if test "${#MSG}" -gt 0; then
+    echo -e "\n**** This quick install ($SCRIPTNAME) has proved:****:$MSG"
+fi
 echo "Script $SCRIPTNAME has finished"
 cd ..

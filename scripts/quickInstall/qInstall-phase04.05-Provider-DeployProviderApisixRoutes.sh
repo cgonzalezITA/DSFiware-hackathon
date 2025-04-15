@@ -36,62 +36,31 @@ echo "Now at $(pwd) folder"
 
 
 echo "# Removes previously existing apisix namespace"
-kRemoveRestart ns apisix -y -v
+echo "# Removes previously existing namespace service"
+kRemoveRestart ns apisix -y -v       > /dev/null 2>&1 & disown 
+kRemoveRestart -a ns service  -y -v     > /dev/null 2>&1 & disown 
 
-echo "# Removes previously existing namespace provider"
-kRemoveRestart ns provider -y -v
-
-export NAMESPACE="provider"
 
 echo "# Deployment of the apisix"
-hFileCommand apisix r -v -y -b
-echo "# Deployment of the provider common"
-hFileCommand provider/common r -v -y -b
-echo "# Deployment of the provider authentication"
-hFileCommand provider/authentication r -v -y -b
-echo "# Deployment of the provider authorization"
-hFileCommand provider/authorization r -v -y -b
-echo "# Deployment of the provider service"
-hFileCommand provider/service r -v -y -b
+kRemoveRestart ns apisix -y -v       > /dev/null 2>&1
+hFileCommand apisix r -v -y -b       > /dev/null 2>&1 & disown 
+
+echo "# Deployment of the provider's service"
+kRemoveRestart -a ns service  -y -v          > /dev/null 2>&1
+hFileCommand provider/service r -v -y -b  > /dev/null 2>&1 & disown 
 
 
-echo "# Registers the fiwaredsc-provider.local at the /etc/hosts file to map the DNS with the IP address"
-PUBLIC_IP=$(hostname -I | awk '{print $1}')
-DNS_PROVIDER="fiwaredsc-provider.local"
-LINE="$PUBLIC_IP  fiwaredsc-trustanchor.local fiwaredsc-consumer.local fiwaredsc-provider.local"
-echo "# Map the local DNS at your hosts file"
-MSG="# To use the local DNSs at the host, it is required to add a few lines to the '/etc/hosts' file:\n\
-$LINE\n
-Do you want to insert it automatically?";
-if [ $(readAnswer "$MSG (y|n*)" 'n') == 'y' ]; then
-    sudo cat <<EOF >> /etc/hosts
-$LINE
-EOF
-    if [[ "$?" -ne 0 ]]; then
-        readAnswer "An error has happened. This operation requires sudo permission. Do it manually on another terminal and press any key to continue" \
-            "" 120 false false
-    fi
-fi
-readAnswer "To access it from a windows browser, add the same line into the 'C:\Windows\System32\drivers\etc\hosts' file\n\
-    Press a key to continue" "" 10 false false
-
-
-
-# Waits for the deployment
-wait4PodsDeploymentCompleted apisix 20
-wait4PodsDeploymentCompleted service 20 "Note that the init-data pod finishes when it is marked as '0/1 Completed'. Please, be patient"
-wait4PodsDeploymentCompleted provider 20
+echo "# Waits for the deployment of the different components"
+wait4NamespaceCreated apisix
+wait4PodsDeploymentCompleted apisix       20
+wait4NamespaceCreated service
+wait4PodsDeploymentCompleted service      20 "Note that the init-data pod finishes when it is marked as '0/1 Completed'. Please, be patient"
 
 echo "# Registration of the new apisix routes"
-. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_fiwaredsc_vcverifier_local
-. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_JWKS_fiwaredsc_vcverifier_local
-. scripts/manageAPI6Routes.sh insert -r ROUTE_WELLKNOWN_OIDC_Service_fiwaredsc_vcverifier_local
-. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth
-. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_fiwaredsc_provider_local_dataSpaceConfiguration
+. scripts/manageAPI6Routes.sh insert -r ROUTE_PROVIDER_SERVICE_fiwaredsc_provider_local_0auth          > /dev/null
 
 
-
-echo "# Verification"
+echo -e "\n\n#### Final Verification"
 DNS="https://fiwaredsc-provider.local/services/hackathon-service/ngsi-ld/v1/entities?type=Order"
 CMD="curl -s -o /dev/null -w \"%{http_code}\" -k $DNS"
 RC=$($CMD)
@@ -101,7 +70,11 @@ if [[ "$RC" == "\"200\"" ]]; then
     JSON=$($CMD)
     echo "$JSON" | jq empty
     if [ $? -eq 0 ]; then
-        readAnswer "\"$CMD\" returns a valid json. It has worked! Congrats!." "" 5 false
+        echo "\"$CMD\" returns a valid json. It has worked! Congrats!."
+        echo -e "\n**** This quick install ($SCRIPTNAME) has proved:****:
+        \t-The provider's service components have properly been deployed.
+        \tNOTE that neither authentication nor authorization have been enabled at this stage.
+        \t Try running the command=curl -k $DNS"
     else
         readAnswer "\"$CMD\" has failed. Review the logs and the value file used by helm for some clues" "" 15 false
     fi
